@@ -1,36 +1,21 @@
+from typing import List, Optional
 from .Books import Book
 
-class Shelf:
-    """Represents a shelf that holds a Book and tracks the total weight on the shelf.
 
-    Follows the same private-attribute + getter/setter pattern used in `Books.py`.
+class Shelf:
+    """Shelf model that stores metadata and a collection of Book objects.
+
+    Intentionally minimal: this class only holds data (id, books list and capacity).
+    All behaviors/operations (add/remove/weight calculations) are expected to
+    live in a corresponding shelf service module.
     """
 
-    def __init__(self, id, book: Book, totalweight: float):
+    def __init__(self, id, books: Optional[List[Book]] = None, capacity: float = 8.0):
         # private attributes
         self.__id = id
-        self.__book = book
-        self.__totalweight = totalweight
-
-    # Getters
-    def get_id(self):
-        return self.__id
-
-    def get_book(self):
-        return self.__book
-
-    def get_totalweight(self):
-        return self.__totalweight
-
-    # Setters
-    def set_id(self, id):
-        self.__id = id
-
-    def set_book(self, book: Book):
-        self.__book = book
-
-    def set_totalweight(self, totalweight: float):
-        self.__totalweight = totalweight
+        # store books as a simple list; service layer will manipulate it
+        self.__books: List[Book] = books if books is not None else []
+        self.__capacity: float = capacity
 
     def __str__(self):
-        return f"Shelf[ID: {self.__id}, Book: {self.__book}, TotalWeight: {self.__totalweight}]"
+        return f"Shelf[ID: {self.__id}, books: {len(self.__books)} items, capacity: {self.__capacity}kg]"
