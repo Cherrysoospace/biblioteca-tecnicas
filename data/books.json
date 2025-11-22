@@ -6,7 +6,7 @@
     "author": "Homer",
     "weight": 1.1,
     "price": 30000,
-    "isBorrowed": false
+    "stock": 1
   },
   {
     "id": "B002",
@@ -15,7 +15,7 @@
     "author": "Jane Austen",
     "weight": 0.9,
     "price": 25000,
-    "isBorrowed": false
+    "stock": 1
   },
   {
     "id": "B003",
@@ -24,7 +24,7 @@
     "author": "F. Scott Fitzgerald",
     "weight": 0.8,
     "price": 27000,
-    "isBorrowed": true
+    "stock": 1
   },
   {
     "id": "B004",
@@ -33,7 +33,7 @@
     "author": "Harper Lee",
     "weight": 0.95,
     "price": 28000,
-    "isBorrowed": false
+    "stock": 1
   },
   {
     "id": "B005",
@@ -42,7 +42,7 @@
     "author": "Cormac McCarthy",
     "weight": 1.0,
     "price": 32000,
-    "isBorrowed": false
+    "stock": 1
   },
   {
     "id": "B006",
@@ -51,7 +51,7 @@
     "author": "Stephen King",
     "weight": 1.3,
     "price": 45000,
-    "isBorrowed": true
+    "stock": 1
   },
   {
     "id": "B007",
@@ -60,7 +60,7 @@
     "author": "Paulo Coelho",
     "weight": 0.7,
     "price": 20000,
-    "isBorrowed": false
+    "stock": 1
   },
   {
     "id": "B008",
@@ -69,7 +69,7 @@
     "author": "Suzanne Collins",
     "weight": 0.85,
     "price": 26000,
-    "isBorrowed": false
+    "stock": 1
   },
   {
     "id": "B009",
@@ -78,7 +78,7 @@
     "author": "Ernest Cline",
     "weight": 1.05,
     "price": 35000,
-    "isBorrowed": false
+    "stock": 1
   },
   {
     "id": "B010",
@@ -87,7 +87,7 @@
     "author": "Andy Weir",
     "weight": 1.2,
     "price": 38000,
-    "isBorrowed": false
+    "stock": 1
   },
   {
     "id": "B021",
@@ -96,6 +96,24 @@
     "author": "Yevgeny Zamyatin",
     "weight": 0.5,
     "price": 22554,
-    "isBorrowed": false
+    "stock": 1
+  },
+  {
+    "id": "B022",
+    "ISBNCode": "923",
+    "title": "Hola",
+    "author": "Chris",
+    "weight": 0.9,
+    "price": 20000,
+    "stock": 1
+  },
+  {
+    "id": "B0023",
+    "ISBNCode": "8",
+    "title": "DNA",
+    "author": "AJDBCD",
+    "weight": 1.0,
+    "price": 100000,
+    "stock": 3
   }
 ]

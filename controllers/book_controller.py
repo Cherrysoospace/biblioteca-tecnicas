@@ -13,7 +13,7 @@ class BookController:
             data["author"],
             float(data["weight"]),
             int(data["price"]),
-            bool(data.get("isBorrowed", False))
+            int(data.get("stock", 1))
         )
         self.service.add_book(book)
 

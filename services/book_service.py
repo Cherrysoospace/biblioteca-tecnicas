@@ -78,12 +78,17 @@ class BookService:
         for idx, item in enumerate(data):
             if not isinstance(item, dict):
                 raise ValueError(f"Invalid book entry at index {idx}: expected object/dict")
-            required = ['id', 'ISBNCode', 'title', 'author', 'weight', 'price', 'isBorrowed']
+
+            required = ['id', 'ISBNCode', 'title', 'author', 'weight', 'price']
             for key in required:
                 if key not in item:
                     raise ValueError(f"Missing '{key}' in book entry at index {idx}")
 
             try:
+                # Support new 'stock' field. For backwards compatibility, accept files
+                # that may have 'isBorrowed' instead: if 'stock' is missing we default to 1.
+                stock_value = int(item.get('stock', 1))
+
                 book = Book(
                     item['id'],
                     item['ISBNCode'],
@@ -91,7 +96,7 @@ class BookService:
                     item['author'],
                     float(item['weight']),
                     int(item['price']),
-                    bool(item['isBorrowed']),
+                    stock_value,
                 )
             except Exception as e:
                 raise ValueError(f"Invalid data types in book entry at index {idx}: {e}")
@@ -116,7 +121,7 @@ class BookService:
                 'author': b.get_author(),
                 'weight': b.get_weight(),
                 'price': b.get_price(),
-                'isBorrowed': b.get_isBorrowed(),
+                'stock': b.get_stock(),
             })
 
         try:
@@ -173,6 +178,7 @@ class BookService:
             'weight': book.set_weight,
             'price': book.set_price,
             'isBorrowed': book.set_isBorrowed,
+            'stock': book.set_stock,
         }
 
         if 'id' in new_data:
@@ -186,6 +192,8 @@ class BookService:
             if key == 'weight':
                 value = float(value)
             if key == 'price':
+                value = int(value)
+            if key == 'stock':
                 value = int(value)
             if key == 'isBorrowed':
                 value = bool(value)
@@ -208,8 +216,11 @@ class BookService:
         book = self.find_by_id(id)
         if book is None:
             raise ValueError(f"No book found with id '{id}'")
+        # Prevent deleting if book is currently borrowed or has stock remaining
         if book.get_isBorrowed():
             raise ValueError("Cannot delete a book that is currently borrowed")
+        if book.get_stock() > 0:
+            raise ValueError("Cannot delete a book that has stock > 0")
 
         self.books = [b for b in self.books if b.get_id() != id]
         self._save_to_file()

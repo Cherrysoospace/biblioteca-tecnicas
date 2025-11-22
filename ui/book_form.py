@@ -31,6 +31,9 @@ class BookForm(ctk.CTk):
         self.entry_price = ctk.CTkEntry(self, placeholder_text="Precio")
         self.entry_price.pack(pady=5)
 
+        self.entry_stock = ctk.CTkEntry(self, placeholder_text="Stock")
+        self.entry_stock.pack(pady=5)
+
         # Botón según modo
         if mode == "create":
             btn = ctk.CTkButton(self, text="Crear Libro", command=self.create_book)
@@ -56,6 +59,7 @@ class BookForm(ctk.CTk):
         self.entry_author.insert(0, book.get_author())
         self.entry_weight.insert(0, book.get_weight())
         self.entry_price.insert(0, book.get_price())
+        self.entry_stock.insert(0, book.get_stock())
 
     def create_book(self):
         data = {
@@ -65,6 +69,8 @@ class BookForm(ctk.CTk):
             "author": self.entry_author.get(),
             "weight": self.entry_weight.get(),
             "price": self.entry_price.get(),
+            # parse stock safely; default to 1 when empty
+            "stock": int(self.entry_stock.get()) if self.entry_stock.get().strip() else 1,
         }
 
         try:
@@ -80,6 +86,7 @@ class BookForm(ctk.CTk):
             "author": self.entry_author.get(),
             "weight": self.entry_weight.get(),
             "price": self.entry_price.get(),
+            "stock": int(self.entry_stock.get()) if self.entry_stock.get().strip() else 1,
         }
 
         try:
