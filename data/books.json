@@ -1,162 +1,101 @@
 [
-    {
-        "ID": 1,
-        "ISBN": "978-3-16-148400",
-        "Title": "The Great Adventure",
-        "Author": "John Smith",
-        "WeightKg": 0.5,
-        "ValueCOP": 10000
-    },
-    {
-        "ID": 2,
-        "ISBN": "978-3-16-148401",
-        "Title": "Python Programming",
-        "Author": "Alice Johnson",
-        "WeightKg": 0.7,
-        "ValueCOP": 15000
-    },
-    {
-        "ID": 3,
-        "ISBN": "978-3-16-148402",
-        "Title": "Data Structures",
-        "Author": "Michael Brown",
-        "WeightKg": 0.9,
-        "ValueCOP": 20000
-    },
-    {
-        "ID": 4,
-        "ISBN": "978-3-16-148403",
-        "Title": "Algorithms Unlocked",
-        "Author": "Laura Wilson",
-        "WeightKg": 1.1,
-        "ValueCOP": 25000
-    },
-    {
-        "ID": 5,
-        "ISBN": "978-3-16-148404",
-        "Title": "Deep Learning Basics",
-        "Author": "James Davis",
-        "WeightKg": 1.3,
-        "ValueCOP": 30000
-    },
-    {
-        "ID": 6,
-        "ISBN": "978-3-16-148405",
-        "Title": "Machine Learning 101",
-        "Author": "Patricia Miller",
-        "WeightKg": 1.5,
-        "ValueCOP": 35000
-    },
-    {
-        "ID": 7,
-        "ISBN": "978-3-16-148406",
-        "Title": "Database Systems",
-        "Author": "Robert Garcia",
-        "WeightKg": 1.7,
-        "ValueCOP": 40000
-    },
-    {
-        "ID": 8,
-        "ISBN": "978-3-16-148407",
-        "Title": "Software Engineering",
-        "Author": "Linda Martinez",
-        "WeightKg": 1.9,
-        "ValueCOP": 45000
-    },
-    {
-        "ID": 9,
-        "ISBN": "978-3-16-148408",
-        "Title": "Operating Systems",
-        "Author": "William Anderson",
-        "WeightKg": 2.1,
-        "ValueCOP": 50000
-    },
-    {
-        "ID": 10,
-        "ISBN": "978-3-16-148409",
-        "Title": "Computer Networks",
-        "Author": "Elizabeth Thomas",
-        "WeightKg": 2.3,
-        "ValueCOP": 55000
-    },
-    {
-        "ID": 11,
-        "ISBN": "978-3-16-148410",
-        "Title": "Artificial Intelligence",
-        "Author": "Christopher Jackson",
-        "WeightKg": 2.5,
-        "ValueCOP": 60000
-    },
-    {
-        "ID": 12,
-        "ISBN": "978-3-16-148411",
-        "Title": "Cybersecurity Fundamentals",
-        "Author": "Barbara White",
-        "WeightKg": 2.7,
-        "ValueCOP": 65000
-    },
-    {
-        "ID": 13,
-        "ISBN": "978-3-16-148412",
-        "Title": "Web Development",
-        "Author": "Daniel Harris",
-        "WeightKg": 2.9,
-        "ValueCOP": 70000
-    },
-    {
-        "ID": 14,
-        "ISBN": "978-3-16-148413",
-        "Title": "Cloud Computing",
-        "Author": "Jennifer Clark",
-        "WeightKg": 3.1,
-        "ValueCOP": 75000
-    },
-    {
-        "ID": 15,
-        "ISBN": "978-3-16-148414",
-        "Title": "Mobile App Design",
-        "Author": "Matthew Lewis",
-        "WeightKg": 3.3,
-        "ValueCOP": 80000
-    },
-    {
-        "ID": 16,
-        "ISBN": "978-3-16-148415",
-        "Title": "Game Development",
-        "Author": "Susan Robinson",
-        "WeightKg": 3.5,
-        "ValueCOP": 85000
-    },
-    {
-        "ID": 17,
-        "ISBN": "978-3-16-148416",
-        "Title": "Blockchain Basics",
-        "Author": "Joseph Walker",
-        "WeightKg": 3.7,
-        "ValueCOP": 90000
-    },
-    {
-        "ID": 18,
-        "ISBN": "978-3-16-148417",
-        "Title": "Big Data Analytics",
-        "Author": "Sarah Hall",
-        "WeightKg": 3.9,
-        "ValueCOP": 95000
-    },
-    {
-        "ID": 19,
-        "ISBN": "978-3-16-148418",
-        "Title": "Robotics Introduction",
-        "Author": "Charles Allen",
-        "WeightKg": 4.1,
-        "ValueCOP": 100000
-    },
-    {
-        "ID": 20,
-        "ISBN": "978-3-16-148419",
-        "Title": "Digital Transformation",
-        "Author": "Karen Young",
-        "WeightKg": 4.3,
-        "ValueCOP": 105000
-    }
+  {
+    "id": "B001",
+    "ISBNCode": "9780140449136",
+    "title": "The Odyssey",
+    "author": "Homer",
+    "weight": 1.1,
+    "price": 30000,
+    "isBorrowed": false
+  },
+  {
+    "id": "B002",
+    "ISBNCode": "9780679783268",
+    "title": "Pride and Prejudice",
+    "author": "Jane Austen",
+    "weight": 0.9,
+    "price": 25000,
+    "isBorrowed": false
+  },
+  {
+    "id": "B003",
+    "ISBNCode": "9780743273565",
+    "title": "The Great Gatsby",
+    "author": "F. Scott Fitzgerald",
+    "weight": 0.8,
+    "price": 27000,
+    "isBorrowed": true
+  },
+  {
+    "id": "B004",
+    "ISBNCode": "9780061120084",
+    "title": "To Kill a Mockingbird",
+    "author": "Harper Lee",
+    "weight": 0.95,
+    "price": 28000,
+    "isBorrowed": false
+  },
+  {
+    "id": "B005",
+    "ISBNCode": "9780307277671",
+    "title": "The Road",
+    "author": "Cormac McCarthy",
+    "weight": 1.0,
+    "price": 32000,
+    "isBorrowed": false
+  },
+  {
+    "id": "B006",
+    "ISBNCode": "9781982137274",
+    "title": "The Institute",
+    "author": "Stephen King",
+    "weight": 1.3,
+    "price": 45000,
+    "isBorrowed": true
+  },
+  {
+    "id": "B007",
+    "ISBNCode": "9780307387899",
+    "title": "The Alchemist",
+    "author": "Paulo Coelho",
+    "weight": 0.7,
+    "price": 20000,
+    "isBorrowed": false
+  },
+  {
+    "id": "B008",
+    "ISBNCode": "9780446310789",
+    "title": "Mockingjay",
+    "author": "Suzanne Collins",
+    "weight": 0.85,
+    "price": 26000,
+    "isBorrowed": false
+  },
+  {
+    "id": "B009",
+    "ISBNCode": "9780307743657",
+    "title": "Ready Player One",
+    "author": "Ernest Cline",
+    "weight": 1.05,
+    "price": 35000,
+    "isBorrowed": false
+  },
+  {
+    "id": "B010",
+    "ISBNCode": "9780143126560",
+    "title": "The Martian",
+    "author": "Andy Weir",
+    "weight": 1.2,
+    "price": 38000,
+    "isBorrowed": false
+  },
+  {
+    "id": "B021",
+    "ISBNCode": "9780140185850",
+    "title": "WE",
+    "author": "Yevgeny Zamyatin",
+    "weight": 0.5,
+    "price": 22554,
+    "isBorrowed": false
+  }
 ]
