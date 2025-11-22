@@ -1,5 +1,6 @@
 class Book:
-    def __init__(self, ISBNCode, title, author, weight, price, isBorrowed):
+    def __init__(self, id,ISBNCode, title, author, weight, price, isBorrowed):
+        self.__id = id
         self.__ISBNCode = ISBNCode #String
         self.__title = title #String
         self.__author = author #String
@@ -8,6 +9,9 @@ class Book:
         self.__isBorrowed = isBorrowed #Boolean
 
     #Getters Ejemplos
+    def get_id(self):
+        return self.__id
+
     def get_ISBNCode(self):
         return self.__ISBNCode
     
@@ -45,4 +49,10 @@ class Book:
     
     def set_isBorrowed(self, isBorrowed):
         self.__isBorrowed = isBorrowed
+    
+    def set_id(self, id):
+        self.__id = id
+
+    def __str__(self):
+        return f"Book[ID: {self.__id}, ISBNCode: {self.__ISBNCode}, Title: {self.__title}, Author: {self.__author}, Weight: {self.__weight}, Price: {self.__price}, Is Borrowed: {self.__isBorrowed}]"
     
