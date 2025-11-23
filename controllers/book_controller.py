@@ -22,3 +22,7 @@ class BookController:
 
     def get_book(self, book_id):
         return self.service.find_by_id(book_id)
+
+    def get_all_books(self):
+        """Return list of all Book objects from the service."""
+        return self.service.get_all_books()
