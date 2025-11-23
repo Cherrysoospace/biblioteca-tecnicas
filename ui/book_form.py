@@ -5,11 +5,23 @@ try:
 except Exception:
     Image = None
 from controllers.book_controller import BookController
+from ui import theme
+from ui import widget_factory as wf
 
 class BookForm(ctk.CTkToplevel):
     def __init__(self, parent=None, mode="create", book_id=None):
         # Initialize as a Toplevel attached to the main CTk root
         super().__init__(parent)
+        # keep parent reference to restore focus when closing
+        self._parent_window = parent
+        # Apply theme colors to this window and create a main container to match MainMenu
+        try:
+            theme.apply_theme(self)
+        except Exception:
+            try:
+                self.configure(fg_color=theme.BG_COLOR)
+            except Exception:
+                pass
 
         # Load twemoji assets (defensive)
         assets_path = os.path.join(os.path.dirname(__file__), "assets", "twemoji")
@@ -27,39 +39,72 @@ class BookForm(ctk.CTkToplevel):
         self.mode = mode
         self.book_id = book_id
 
+        # Main container (keeps spacing and background consistent)
+        container = ctk.CTkFrame(self, fg_color=theme.BG_COLOR, corner_radius=12)
+        container.pack(expand=True, fill="both", padx=20, pady=20)
+
+        # Title area
+        title_frame = ctk.CTkFrame(container, fg_color=theme.BG_COLOR, corner_radius=0)
+        title_frame.pack(pady=(6, 12))
+        if self.icon_book is not None:
+            icon_lbl = ctk.CTkLabel(title_frame, image=self.icon_book, text="")
+            icon_lbl.pack(side="left", padx=(0, 8))
+
+        title_lbl = wf.create_title_label(title_frame, "Crear Libro")
+        title_lbl.pack(side="left")
+
+        # Form fields placed in a simple vertical stack inside the container
+        form_frame = ctk.CTkFrame(container, fg_color=theme.BG_COLOR, corner_radius=0)
+        form_frame.pack(expand=True, fill="both")
+
         # Campos
-        self.entry_id = ctk.CTkEntry(self, placeholder_text="ID")
-        self.entry_id.pack(pady=5)
+        self.entry_id = ctk.CTkEntry(form_frame, placeholder_text="ID")
+        self.entry_id.pack(pady=6, fill="x")
 
-        self.entry_isbn = ctk.CTkEntry(self, placeholder_text="ISBN")
-        self.entry_isbn.pack(pady=5)
+        self.entry_isbn = ctk.CTkEntry(form_frame, placeholder_text="ISBN")
+        self.entry_isbn.pack(pady=6, fill="x")
 
-        self.entry_title = ctk.CTkEntry(self, placeholder_text="Título")
-        self.entry_title.pack(pady=5)
+        self.entry_title = ctk.CTkEntry(form_frame, placeholder_text="Título")
+        self.entry_title.pack(pady=6, fill="x")
 
-        self.entry_author = ctk.CTkEntry(self, placeholder_text="Autor")
-        self.entry_author.pack(pady=5)
+        self.entry_author = ctk.CTkEntry(form_frame, placeholder_text="Autor")
+        self.entry_author.pack(pady=6, fill="x")
 
-        self.entry_weight = ctk.CTkEntry(self, placeholder_text="Peso")
-        self.entry_weight.pack(pady=5)
+        self.entry_weight = ctk.CTkEntry(form_frame, placeholder_text="Peso")
+        self.entry_weight.pack(pady=6, fill="x")
 
-        self.entry_price = ctk.CTkEntry(self, placeholder_text="Precio")
-        self.entry_price.pack(pady=5)
+        self.entry_price = ctk.CTkEntry(form_frame, placeholder_text="Precio")
+        self.entry_price.pack(pady=6, fill="x")
 
-        self.entry_stock = ctk.CTkEntry(self, placeholder_text="Stock")
-        self.entry_stock.pack(pady=5)
+        self.entry_stock = ctk.CTkEntry(form_frame, placeholder_text="Stock")
+        self.entry_stock.pack(pady=6, fill="x")
+
+        # Action button area (primary + small 'Regresar' cancel button)
+        action_frame = ctk.CTkFrame(container, fg_color=theme.BG_COLOR, corner_radius=0)
+        action_frame.pack(pady=(12, 6))
 
         # Botón según modo
         if mode == "create":
-            btn = ctk.CTkButton(self, text="Crear Libro", command=self.create_book)
+            btn = wf.create_primary_button(action_frame, text="Crear Libro", command=self.create_book)
         else:
-            btn = ctk.CTkButton(self, text="Actualizar Libro", command=self.update_book)
+            btn = wf.create_primary_button(action_frame, text="Actualizar Libro", command=self.update_book)
 
-        btn.pack(pady=20)
+        # small cancel/back button to return to main menu
+        cancel_btn = wf.create_small_button(action_frame, text="Regresar", command=self._on_cancel)
+
+        # pack side-by-side for better UX
+        btn.pack(side="left", padx=(0, 8), pady=6)
+        cancel_btn.pack(side="left", pady=6)
 
         # Si estás en modo edición, carga los datos
         if mode == "edit" and book_id:
             self.load_book()
+
+        # Ensure closing via window manager also triggers our cancel logic
+        try:
+            self.protocol("WM_DELETE_WINDOW", self._on_cancel)
+        except Exception:
+            pass
 
     def load_book(self):
         book = self.controller.get_book(self.book_id)
@@ -109,4 +154,31 @@ class BookForm(ctk.CTkToplevel):
             ctk.CTkLabel(self, text="Libro actualizado!").pack()
         except Exception as e:
             ctk.CTkLabel(self, text=str(e), text_color="red").pack()
+
+    def _on_cancel(self):
+        """Close this form and return focus to the parent/main menu."""
+        try:
+            # destroy this toplevel
+            self.destroy()
+        except Exception:
+            try:
+                self.withdraw()
+            except Exception:
+                pass
+
+        # try to restore focus to parent window
+        try:
+            if getattr(self, '_parent_window', None):
+                parent = self._parent_window
+                try:
+                    parent.deiconify()
+                except Exception:
+                    pass
+                try:
+                    parent.lift()
+                    parent.focus_force()
+                except Exception:
+                    pass
+        except Exception:
+            pass
 
