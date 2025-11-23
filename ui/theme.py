@@ -1,11 +1,19 @@
 import customtkinter as ctk
 
-# Exact palette (do not change)
-BG_COLOR = "#FAF9F6"        # White Rice
-BUTTON_COLOR = "#F7E2E2"    # Sakura Pink
-BUTTON_HOVER = "#CBDDB4"    # Wasabi Soft Green
-TEXT_COLOR = "#2E2E2E"      # Charcoal Ink
-BORDER_COLOR = "#E8DCC2"    # Hinoki Beige
+# Palette adapted for the background artwork (beige base, black lines, red accents)
+# Background: warm beige
+BG_COLOR = "#EDE6D6"        # Warm Beige
+# Buttons: a slightly darker beige to sit on the background
+BUTTON_COLOR = "#DCCFB8"    # Button Beige
+# Hover / accent: deep red to match the red semicircles in the background
+BUTTON_HOVER = "#C0392B"    # Deep Sakura Red
+# Main text should be black to match the black line art
+TEXT_COLOR = "#0B0B0B"      # Near Black
+# Borders and line accents use true black for strong definition
+BORDER_COLOR = "#000000"    # Black
+
+# Optional accent color available to UI for small highlights
+ACCENT_RED = "#C0392B"
 
 
 def apply_theme(root: ctk.CTk):

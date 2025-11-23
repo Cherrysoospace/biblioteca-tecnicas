@@ -26,7 +26,7 @@ def create_primary_button(parent, text: str, command: Optional[Callable] = None,
         width=width,
         height=height,
     )
-    # subtle border for tactile feeling
+    # use strong border to echo the black line art in the background
     try:
         btn.configure(border_width=1, border_color=theme.BORDER_COLOR)
     except Exception:

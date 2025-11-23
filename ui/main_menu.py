@@ -1,9 +1,10 @@
 import os
 import customtkinter as ctk
 try:
-    from PIL import Image
+    from PIL import Image, ImageTk
 except Exception:
     Image = None
+    ImageTk = None
 from ui import theme
 from ui import widget_factory as wf
 from ui.book_form import BookForm
@@ -36,6 +37,99 @@ class MainMenu(ctk.CTk):
         # Main container for vertical centering
         container = ctk.CTkFrame(self, fg_color=theme.BG_COLOR, corner_radius=12)
         container.pack(expand=True, fill="both", padx=40, pady=30)
+
+        # ------------------ Background Image (responsive, pixel-art) ------------------
+        assets_bg_path = os.path.join(os.path.dirname(__file__), "assets", "backgrounds")
+        bg_path = os.path.join(assets_bg_path, "BG-5.jpg")
+        self.bg_image = None
+        self.bg_photo = None
+        self.bg_label = None
+        self.bg_pil_original = None
+
+        if Image is not None and os.path.exists(bg_path):
+            try:
+                pil = Image.open(bg_path)
+                # Keep original in memory for responsive resizing
+                self.bg_pil_original = pil
+
+                # Resize using NEAREST for pixel-art effect
+                init_w, init_h = width, height
+                pil_resized = pil.resize((init_w, init_h), Image.NEAREST)
+
+                # Try CTkImage first; if it fails, fallback to ImageTk.PhotoImage
+                try:
+                    self.bg_image = ctk.CTkImage(pil_resized, size=(init_w, init_h))
+                    self.bg_label = ctk.CTkLabel(self, image=self.bg_image, text="")
+                    self.bg_label.place(x=0, y=0, relwidth=1, relheight=1)
+                except Exception:
+                    try:
+                        if ImageTk is not None:
+                            self.bg_photo = ImageTk.PhotoImage(pil_resized)
+                            self.bg_label = ctk.CTkLabel(self, image=self.bg_photo, text="")
+                            self.bg_label.place(x=0, y=0, relwidth=1, relheight=1)
+                    except Exception:
+                        self.bg_label = None
+
+                # Ensure bg_label is behind other widgets
+                try:
+                    if self.bg_label is not None:
+                        self.bg_label.lower()
+                except Exception:
+                    pass
+            except Exception:
+                self.bg_pil_original = None
+
+        # bind resize to keep background responsive (pixelated using NEAREST)
+        def _on_bg_resize(event):
+            if not getattr(self, 'bg_pil_original', None):
+                return
+            w = max(1, event.width)
+            h = max(1, event.height)
+            if getattr(self, '_bg_last_size', None) == (w, h):
+                return
+            self._bg_last_size = (w, h)
+            try:
+                pil = self.bg_pil_original.resize((w, h), Image.NEAREST)
+                try:
+                    self.bg_image = ctk.CTkImage(pil, size=(w, h))
+                    if self.bg_label is None:
+                        self.bg_label = ctk.CTkLabel(self, image=self.bg_image, text="")
+                        self.bg_label.place(x=0, y=0, relwidth=1, relheight=1)
+                        try:
+                            self.bg_label.lower()
+                        except Exception:
+                            pass
+                    else:
+                        try:
+                            self.bg_label.configure(image=self.bg_image)
+                        except Exception:
+                            pass
+                except Exception:
+                    # fallback to ImageTk
+                    try:
+                        if ImageTk is not None:
+                            self.bg_photo = ImageTk.PhotoImage(pil)
+                            if self.bg_label is None:
+                                self.bg_label = ctk.CTkLabel(self, image=self.bg_photo, text="")
+                                self.bg_label.place(x=0, y=0, relwidth=1, relheight=1)
+                                try:
+                                    self.bg_label.lower()
+                                except Exception:
+                                    pass
+                            else:
+                                try:
+                                    self.bg_label.configure(image=self.bg_photo)
+                                except Exception:
+                                    pass
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+
+        try:
+            self.bind('<Configure>', _on_bg_resize)
+        except Exception:
+            pass
 
         # Title with lantern icon on the left
         assets_path = os.path.join(os.path.dirname(__file__), "assets", "twemoji")
