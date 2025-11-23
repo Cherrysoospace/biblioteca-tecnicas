@@ -1,10 +1,12 @@
 import customtkinter as ctk
 from controllers.book_controller import BookController
 
-class BookForm(ctk.CTk):
-    def __init__(self, mode="create", book_id=None):
-        super().__init__()
+class BookForm(ctk.CTkToplevel):
+    def __init__(self, parent=None, mode="create", book_id=None):
+        # Initialize as a Toplevel attached to the main CTk root
+        super().__init__(parent)
 
+        # Ensure window is initially visible and properly titled
         self.title("Book Manager")
         self.geometry("500x600")
 

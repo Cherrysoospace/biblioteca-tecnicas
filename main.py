@@ -1,8 +1,8 @@
 import customtkinter as ctk
-from ui.book_form import BookForm
+from ui.main_menu import MainMenu
 
 ctk.set_appearance_mode("dark")
 
-app = BookForm(mode="create")  # para crear
-# app = BookForm(mode="edit", book_id="001")  # para editar
-app.mainloop()
+if __name__ == "__main__":
+    app = MainMenu()
+    app.mainloop()
