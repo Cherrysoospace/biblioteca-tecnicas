@@ -3,12 +3,9 @@ from ui import theme
 from ui import widget_factory as wf
 from ui.book_form import BookForm
 from ui.user_form import UserForm
-<<<<<<< HEAD
 from tkinter import messagebox
 
-=======
 from ui.loan_form import LoanForm
->>>>>>> 278b961a3e181329c048a57b3b911d899c6c6d4d
 
 class MainMenu(ctk.CTk):
     def __init__(self):
