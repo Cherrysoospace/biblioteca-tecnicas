@@ -7,11 +7,16 @@ class LoanForm(ctk.CTkToplevel):
     def __init__(self, parent=None):
         super().__init__(parent)
 
+        # attach to parent and set basic geometry
+        self._parent_window = parent
         self.title("Create Loan")
         self.geometry("400x300")
-
-        ctk.set_appearance_mode("dark")
-        ctk.set_default_color_theme("blue")
+        try:
+            # make the toplevel transient so window managers treat it as related
+            if parent is not None:
+                self.transient(parent)
+        except Exception:
+            pass
 
         self.controller = LoanController()
 
@@ -35,6 +40,12 @@ class LoanForm(ctk.CTkToplevel):
         self.btn_create = ctk.CTkButton(self, text="Create Loan", command=self.create_loan)
         self.btn_create.pack(pady=15)
 
+        # ensure closing returns focus to parent
+        try:
+            self.protocol("WM_DELETE_WINDOW", self._on_close)
+        except Exception:
+            pass
+
     def create_loan(self):
         loan_id = self.entry_loan_id.get().strip()
         user_id = self.entry_user_id.get().strip()
@@ -48,6 +59,25 @@ class LoanForm(ctk.CTkToplevel):
         if res.get('success'):
             messagebox.showinfo("Success", "Loan created successfully")
             # optionally close window after creating
-            self.destroy()
+            self._on_close()
         else:
             messagebox.showerror("Error", res.get('message'))
+
+    def _on_close(self):
+        try:
+            self.destroy()
+        except Exception:
+            try:
+                self.withdraw()
+            except Exception:
+                pass
+
+        try:
+            if getattr(self, '_parent_window', None):
+                try:
+                    self._parent_window.lift()
+                    self._parent_window.focus_force()
+                except Exception:
+                    pass
+        except Exception:
+            pass
