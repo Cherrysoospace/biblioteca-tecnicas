@@ -1,43 +1,76 @@
 import customtkinter as ctk
+from ui import theme
+from ui import widget_factory as wf
 from ui.book_form import BookForm
 from ui.user_form import UserForm
+from tkinter import messagebox
+
 
 class MainMenu(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        self.title("Library Management System")
-        self.geometry("500x400")
+        # Apply theme and sizing
+        theme.apply_theme(self)
+        self.title("🏮 Biblioteca Mitrauma")
+        width, height = 800, 550
+        self.geometry(f"{width}x{height}")
 
-        ctk.set_appearance_mode("dark")
-        ctk.set_default_color_theme("blue")
+        # Center window on screen
+        try:
+            self.update_idletasks()
+            screen_w = self.winfo_screenwidth()
+            screen_h = self.winfo_screenheight()
+            x = (screen_w // 2) - (width // 2)
+            y = (screen_h // 2) - (height // 2)
+            self.geometry(f"{width}x{height}+{x}+{y}")
+        except Exception:
+            pass
 
-        title = ctk.CTkLabel(self, text="Library Management System",
-                             font=("Arial", 22))
-        title.pack(pady=20)
+        # Main container for vertical centering
+        container = ctk.CTkFrame(self, fg_color=theme.BG_COLOR, corner_radius=12)
+        container.pack(expand=True, fill="both", padx=40, pady=30)
 
-        # ---------- BOOK SECTION ----------
-        book_label = ctk.CTkLabel(self, text="Books", font=("Arial", 18))
-        book_label.pack(pady=10)
+        # Title
+        title = wf.create_title_label(container, "🏮 Biblioteca Mitrauma")
+        title.pack(pady=(10, 24))
 
-        btn_create_book = ctk.CTkButton(self, text="Create Book",
-                                        command=self.open_create_book)
-        btn_create_book.pack(pady=5)
+        # Buttons frame (centered column)
+        btn_frame = ctk.CTkFrame(container, fg_color=theme.BG_COLOR)
+        btn_frame.pack(expand=True)
 
-        # ---------- USER SECTION ----------
-        user_label = ctk.CTkLabel(self, text="Users", font=("Arial", 18))
-        user_label.pack(pady=20)
+        # Primary actions (big, vertical, centered)
+        b1 = wf.create_primary_button(btn_frame, "📚  Crear Libro", command=self.open_create_book)
+        b1.pack(pady=10)
 
-        btn_create_user = ctk.CTkButton(self, text="Create User",
-                                        command=self.open_create_user)
-        btn_create_user.pack(pady=5)
+        b2 = wf.create_primary_button(btn_frame, "👤  Crear Usuario", command=self.open_create_user)
+        b2.pack(pady=10)
+
+        b3 = wf.create_primary_button(btn_frame, "📖  Ver Libros", command=self.open_view_books)
+        b3.pack(pady=10)
+
+        b4 = wf.create_primary_button(btn_frame, "🧑‍💼  Ver Usuarios", command=self.open_view_users)
+        b4.pack(pady=10)
+
+        # Bottom exit button separated
+        bottom_frame = ctk.CTkFrame(container, fg_color=theme.BG_COLOR)
+        bottom_frame.pack(side="bottom", fill="x", pady=(10, 6))
+
+        exit_btn = wf.create_small_button(bottom_frame, "🍵  Salir", command=self.quit)
+        exit_btn.pack(side="bottom", pady=6)
+
+        # Keep references to opened windows to avoid GC
+        self._open_windows = []
 
     # ------------------- OPEN WINDOWS -------------------
-    def open_create_book(self):
-        # Create a non-modal CTkToplevel; keep a reference so Python doesn't GC it
-        win = BookForm(self, mode="create")
-        if not hasattr(self, '_open_windows'):
-            self._open_windows = []
+    def _open_toplevel(self, cls, *args, **kwargs):
+        try:
+            win = cls(self, *args, **kwargs)
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo abrir la ventana: {e}")
+            return None
+
+        # keep reference
         self._open_windows.append(win)
         try:
             win.deiconify()
@@ -45,18 +78,20 @@ class MainMenu(ctk.CTk):
             win.focus()
         except Exception:
             pass
+        return win
+
+    def open_create_book(self):
+        self._open_toplevel(BookForm, mode="create")
 
     def open_create_user(self):
-        # Create a non-modal CTkToplevel; keep a reference so Python doesn't GC it
-        win = UserForm(self, mode="create")
-        if not hasattr(self, '_open_windows'):
-            self._open_windows = []
-        self._open_windows.append(win)
-        try:
-            win.deiconify()
-            win.lift()
-            win.focus()
-        except Exception:
-            pass
-        
+        self._open_toplevel(UserForm, mode="create")
+
+    def open_view_books(self):
+        # Placeholder: this should open a read-only viewer or table
+        messagebox.showinfo("Info", "Funcionalidad 'Ver Libros' no implementada aún.")
+
+    def open_view_users(self):
+        # Placeholder: this should open a read-only viewer or table
+        messagebox.showinfo("Info", "Funcionalidad 'Ver Usuarios' no implementada aún.")
+
 
