@@ -10,13 +10,14 @@ def create_title_label(parent, text: str):
     return lbl
 
 
-def create_primary_button(parent, text: str, command: Optional[Callable] = None, width: int = 360, height: int = 64):
+def create_primary_button(parent, text: str, command: Optional[Callable] = None, width: int = 360, height: int = 64, image: Optional[object] = None):
     """Create a big rounded primary button using exact palette colors."""
     font = theme.get_font(parent, size=16, weight="bold")
     btn = ctk.CTkButton(
         parent,
         text=text,
         command=command,
+        image=image,
         fg_color=theme.BUTTON_COLOR,
         hover_color=theme.BUTTON_HOVER,
         text_color=theme.TEXT_COLOR,
@@ -33,12 +34,13 @@ def create_primary_button(parent, text: str, command: Optional[Callable] = None,
     return btn
 
 
-def create_small_button(parent, text: str, command: Optional[Callable] = None, width: int = 160, height: int = 44):
+def create_small_button(parent, text: str, command: Optional[Callable] = None, width: int = 160, height: int = 44, image: Optional[object] = None):
     font = theme.get_font(parent, size=14, weight="normal")
     btn = ctk.CTkButton(
         parent,
         text=text,
         command=command,
+        image=image,
         fg_color=theme.BUTTON_COLOR,
         hover_color=theme.BUTTON_HOVER,
         text_color=theme.TEXT_COLOR,

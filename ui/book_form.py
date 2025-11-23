@@ -1,10 +1,23 @@
+import os
 import customtkinter as ctk
+try:
+    from PIL import Image
+except Exception:
+    Image = None
 from controllers.book_controller import BookController
 
 class BookForm(ctk.CTkToplevel):
     def __init__(self, parent=None, mode="create", book_id=None):
         # Initialize as a Toplevel attached to the main CTk root
         super().__init__(parent)
+
+        # Load twemoji assets (defensive)
+        assets_path = os.path.join(os.path.dirname(__file__), "assets", "twemoji")
+        try:
+            # load bookpile icon for consistency with main menu
+            self.icon_book = ctk.CTkImage(Image.open(os.path.join(assets_path, "bookpile.png")), size=(36, 36))
+        except Exception:
+            self.icon_book = None
 
         # Ensure window is initially visible and properly titled
         self.title("Book Manager")

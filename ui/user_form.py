@@ -1,4 +1,9 @@
+import os
 import customtkinter as ctk
+try:
+    from PIL import Image
+except Exception:
+    Image = None
 from controllers.user_controller import UserController
 from tkinter import messagebox
 
@@ -11,6 +16,14 @@ class UserForm(ctk.CTkToplevel):
         self.mode = mode       # "create" o "edit"
         self.user = user       # instancia User (solo si edit)
         self.controller = UserController()
+
+        # Load twemoji assets (defensive)
+        assets_path = os.path.join(os.path.dirname(__file__), "assets", "twemoji")
+        try:
+            # load user.png as requested
+            self.icon_user = ctk.CTkImage(Image.open(os.path.join(assets_path, "user.png")), size=(36, 36))
+        except Exception:
+            self.icon_user = None
 
         self.title("User Form")
         self.geometry("400x300")

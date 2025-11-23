@@ -12,5 +12,12 @@
     "isbn": "9789584280350",
     "loan_date": "2025-11-23",
     "returned": false
+  },
+  {
+    "loan_id": "3",
+    "user_id": "U008",
+    "isbn": "9789584280350",
+    "loan_date": "2025-11-23",
+    "returned": false
   }
 ]
