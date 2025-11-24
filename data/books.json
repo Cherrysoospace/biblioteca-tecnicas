@@ -124,5 +124,14 @@
     "weight": 0.4,
     "price": 35000,
     "stock": 0
+  },
+  {
+    "id": "B034",
+    "ISBNCode": "9789584280351",
+    "title": "El Hobbit",
+    "author": "J.R.R Tolkin",
+    "weight": 0.2,
+    "price": 25000,
+    "stock": 0
   }
 ]

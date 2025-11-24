@@ -6,12 +6,16 @@ except Exception:
     Image = None
 from controllers.user_controller import UserController
 from tkinter import messagebox
+from ui import theme
 
 
 class UserForm(ctk.CTkToplevel):
     def __init__(self, parent=None, mode="create", user=None):
         # Initialize as a Toplevel attached to the main CTk root
         super().__init__(parent)
+
+        # keep parent reference to restore focus on close
+        self._parent_window = parent
 
         self.mode = mode       # "create" o "edit"
         self.user = user       # instancia User (solo si edit)
@@ -25,11 +29,25 @@ class UserForm(ctk.CTkToplevel):
         except Exception:
             self.icon_user = None
 
+        # Basic window properties
         self.title("User Form")
         self.geometry("400x300")
 
-        ctk.set_appearance_mode("dark")
-        ctk.set_default_color_theme("blue")
+        # Do not change global CTk appearance/theme here; instead apply app theme to this toplevel
+        try:
+            theme.apply_theme(self)
+        except Exception:
+            try:
+                self.configure(fg_color=theme.BG_COLOR)
+            except Exception:
+                pass
+
+        # make this window transient to its parent (better WM behavior)
+        try:
+            if parent is not None:
+                self.transient(parent)
+        except Exception:
+            pass
 
         # ----------- WIDGETS ------------
         self.label_title = ctk.CTkLabel(self, text=("Create User" if mode=="create" else "Edit User"), font=("Arial", 18))
@@ -57,6 +75,12 @@ class UserForm(ctk.CTkToplevel):
         self.btn_submit = ctk.CTkButton(self, text=btn_text, command=self.submit)
         self.btn_submit.pack(pady=20)
 
+        # ensure closing returns focus to parent
+        try:
+            self.protocol("WM_DELETE_WINDOW", self._on_close)
+        except Exception:
+            pass
+
     # ----------- LÓGICA DEL FORM ------------
     def submit(self):
         id_value = self.entry_id.get().strip()
@@ -78,6 +102,36 @@ class UserForm(ctk.CTkToplevel):
                 messagebox.showinfo("Success", "User updated successfully.")
 
             self.destroy()
+            # restore focus to parent after closing
+            try:
+                if getattr(self, '_parent_window', None):
+                    try:
+                        self._parent_window.lift()
+                        self._parent_window.focus_force()
+                    except Exception:
+                        pass
+            except Exception:
+                pass
 
         except Exception as e:
             messagebox.showerror("Error", str(e))
+
+    def _on_close(self):
+        """Handle close: destroy/withdraw and restore focus to parent."""
+        try:
+            self.destroy()
+        except Exception:
+            try:
+                self.withdraw()
+            except Exception:
+                pass
+
+        try:
+            if getattr(self, '_parent_window', None):
+                try:
+                    self._parent_window.lift()
+                    self._parent_window.focus_force()
+                except Exception:
+                    pass
+        except Exception:
+            pass
