@@ -170,15 +170,15 @@ class MainMenu(ctk.CTk):
             self.icon_view = ctk.CTkImage(Image.open(os.path.join(assets_path, "openbook.png")), size=(36, 36))
         except Exception:
             self.icon_view = None
+        # Try to load loan-related icon. The assets folder contains 'prestamo.png' (singular)
+        # so try that first, then fall back to 'sakura.png' if present.
         try:
-            # use prestamos icon for loans
-            self.icon_loan = ctk.CTkImage(Image.open(os.path.join(assets_path, "prestamos.png")), size=(36, 36))
+            self.icon_loan = ctk.CTkImage(Image.open(os.path.join(assets_path, "prestamo.png")), size=(36, 36))
         except Exception:
-            self.icon_loan = None
-        try:
-            self.icon_loan = ctk.CTkImage(Image.open(os.path.join(assets_path, "sakura.png")), size=(36, 36))
-        except Exception:
-            self.icon_loan = None
+            try:
+                self.icon_loan = ctk.CTkImage(Image.open(os.path.join(assets_path, "sakura.png")), size=(36, 36))
+            except Exception:
+                self.icon_loan = None
 
         b1 = wf.create_primary_button(btn_frame, "Crear Libro", command=self.open_create_book, image=self.icon_book)
         b1.pack(pady=10)

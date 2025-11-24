@@ -117,15 +117,6 @@
     "stock": 3
   },
   {
-    "id": "B034",
-    "ISBNCode": "9789584280351",
-    "title": "El Hobbit",
-    "author": "J.R.R Tolkin",
-    "weight": 0.2,
-    "price": 25000,
-    "stock": 0
-  },
-  {
     "id": "B045",
     "ISBNCode": "978312456789",
     "title": "El Arte de la Guerra",
