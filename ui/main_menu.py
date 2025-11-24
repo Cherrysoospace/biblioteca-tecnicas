@@ -9,6 +9,7 @@ from ui import theme
 from ui import widget_factory as wf
 from ui.book_form import BookForm
 from ui.user_form import UserForm
+from ui.book_list import BookList
 from tkinter import messagebox
 
 from ui.loan_form import LoanForm
@@ -228,8 +229,8 @@ class MainMenu(ctk.CTk):
         self._open_toplevel(UserForm, mode="create")
 
     def open_view_books(self):
-        # Placeholder: this should open a read-only viewer or table
-        messagebox.showinfo("Info", "Funcionalidad 'Ver Libros' no implementada aún.")
+        # Open the provisional book list viewer
+        self._open_toplevel(BookList)
 
     def open_view_users(self):
         # Placeholder: this should open a read-only viewer or table
