@@ -20,7 +20,7 @@
   {
     "id": "B003",
     "ISBNCode": "9780743273565",
-    "title": "The Great Gatsby",
+    "title": "The Great Gatsbi",
     "author": "F. Scott Fitzgerald",
     "weight": 0.8,
     "price": 27000,
@@ -133,5 +133,14 @@
     "weight": 0.5,
     "price": 45000,
     "stock": 3
+  },
+  {
+    "id": "B055",
+    "ISBNCode": "97865762333",
+    "title": "Prueba 2",
+    "author": "Prueba",
+    "weight": 0.3,
+    "price": 25000,
+    "stock": 1
   }
 ]
