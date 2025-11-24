@@ -33,7 +33,7 @@
     "author": "Harper Lee",
     "weight": 0.95,
     "price": 28000,
-    "stock": 1
+    "stock": 4
   },
   {
     "id": "B005",
@@ -117,15 +117,6 @@
     "stock": 3
   },
   {
-    "id": "B033",
-    "ISBNCode": "9789584280350",
-    "title": "El retorno del rey",
-    "author": "J.R.R Tolkien",
-    "weight": 0.4,
-    "price": 35000,
-    "stock": 0
-  },
-  {
     "id": "B034",
     "ISBNCode": "9789584280351",
     "title": "El Hobbit",
@@ -133,5 +124,14 @@
     "weight": 0.2,
     "price": 25000,
     "stock": 0
+  },
+  {
+    "id": "B045",
+    "ISBNCode": "978312456789",
+    "title": "El Arte de la Guerra",
+    "author": "Sun Tzu",
+    "weight": 0.5,
+    "price": 45000,
+    "stock": 3
   }
 ]

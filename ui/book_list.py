@@ -6,6 +6,8 @@ import customtkinter as ctk
 from tkinter import ttk, messagebox
 from ui import theme
 from ui import widget_factory as wf
+from ui.book_form import BookForm
+from controllers.book_controller import BookController
 
 
 class BookList(ctk.CTkToplevel):
@@ -111,6 +113,12 @@ class BookList(ctk.CTkToplevel):
 
         refresh_btn = wf.create_small_button(action_frame, text="Refrescar", command=self.load_books)
         refresh_btn.pack(side="left", padx=(0, 8))
+        # Edit and Delete buttons operate on the selected row
+        edit_btn = wf.create_small_button(action_frame, text="Editar", command=self.open_selected_for_edit)
+        edit_btn.pack(side="left", padx=(0, 8))
+
+        delete_btn = wf.create_small_button(action_frame, text="Eliminar", command=self.delete_selected)
+        delete_btn.pack(side="left", padx=(0, 8))
 
         close_btn = wf.create_small_button(action_frame, text="Regresar", command=self._on_close)
         close_btn.pack(side="left")
@@ -123,6 +131,12 @@ class BookList(ctk.CTkToplevel):
 
         try:
             self.protocol("WM_DELETE_WINDOW", self._on_close)
+        except Exception:
+            pass
+
+        # bind double-click to open edit for selected row
+        try:
+            self.tree.bind("<Double-1>", lambda e: self.open_selected_for_edit())
         except Exception:
             pass
 
@@ -190,6 +204,55 @@ class BookList(ctk.CTkToplevel):
                     pass
         except Exception:
             pass
+
+    def open_selected_for_edit(self):
+        sel = self.tree.selection()
+        if not sel:
+            messagebox.showinfo("Info", "Selecciona primero un libro en la tabla.")
+            return
+        try:
+            values = self.tree.item(sel[0], "values")
+            book_id = values[0]
+            # open BookForm in edit mode; parent should be main menu if available
+            parent = self._parent_window or self
+            win = BookForm(parent, mode="edit", book_id=book_id)
+            try:
+                # keep a reference to avoid GC
+                if getattr(self, "_open_windows", None) is None:
+                    self._open_windows = []
+                self._open_windows.append(win)
+                win.deiconify()
+                win.lift()
+                win.focus()
+            except Exception:
+                pass
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo abrir el editor: {e}")
+
+    def delete_selected(self):
+        sel = self.tree.selection()
+        if not sel:
+            messagebox.showinfo("Info", "Selecciona primero un libro en la tabla.")
+            return
+        try:
+            values = self.tree.item(sel[0], "values")
+            book_id = values[0]
+        except Exception:
+            messagebox.showerror("Error", "No se pudo leer la fila seleccionada.")
+            return
+
+        if not messagebox.askyesno("Confirmar", f"¿Eliminar el libro {book_id}? Esta acción no se puede deshacer?"):
+            return
+
+        try:
+            # use controller/service to delete
+            controller = BookController()
+            # BookService.delete_book enforces borrow/stock checks
+            controller.service.delete_book(book_id)
+            messagebox.showinfo("Borrado", "Libro eliminado correctamente.")
+            self.load_books()
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
 
 
 __all__ = ["BookList"]

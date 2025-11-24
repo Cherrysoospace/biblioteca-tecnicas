@@ -135,7 +135,14 @@ class BookForm(ctk.CTkToplevel):
 
         try:
             self.controller.create_book(data)
-            ctk.CTkLabel(self, text="Libro creado exitosamente!").pack()
+            # Close form after successful creation and restore main menu focus
+            try:
+                self._on_cancel()
+            except Exception:
+                try:
+                    ctk.CTkLabel(self, text="Libro creado exitosamente!").pack()
+                except Exception:
+                    pass
         except Exception as e:
             ctk.CTkLabel(self, text=str(e), text_color="red").pack()
 
