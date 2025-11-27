@@ -5,13 +5,15 @@ class LoanController:
 	def __init__(self):
 		self.service = LoanService()
 
-	def create_loan(self, loan_id: str, user_id: str, isbn: str) -> dict:
+	def create_loan(self, user_id: str, isbn: str) -> dict:
 		"""Create a loan and decrement inventory stock.
 
-		Returns a dict with keys: success (bool), message (str), loan (Loan|None)
+		The loan_id is now generated automatically by the service when not
+		provided by the caller. Returns a dict with keys: success (bool),
+		message (str), loan (Loan|None)
 		"""
 		try:
-			loan = self.service.create_loan(loan_id, user_id, isbn)
+			loan = self.service.create_loan(None, user_id, isbn)
 			return {"success": True, "message": "Loan created", "loan": loan}
 		except Exception as e:
 			return {"success": False, "message": str(e), "loan": None}

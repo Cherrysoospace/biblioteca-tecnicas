@@ -58,8 +58,19 @@ class BookForm(ctk.CTkToplevel):
         form_frame.pack(expand=True, fill="both")
 
         # Campos
-        self.entry_id = ctk.CTkEntry(form_frame, placeholder_text="ID")
+        # For create mode we show an ID entry but disabled and with a hint
+        # (the controller/service will auto-generate the ID). In edit mode we
+        # allow showing the current ID but keep it disabled so it can't be
+        # changed.
+        id_placeholder = "ID" if mode == "edit" else "Auto (se asignará)"
+        self.entry_id = ctk.CTkEntry(form_frame, placeholder_text=id_placeholder)
         self.entry_id.pack(pady=6, fill="x")
+        if mode == "create":
+            try:
+                # disable manual editing in create mode
+                self.entry_id.configure(state="disabled")
+            except Exception:
+                pass
 
         self.entry_isbn = ctk.CTkEntry(form_frame, placeholder_text="ISBN")
         self.entry_isbn.pack(pady=6, fill="x")
@@ -75,9 +86,6 @@ class BookForm(ctk.CTkToplevel):
 
         self.entry_price = ctk.CTkEntry(form_frame, placeholder_text="Precio")
         self.entry_price.pack(pady=6, fill="x")
-
-        self.entry_stock = ctk.CTkEntry(form_frame, placeholder_text="Stock")
-        self.entry_stock.pack(pady=6, fill="x")
 
         # Action button area (primary + small 'Regresar' cancel button)
         action_frame = ctk.CTkFrame(container, fg_color=theme.BG_COLOR, corner_radius=0)
@@ -119,7 +127,8 @@ class BookForm(ctk.CTkToplevel):
         self.entry_author.insert(0, book.get_author())
         self.entry_weight.insert(0, book.get_weight())
         self.entry_price.insert(0, book.get_price())
-        self.entry_stock.insert(0, book.get_stock())
+        # stock is managed by InventoryService (calculated from inventory entries)
+        # the form does not allow editing stock directly
 
     def create_book(self):
         data = {
@@ -129,8 +138,6 @@ class BookForm(ctk.CTkToplevel):
             "author": self.entry_author.get(),
             "weight": self.entry_weight.get(),
             "price": self.entry_price.get(),
-            # parse stock safely; default to 1 when empty
-            "stock": int(self.entry_stock.get()) if self.entry_stock.get().strip() else 1,
         }
 
         try:
@@ -153,7 +160,6 @@ class BookForm(ctk.CTkToplevel):
             "author": self.entry_author.get(),
             "weight": self.entry_weight.get(),
             "price": self.entry_price.get(),
-            "stock": int(self.entry_stock.get()) if self.entry_stock.get().strip() else 1,
         }
 
         try:

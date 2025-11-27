@@ -36,6 +36,38 @@ class BookService:
         self._ensure_file()
         self._load_from_file()
 
+    def generate_next_id(self, prefix: str = 'B', min_width: int = 3) -> str:
+        """Generate the next chronological ID for a Book.
+
+        Strategy:
+        - Extract trailing numeric portion from existing book IDs (e.g. 'B012' -> 12).
+        - Increment the maximum found (or start at 1 if none present).
+        - Preserve a sensible zero-padding width (at least `min_width`, or the
+          maximum width found in existing IDs).
+
+        Returns a string like 'B011'.
+        """
+        import re
+
+        nums = []
+        max_width = min_width
+        for b in self.books:
+            bid = b.get_id()
+            if not isinstance(bid, str):
+                continue
+            m = re.search(r"(\d+)$", bid)
+            if m:
+                s = m.group(1)
+                try:
+                    nums.append(int(s))
+                    if len(s) > max_width:
+                        max_width = len(s)
+                except Exception:
+                    continue
+
+        next_num = (max(nums) + 1) if nums else 1
+        return f"{prefix}{str(next_num).zfill(max_width)}"
+
     # -------------------- File handling --------------------
     def _ensure_file(self) -> None:
         """Ensure the JSON file and its directory exist; create with an empty list if missing.
@@ -85,10 +117,10 @@ class BookService:
                     raise ValueError(f"Missing '{key}' in book entry at index {idx}")
 
             try:
-                # Support new 'stock' field. For backwards compatibility, accept files
-                # that may have 'isBorrowed' instead: if 'stock' is missing we default to 1.
-                stock_value = int(item.get('stock', 1))
-
+                # Books no longer store 'stock' or borrow state. Ignore any
+                # legacy 'isBorrowed' fields in JSON and construct Book with
+                # the default borrow state (False). Inventory manages borrow
+                # state now.
                 book = Book(
                     item['id'],
                     item['ISBNCode'],
@@ -96,7 +128,6 @@ class BookService:
                     item['author'],
                     float(item['weight']),
                     int(item['price']),
-                    stock_value,
                 )
             except Exception as e:
                 raise ValueError(f"Invalid data types in book entry at index {idx}: {e}")
@@ -121,7 +152,6 @@ class BookService:
                 'author': b.get_author(),
                 'weight': b.get_weight(),
                 'price': b.get_price(),
-                'stock': b.get_stock(),
             })
 
         try:
@@ -178,13 +208,16 @@ class BookService:
             'weight': book.set_weight,
             'price': book.set_price,
             'isBorrowed': book.set_isBorrowed,
-            'stock': book.set_stock,
         }
 
         if 'id' in new_data:
             new_id = new_data['id']
             if new_id != id and any(b.get_id() == new_id for b in self.books):
                 raise ValueError(f"Cannot update id: another book with id '{new_id}' already exists")
+
+        # capture previous identifying fields to propagate changes to inventory
+        old_id = book.get_id()
+        old_isbn = book.get_ISBNCode()
 
         for key, value in new_data.items():
             if key not in setters:
@@ -193,13 +226,54 @@ class BookService:
                 value = float(value)
             if key == 'price':
                 value = int(value)
-            if key == 'stock':
-                value = int(value)
             if key == 'isBorrowed':
                 value = bool(value)
             setters[key](value)
 
+        # persist books.json
         self._save_to_file()
+
+        # Try to update inventory to reflect id/ISBN changes. If InventoryService
+        # is not available or any error occurs, skip silently (books were saved).
+        try:
+            from services.inventory_service import InventoryService
+            inv_svc = InventoryService()
+
+            # If the book id changed, update any inventory entry's book id
+            new_id = book.get_id()
+            new_isbn = book.get_ISBNCode()
+
+            if old_id != new_id or old_isbn != new_isbn:
+                updated_any = False
+                for inv in inv_svc.inventory_general:
+                    try:
+                        if inv.get_book().get_id() == old_id:
+                            # update the Book object inside Inventory
+                            inv.get_book().set_id(new_id)
+                            inv.get_book().set_ISBNCode(new_isbn)
+                            updated_any = True
+                        else:
+                            # if ISBN changed, also consider entries that reference the same book by id
+                            if inv.get_book().get_id() == new_id:
+                                inv.get_book().set_ISBNCode(new_isbn)
+                                updated_any = True
+                    except Exception:
+                        continue
+
+                if updated_any:
+                    # persist inventory changes
+                    try:
+                        inv_svc._save_general()
+                        inv_svc._save_sorted()
+                    except Exception:
+                        # fall back: regenerate inventory from books
+                        try:
+                            inv_svc.regenerate_general_from_books()
+                        except Exception:
+                            pass
+        except Exception:
+            # don't block on inventory updates
+            pass
 
     def delete_book(self, id: str) -> None:
         """Delete a book from the catalog by id and persist.
@@ -219,8 +293,18 @@ class BookService:
         # Prevent deleting if book is currently borrowed or has stock remaining
         if book.get_isBorrowed():
             raise ValueError("Cannot delete a book that is currently borrowed")
-        if book.get_stock() > 0:
-            raise ValueError("Cannot delete a book that has stock > 0")
+
+        # Check inventory for this book id: if any inventory entry has stock > 0,
+        # prevent deletion. Use local import to avoid circular dependency.
+        try:
+            from services.inventory_service import InventoryService
+            inv_svc = InventoryService()
+            inv_item = inv_svc.find_by_book_id(id)
+            if inv_item is not None and inv_item.get_stock() > 0:
+                raise ValueError("Cannot delete a book that has stock > 0 in inventory")
+        except Exception:
+            # If inventory service isn't available for any reason, skip this check.
+            pass
 
         self.books = [b for b in self.books if b.get_id() != id]
         self._save_to_file()

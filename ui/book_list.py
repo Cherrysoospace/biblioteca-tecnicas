@@ -46,7 +46,7 @@ class BookList(ctk.CTkToplevel):
         table_holder = tk.Frame(container, bg=theme.BG_COLOR)
         table_holder.pack(expand=True, fill="both", pady=(8, 8))
 
-        cols = ("id", "ISBNCode", "title", "author", "weight", "price", "stock")
+        cols = ("id", "ISBNCode", "title", "author", "weight", "price")
 
         # Style the Treeview to match app fonts and palette
         style = ttk.Style()
@@ -89,12 +89,11 @@ class BookList(ctk.CTkToplevel):
             "author": "Autor",
             "weight": "Peso",
             "price": "Precio",
-            "stock": "Stock",
         }
         for c in cols:
             self.tree.heading(c, text=headings.get(c, c))
             # set a reasonable width per column
-            if c in ("id", "stock"):
+            if c == "id":
                 self.tree.column(c, width=70, anchor="center")
             elif c in ("price", "weight"):
                 self.tree.column(c, width=90, anchor="center")
@@ -172,7 +171,6 @@ class BookList(ctk.CTkToplevel):
                     item.get("author", ""),
                     item.get("weight", ""),
                     item.get("price", ""),
-                    item.get("stock", ""),
                 )
                 tag = 'even' if i % 2 == 0 else 'odd'
                 self.tree.insert("", "end", values=row, tags=(tag,))

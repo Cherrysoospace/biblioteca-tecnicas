@@ -1,9 +1,11 @@
 import os
 import json
+from datetime import datetime
 from typing import List, Optional
 
 from models.loan import Loan
 from services.book_service import BookService
+from services.inventory_service import InventoryService
 from utils.structures.stack import Stack
 
 
@@ -17,15 +19,16 @@ class LoanService:
     - Mark loans returned (optionally increment stock back by 1).
     """
 
-    def __init__(self, json_path: Optional[str] = None, book_service: Optional[BookService] = None):
+    def __init__(self, json_path: Optional[str] = None, book_service: Optional[BookService] = None, inventory_service: Optional[InventoryService] = None):
         base = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
         if json_path:
             self.json_path = os.path.abspath(json_path)
         else:
             self.json_path = os.path.join(base, 'data', 'loan.json')
-        # BookService: if not provided, create a default one so we can
-        # update stock in books.json when loans are created.
+        # BookService: catalog access
         self.book_service = book_service or BookService()
+        # InventoryService: manage stock and borrow state
+        self.inventory_service = inventory_service or InventoryService()
 
         self.loans: List[Loan] = []
         # Stack to store quick-access loan entries (user, isbn, loan_date)
@@ -98,7 +101,7 @@ class LoanService:
             raise Exception(f"Unable to write loan JSON file: {e}")
 
     # -------------------- CRUD / Actions --------------------
-    def create_loan(self, loan_id: str, user_id: str, isbn: str) -> Loan:
+    def create_loan(self, loan_id: Optional[str], user_id: str, isbn: str) -> Loan:
         """Create a loan for a book identified by ISBN.
 
         Behavior:
@@ -109,32 +112,47 @@ class LoanService:
         Raises:
         - ValueError if no matching inventory item or no stock available.
         """
-        # Find matching Book objects by ISBN
-        books = self.book_service.find_by_isbn(isbn)
-        if not books:
-            raise ValueError(f"No book found for ISBN '{isbn}'")
+        # If caller didn't supply a loan_id, create one automatically using
+        # a chronological UTC timestamp. Ensure uniqueness against existing
+        # loan ids already loaded in memory.
+        if not loan_id:
+            base = datetime.utcnow().strftime("LN%Y%m%d%H%M%S")
+            new_id = base
+            existing_ids = {l.get_loan_id() for l in self.loans}
+            counter = 1
+            while new_id in existing_ids:
+                new_id = f"{base}-{counter}"
+                counter += 1
+            loan_id = new_id
+        # Use InventoryService to find an inventory entry with available stock
+        invs = self.inventory_service.find_by_isbn(isbn)
+        if not invs:
+            raise ValueError(f"No inventory entries found for ISBN '{isbn}'")
 
-        # pick first book that has stock > 0
-        chosen_book = None
-        for b in books:
+        chosen_inv = None
+        for inv in invs:
             try:
-                if b.get_stock() > 0:
-                    chosen_book = b
+                if inv.get_stock() > 0:
+                    chosen_inv = inv
                     break
             except Exception:
                 continue
 
-        if chosen_book is None:
+        if chosen_inv is None:
             raise ValueError(f"No stock available for ISBN '{isbn}'")
 
-        # decrement stock in the BookService (persisted to books.json)
-        book_id = chosen_book.get_id()
-        new_stock = chosen_book.get_stock() - 1
+        # decrement stock in inventory and persist
+        book_id = chosen_inv.get_book().get_id()
+        new_stock = chosen_inv.get_stock() - 1
         if new_stock < 0:
             raise ValueError("Computed negative stock; aborting")
 
-        # Update book stock via BookService
-        self.book_service.update_book(book_id, {'stock': int(new_stock)})
+        self.inventory_service.update_stock(book_id, int(new_stock))
+        # mark inventory entry as borrowed
+        try:
+            self.inventory_service.update_borrow_status(book_id, True)
+        except Exception:
+            pass
 
         # Create loan record and persist
         loan = Loan(loan_id, user_id, isbn)
@@ -165,15 +183,24 @@ class LoanService:
         if loan.is_returned():
             return
 
-        # find book by isbn and increment stock
-        books = self.book_service.find_by_isbn(loan.get_isbn())
-        if books:
-            b = books[0]
-            try:
-                self.book_service.update_book(b.get_id(), {'stock': int(b.get_stock() + 1)})
-            except Exception:
-                # ignore failures to increment stock, but continue marking returned
-                pass
+        # find an inventory entry by isbn and increment stock
+        try:
+            invs = self.inventory_service.find_by_isbn(loan.get_isbn())
+            if invs:
+                # Prefer to find the inventory entry that is currently marked
+                # as borrowed for this ISBN and mark it returned. If none are
+                # marked borrowed, fall back to the first entry.
+                inv_borrowed = next((i for i in invs if i.get_isBorrowed()), None)
+                target = inv_borrowed or invs[0]
+                try:
+                    # Use update_borrow_status to clear the borrowed flag and
+                    # set the per-item stock back to 1.
+                    self.inventory_service.update_borrow_status(target.get_book().get_id(), False)
+                except Exception:
+                    # ignore failures to update inventory, but continue marking returned
+                    pass
+        except Exception:
+            pass
 
         loan.mark_returned()
         self._save_to_file()

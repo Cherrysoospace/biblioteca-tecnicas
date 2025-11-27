@@ -156,6 +156,44 @@ class UserService:
 
 		self._save_to_file()
 
+	def create_user(self, name: str) -> User:
+		"""Create a new user with an auto-generated unique ID and persist it.
+
+		ID generation strategy:
+		- Prefer IDs of the form 'U###' where ### is a zero-padded integer.
+		- Find existing IDs that match 'U' followed by digits, take the max numeric
+		  suffix and increment. If none found, start at 1 (U001).
+		- Ensure the generated ID does not collide with any existing id; if it does
+		  (unlikely), append a suffix '-1', '-2', ... until unique.
+		"""
+		# collect existing ids
+		existing_ids = {u.get_id() for u in self.users_general}
+		# find numeric suffixes for IDs like U123
+		max_n = 0
+		for uid in existing_ids:
+			if isinstance(uid, str) and uid.startswith('U'):
+				num_part = uid[1:]
+				if num_part.isdigit():
+					try:
+						val = int(num_part)
+						if val > max_n:
+							max_n = val
+					except Exception:
+						pass
+
+		base_num = max_n + 1
+		new_id = f"U{base_num:03d}"
+		# ensure uniqueness
+		counter = 1
+		while new_id in existing_ids:
+			new_id = f"U{base_num:03d}-{counter}"
+			counter += 1
+
+		from models.user import User as UserModel
+		user = UserModel(new_id, name)
+		self.add_user(user)
+		return user
+
 	def get_all_users(self) -> List[User]:
 		"""Return all users in insertion order.
 

@@ -44,9 +44,7 @@ class LoanForm(ctk.CTkToplevel):
         form_frame = ctk.CTkFrame(container, fg_color=theme.BG_COLOR, corner_radius=0)
         form_frame.pack(expand=True, fill="both")
 
-        # Loan ID
-        self.entry_loan_id = ctk.CTkEntry(form_frame, placeholder_text="Loan ID")
-        self.entry_loan_id.pack(pady=6, fill="x")
+    # NOTE: loan id is now generated automatically; user should not enter it
 
         # User ID
         self.entry_user_id = ctk.CTkEntry(form_frame, placeholder_text="User ID")
@@ -73,17 +71,25 @@ class LoanForm(ctk.CTkToplevel):
             pass
 
     def create_loan(self):
-        loan_id = self.entry_loan_id.get().strip()
         user_id = self.entry_user_id.get().strip()
         isbn = self.entry_isbn.get().strip()
 
-        if not loan_id or not user_id or not isbn:
+        if not user_id or not isbn:
             messagebox.showerror("Error", "All fields are required")
             return
 
-        res = self.controller.create_loan(loan_id, user_id, isbn)
+        res = self.controller.create_loan(user_id, isbn)
         if res.get('success'):
-            messagebox.showinfo("Success", "Loan created successfully")
+            # show created loan id when available
+            loan = res.get('loan')
+            try:
+                loan_id = loan.get_loan_id() if loan else None
+            except Exception:
+                loan_id = None
+            if loan_id:
+                messagebox.showinfo("Success", f"Loan {loan_id} created successfully")
+            else:
+                messagebox.showinfo("Success", "Loan created successfully")
             # optionally close window after creating
             self._on_close()
         else:

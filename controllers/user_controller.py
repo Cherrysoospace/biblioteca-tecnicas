@@ -7,10 +7,10 @@ class UserController:
     def __init__(self):
         self.service = UserService()
 
-    def create_user(self, id: str, name: str):
-        """Create a new user."""
-        user = User(id, name)
-        self.service.add_user(user)
+    def create_user(self, name: str):
+        """Create a new user. ID is generated automatically by the service."""
+        user = self.service.create_user(name)
+        return user
 
     def update_user(self, original_id: str, new_data: dict):
         """Update an existing user."""

@@ -53,11 +53,7 @@ class UserForm(ctk.CTkToplevel):
         self.label_title = ctk.CTkLabel(self, text=("Create User" if mode=="create" else "Edit User"), font=("Arial", 18))
         self.label_title.pack(pady=15)
 
-        # ID
-        self.label_id = ctk.CTkLabel(self, text="ID:")
-        self.label_id.pack()
-        self.entry_id = ctk.CTkEntry(self, width=250)
-        self.entry_id.pack(pady=5)
+    # NOTE: ID is auto-generated and should not be entered by the user
 
         # Name
         self.label_name = ctk.CTkLabel(self, text="Name:")
@@ -83,21 +79,30 @@ class UserForm(ctk.CTkToplevel):
 
     # ----------- LÓGICA DEL FORM ------------
     def submit(self):
-        id_value = self.entry_id.get().strip()
         name_value = self.entry_name.get().strip()
 
-        if not id_value or not name_value:
-            messagebox.showerror("Error", "All fields are required.")
+
+        if not name_value:
+            messagebox.showerror("Error", "Name is required.")
             return
 
         try:
             if self.mode == "create":
-                self.controller.create_user(id_value, name_value)
-                messagebox.showinfo("Success", "User created successfully.")
+                user = self.controller.create_user(name_value)
+                # show the generated id to the user
+                try:
+                    uid = user.get_id()
+                except Exception:
+                    uid = None
+                if uid:
+                    messagebox.showinfo("Success", f"User {uid} created successfully.")
+                else:
+                    messagebox.showinfo("Success", "User created successfully.")
             else:
+                # For updates, preserve ability to change id/name via service
                 self.controller.update_user(
                     self.user.get_id(),
-                    {"id": id_value, "name": name_value}
+                    {"id": self.user.get_id(), "name": name_value}
                 )
                 messagebox.showinfo("Success", "User updated successfully.")
 
