@@ -10,6 +10,7 @@ from ui import widget_factory as wf
 from ui.book.book_form import BookForm
 from ui.user.user_form import UserForm
 from ui.book.book_list import BookList
+from ui.user.user_list import UserList
 from tkinter import messagebox
 
 from ui.loan.loan_form import LoanForm
@@ -245,8 +246,8 @@ class MainMenu(ctk.CTk):
         self._open_toplevel(BookList)
 
     def open_view_users(self):
-        # Placeholder: this should open a read-only viewer or table
-        messagebox.showinfo("Info", "Funcionalidad 'Ver Usuarios' no implementada aún.")
+        # Open the user list viewer
+        self._open_toplevel(UserList)
     def open_create_loan(self):
         # Use the generic toplevel opener so errors are handled uniformly
         self._open_toplevel(LoanForm)

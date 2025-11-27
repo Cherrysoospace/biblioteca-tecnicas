@@ -5,10 +5,8 @@ from typing import List, Optional, Dict, Any
 from models.user import User
 
 # Attempt to import algorithms. If not available, set to None and raise ImportError when used.
-try:
-	from utils.algoritmos.insertion_sort import insertion_sort_users
-except Exception:
-	insertion_sort_users = None
+# The project should not rely on a custom insertion sort here; use Python's built-in sorted().
+insertion_sort_users = None
 
 try:
 	from utils.algoritmos.busqueda_lineal import buscar_lineal
@@ -107,11 +105,8 @@ class UserService:
 		self.users_general = loaded
 
 		# Build sorted list using external insertion sort when available
-		if insertion_sort_users is not None:
-			self.users_sorted = insertion_sort_users(list(self.users_general))
-		else:
-			# Fallback to builtin sort to keep a usable list; using name attribute
-			self.users_sorted = sorted(self.users_general, key=lambda u: u.get_name())
+		# Keep a sorted view by name using builtin sort
+		self.users_sorted = sorted(self.users_general, key=lambda u: u.get_name())
 
 	def _save_to_file(self) -> None:
 		"""Persist `self.users_general` to `users.json` in flattened format.
@@ -148,10 +143,8 @@ class UserService:
 
 		self.users_general.append(user)
 
-		if insertion_sort_users is not None:
-			self.users_sorted = insertion_sort_users(list(self.users_general))
-		else:
-			self.users_sorted = sorted(self.users_general, key=lambda u: u.get_name())
+		# Update sorted list view using builtin sort
+		self.users_sorted = sorted(self.users_general, key=lambda u: u.get_name())
 
 
 		self._save_to_file()
@@ -280,9 +273,8 @@ class UserService:
 		if 'name' in new_data:
 			user.set_name(new_data['name'])
 
-		if insertion_sort_users is None:
-			raise ImportError('Required algorithm insertion_sort_users not available')
-		self.users_sorted = insertion_sort_users(list(self.users_general))
+		# Rebuild the sorted view after update using builtin sort
+		self.users_sorted = sorted(self.users_general, key=lambda u: u.get_name())
 
 		self._save_to_file()
 

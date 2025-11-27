@@ -63,8 +63,11 @@ class UserForm(ctk.CTkToplevel):
 
         # Si estamos editando, precargar valores
         if self.mode == "edit" and self.user is not None:
-            self.entry_id.insert(0, self.user.get_id())
-            self.entry_name.insert(0, self.user.get_name())
+            # ID is read-only / auto-generated; only preload the name
+            try:
+                self.entry_name.insert(0, self.user.get_name())
+            except Exception:
+                pass
 
         # Botón
         btn_text = "Create" if self.mode == "create" else "Update"
