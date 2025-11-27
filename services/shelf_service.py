@@ -90,7 +90,23 @@ class ShelfService:
 
 		# compute current total and remaining capacity
 		total = self.total_weight(shelf_id)
-		capacity = getattr(shelf, '_Shelf__capacity', 0.0)
+		capacity = shelf.capacity
+
+		# Prevent adding duplicate book ids to the same shelf
+		books_list: List[Book] = getattr(shelf, '_Shelf__books')
+		try:
+			bid = book.get_id()
+		except Exception:
+			bid = None
+		if bid is not None:
+			for existing in books_list:
+				try:
+					if existing.get_id() == bid:
+						# duplicate id found
+						return False
+				except Exception:
+					# if we can't read id, skip comparison
+					continue
 		try:
 			w = book.get_weight()
 		except Exception:
@@ -98,7 +114,6 @@ class ShelfService:
 			return False
 
 		if total + w <= capacity:
-			books_list: List[Book] = getattr(shelf, '_Shelf__books')
 			books_list.append(book)
 			return True
 		return False
@@ -153,8 +168,133 @@ class ShelfService:
 		shelf = self.find_shelf(shelf_id)
 		if shelf is None:
 			return 0.0
-		capacity = getattr(shelf, '_Shelf__capacity', 0.0)
-		return capacity - self.total_weight(shelf_id)
+		return shelf.capacity - self.total_weight(shelf_id)
+
+	def can_add(self, shelf_id, book: Book) -> bool:
+		"""Check whether a Book fits in the shelf without modifying state.
+
+		Args:
+			shelf_id: Identifier of the shelf to check.
+			book: Book instance to evaluate.
+
+		Returns:
+			True if the book can be added without exceeding capacity, False
+			if the shelf does not exist or the book weight is invalid or would
+			exceed the capacity.
+		"""
+		shelf = self.find_shelf(shelf_id)
+		if shelf is None:
+			return False
+		try:
+			w = float(book.get_weight())
+		except Exception:
+			return False
+		return self.remaining_capacity(shelf_id) >= w
+
+	def get_books(self, shelf_id) -> List[Book]:
+		"""Return a shallow copy of the list of books on the shelf.
+
+		Args:
+			shelf_id: Identifier of the shelf.
+
+		Returns:
+			A list of Book instances (possibly empty). Returns an empty list if
+			shelf is not found.
+		"""
+		shelf = self.find_shelf(shelf_id)
+		if shelf is None:
+			return []
+		return list(getattr(shelf, '_Shelf__books'))
+
+	def clear_shelf(self, shelf_id) -> List[Book]:
+		"""Remove all books from a shelf and return the removed list.
+
+		Args:
+			shelf_id: Identifier of the shelf.
+
+		Returns:
+			List of Book objects that were removed (empty if shelf not found or
+			already empty).
+		"""
+		shelf = self.find_shelf(shelf_id)
+		if shelf is None:
+			return []
+		books_list: List[Book] = getattr(shelf, '_Shelf__books')
+		removed = list(books_list)
+		books_list.clear()
+		return removed
+
+	def move_book(self, from_shelf_id, to_shelf_id, isbn: str) -> bool:
+		"""Atomically move a book identified by ISBN from one shelf to another.
+
+		The operation removes the book from the source shelf and attempts to add
+		it to the destination shelf. If the destination does not have capacity
+		(or does not exist), the book is put back in the source shelf to keep
+		state consistent.
+
+		Args:
+			from_shelf_id: Source shelf identifier.
+			to_shelf_id: Destination shelf identifier.
+			isbn: ISBN of the book to move.
+
+		Returns:
+			True on success, False otherwise.
+		"""
+		# remove from source first
+		book = self.remove_book_by_isbn(from_shelf_id, isbn)
+		if book is None:
+			return False
+		# try to add to destination
+		if self.add_book(to_shelf_id, book):
+			return True
+		# restore back to source (best-effort)
+		src = self.find_shelf(from_shelf_id)
+		if src is not None:
+			getattr(src, '_Shelf__books').append(book)
+		return False
+
+	def set_capacity(self, shelf_id, capacity: float) -> bool:
+		"""Update the capacity (kg) of an existing shelf.
+
+		If the new capacity is smaller than current total weight, the change is
+		allowed but may cause the shelf to be over-capacity; callers can check
+		the remaining_capacity afterwards.
+
+		Args:
+			shelf_id: Identifier of the shelf.
+			capacity: New capacity in kilograms.
+
+		Returns:
+			True if updated, False if shelf not found.
+		"""
+		shelf = self.find_shelf(shelf_id)
+		if shelf is None:
+			return False
+		# delegate validation to the Shelf model's capacity setter
+		try:
+			shelf.capacity = float(capacity)
+		except Exception:
+			# if model validation fails, do not update and return False
+			return False
+		return True
+
+	def shelf_summary(self, shelf_id) -> Dict[str, Any]:
+		"""Return a quick summary dict for a given shelf.
+
+		Fields: id, capacity, total_weight, remaining_capacity, books_count
+		"""
+		shelf = self.find_shelf(shelf_id)
+		if shelf is None:
+			return {}
+		capacity = shelf.capacity
+		books = getattr(shelf, '_Shelf__books')
+		return {
+			'id': getattr(shelf, '_Shelf__id', None),
+			'capacity': capacity,
+			'total_weight': self.total_weight(shelf_id),
+			'remaining_capacity': capacity - self.total_weight(shelf_id),
+			'books_count': len(books),
+		}
 
 	# Serialization helpers
 	def shelf_to_dict(self, shelf: Shelf) -> Dict[str, Any]:
@@ -169,6 +309,9 @@ class ShelfService:
 		Returns:
 			A dictionary ready to be passed to :func:`json.dump`.
 		"""
+		# Use the model's to_dict for basic metadata, then ensure books are
+		# serialized using Book getters so the JSON shape remains stable.
+		meta = shelf.to_dict()
 		books_list: List[Book] = getattr(shelf, '_Shelf__books')
 		books_serialized = []
 		for b in books_list:
@@ -181,11 +324,8 @@ class ShelfService:
 				'price': b.get_price(),
 				'isBorrowed': b.get_isBorrowed(),
 			})
-		return {
-			'id': getattr(shelf, '_Shelf__id', None),
-			'capacity': getattr(shelf, '_Shelf__capacity', None),
-			'books': books_serialized,
-		}
+		meta['books'] = books_serialized
+		return meta
 
 	def shelf_from_dict(self, data: Dict[str, Any]) -> Shelf:
 		"""Create a Shelf (and Book instances) from a dictionary.
@@ -204,6 +344,9 @@ class ShelfService:
 			)
 			books.append(book)
 		shelf = Shelf(data.get('id'), books=books, capacity=data.get('capacity', 8.0))
+		# set optional name if present using model API
+		if data.get('name') is not None:
+			shelf.set_name(data.get('name', ''))
 		self._shelves.append(shelf)
 		return shelf
 

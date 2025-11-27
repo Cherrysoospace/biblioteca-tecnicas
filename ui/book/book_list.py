@@ -6,7 +6,7 @@ import customtkinter as ctk
 from tkinter import ttk, messagebox
 from ui import theme
 from ui import widget_factory as wf
-from ui.book_form import BookForm
+from ui.book.book_form import BookForm
 from controllers.book_controller import BookController
 
 

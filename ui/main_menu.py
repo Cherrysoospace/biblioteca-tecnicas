@@ -7,12 +7,14 @@ except Exception:
     ImageTk = None
 from ui import theme
 from ui import widget_factory as wf
-from ui.book_form import BookForm
-from ui.user_form import UserForm
-from ui.book_list import BookList
+from ui.book.book_form import BookForm
+from ui.user.user_form import UserForm
+from ui.book.book_list import BookList
 from tkinter import messagebox
 
-from ui.loan_form import LoanForm
+from ui.loan.loan_form import LoanForm
+from ui.shelf.shelf_form import ShelfForm
+from ui.shelf.assign_book_form import AssignBookForm
 
 class MainMenu(ctk.CTk):
     def __init__(self):
@@ -188,6 +190,9 @@ class MainMenu(ctk.CTk):
         b3.pack(pady=10)
         b4 = wf.create_primary_button(btn_frame, "Ver Usuarios", command=self.open_view_users, image=self.icon_user)
         b4.pack(pady=10)
+        # Assign books to shelf
+        b_assign = wf.create_primary_button(btn_frame, "Asignar Libros", command=self.open_assign_books, image=self.icon_book)
+        b_assign.pack(pady=10)
 
         # Bottom exit button separated
         bottom_frame = ctk.CTkFrame(container, fg_color=theme.BG_COLOR)
@@ -203,6 +208,13 @@ class MainMenu(ctk.CTk):
         # Add loan button to the primary actions frame
         b5 = wf.create_primary_button(btn_frame, "Crear Préstamo", command=self.open_create_loan, image=self.icon_loan)
         b5.pack(pady=10)
+
+        # Shelf manager button
+        b6 = wf.create_primary_button(btn_frame, "Gestionar Estanterías", command=self.open_shelf_manager, image=self.icon_view)
+        b6.pack(pady=10)
+
+    def open_assign_books(self):
+        self._open_toplevel(AssignBookForm)
 
     # ------------------- OPEN WINDOWS -------------------
     def _open_toplevel(self, cls, *args, **kwargs):
@@ -238,5 +250,8 @@ class MainMenu(ctk.CTk):
     def open_create_loan(self):
         # Use the generic toplevel opener so errors are handled uniformly
         self._open_toplevel(LoanForm)
+    def open_shelf_manager(self):
+        # Open the shelf management form (create mode)
+        self._open_toplevel(ShelfForm, mode="create")
         
 
