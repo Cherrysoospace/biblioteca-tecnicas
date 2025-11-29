@@ -21,6 +21,13 @@ class AssignBookForm(ctk.CTkToplevel):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._parent_window = parent
+        
+        # Apply window scaling for this toplevel
+        try:
+            ctk.set_window_scaling(ctk._get_window_scaling(self))
+        except Exception:
+            pass
+        
         try:
             theme.apply_theme(self)
         except Exception:

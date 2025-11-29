@@ -16,6 +16,12 @@ class UserForm(ctk.CTkToplevel):
 
         # keep parent reference to restore focus on close
         self._parent_window = parent
+        
+        # Apply window scaling for this toplevel
+        try:
+            ctk.set_window_scaling(ctk._get_window_scaling(self))
+        except Exception:
+            pass
 
         self.mode = mode       # "create" o "edit"
         self.user = user       # instancia User (solo si edit)

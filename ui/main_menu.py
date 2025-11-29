@@ -12,6 +12,8 @@ from ui.user.user_form import UserForm
 from ui.book.book_list import BookList
 from ui.user.user_list import UserList
 from tkinter import messagebox
+import tkinter as tk
+from tkinter import ttk
 
 from ui.loan.loan_form import LoanForm
 from ui.shelf.shelf_form import ShelfForm
@@ -20,6 +22,21 @@ from ui.shelf.assign_book_form import AssignBookForm
 class MainMenu(ctk.CTk):
     def __init__(self):
         super().__init__()
+
+        # Apply dynamic scaling based on screen resolution
+        try:
+            screen_width = self.winfo_screenwidth()
+            if screen_width >= 2560:      # 4K
+                scale = 1.5
+            elif screen_width >= 1920:    # Full HD
+                scale = 1.2
+            else:                          # HD or lower
+                scale = 1.0
+            
+            ctk.set_widget_scaling(scale)
+            ctk.set_window_scaling(scale)  # Also scale toplevel windows
+        except Exception:
+            pass
 
         # Apply theme and sizing
         theme.apply_theme(self)
@@ -152,29 +169,22 @@ class MainMenu(ctk.CTk):
         title = wf.create_title_label(title_frame, "Biblioteca Mitrauma")
         title.pack(side="left")
 
-        # Buttons frame (centered column)
-        btn_frame = ctk.CTkFrame(container, fg_color=theme.BG_COLOR)
-        btn_frame.pack(expand=True)
-
-        # Primary actions (big, vertical, centered)
-        # load icons for buttons
+        # Load all button icons BEFORE creating buttons
         try:
-            # use bookpile icon for "Crear Libro"
             self.icon_book = ctk.CTkImage(Image.open(os.path.join(assets_path, "bookpile.png")), size=(36, 36))
         except Exception:
             self.icon_book = None
+        
         try:
-            # use user.png for user-related icons
             self.icon_user = ctk.CTkImage(Image.open(os.path.join(assets_path, "user.png")), size=(36, 36))
         except Exception:
             self.icon_user = None
+        
         try:
-            # use openbook icon for "Ver Libros"
             self.icon_view = ctk.CTkImage(Image.open(os.path.join(assets_path, "openbook.png")), size=(36, 36))
         except Exception:
             self.icon_view = None
-        # Try to load loan-related icon. The assets folder contains 'prestamo.png' (singular)
-        # so try that first, then fall back to 'sakura.png' if present.
+        
         try:
             self.icon_loan = ctk.CTkImage(Image.open(os.path.join(assets_path, "prestamo.png")), size=(36, 36))
         except Exception:
@@ -183,17 +193,47 @@ class MainMenu(ctk.CTk):
             except Exception:
                 self.icon_loan = None
 
-        b1 = wf.create_primary_button(btn_frame, "Crear Libro", command=self.open_create_book, image=self.icon_book)
+        # Buttons frame (centered column)
+        btn_frame = ctk.CTkFrame(container, fg_color=theme.BG_COLOR)
+        btn_frame.pack(expand=True, fill="both")
+
+        # Add a scrollbar to the button frame in case of small screens
+        btn_canvas = tk.Canvas(btn_frame, bg=theme.BG_COLOR, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(container, orient="vertical", command=btn_canvas.yview)
+        scrollable_frame = ctk.CTkFrame(btn_canvas, fg_color=theme.BG_COLOR)
+
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: btn_canvas.configure(scrollregion=btn_canvas.bbox("all"))
+        )
+
+        btn_window = btn_canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        btn_canvas.configure(yscrollcommand=scrollbar.set)
+        
+        # Configurar el ancho del scrollable_frame para que coincida con el canvas
+        def _on_canvas_configure(event):
+            btn_canvas.itemconfig(btn_window, width=event.width)
+        btn_canvas.bind("<Configure>", _on_canvas_configure)
+
+        # Pack scrollbar and canvas
+        scrollbar.pack(side="right", fill="y")
+        btn_canvas.pack(side="left", fill="both", expand=True)
+
+        # Move buttons to the scrollable frame
+        b1 = wf.create_primary_button(scrollable_frame, "Crear Libro", command=self.open_create_book, image=self.icon_book)
         b1.pack(pady=10)
-        b2 = wf.create_primary_button(btn_frame, "Crear Usuario", command=self.open_create_user, image=self.icon_user)
+        b2 = wf.create_primary_button(scrollable_frame, "Crear Usuario", command=self.open_create_user, image=self.icon_user)
         b2.pack(pady=10)
-        b3 = wf.create_primary_button(btn_frame, "Ver Libros", command=self.open_view_books, image=self.icon_view)
+        b3 = wf.create_primary_button(scrollable_frame, "Ver Libros", command=self.open_view_books, image=self.icon_view)
         b3.pack(pady=10)
-        b4 = wf.create_primary_button(btn_frame, "Ver Usuarios", command=self.open_view_users, image=self.icon_user)
+        b4 = wf.create_primary_button(scrollable_frame, "Ver Usuarios", command=self.open_view_users, image=self.icon_user)
         b4.pack(pady=10)
-        # Assign books to shelf
-        b_assign = wf.create_primary_button(btn_frame, "Asignar Libros", command=self.open_assign_books, image=self.icon_book)
+        b_assign = wf.create_primary_button(scrollable_frame, "Asignar Libros", command=self.open_assign_books, image=self.icon_book)
         b_assign.pack(pady=10)
+        b5 = wf.create_primary_button(scrollable_frame, "Crear Préstamo", command=self.open_create_loan, image=self.icon_loan)
+        b5.pack(pady=10)
+        b6 = wf.create_primary_button(scrollable_frame, "Gestionar Estanterías", command=self.open_shelf_manager, image=self.icon_view)
+        b6.pack(pady=10)
 
         # Bottom exit button separated
         bottom_frame = ctk.CTkFrame(container, fg_color=theme.BG_COLOR)
@@ -205,14 +245,6 @@ class MainMenu(ctk.CTk):
 
         # Keep references to opened windows to avoid GC
         self._open_windows = []
-
-        # Add loan button to the primary actions frame
-        b5 = wf.create_primary_button(btn_frame, "Crear Préstamo", command=self.open_create_loan, image=self.icon_loan)
-        b5.pack(pady=10)
-
-        # Shelf manager button
-        b6 = wf.create_primary_button(btn_frame, "Gestionar Estanterías", command=self.open_shelf_manager, image=self.icon_view)
-        b6.pack(pady=10)
 
     def open_assign_books(self):
         self._open_toplevel(AssignBookForm)
@@ -254,5 +286,5 @@ class MainMenu(ctk.CTk):
     def open_shelf_manager(self):
         # Open the shelf management form (create mode)
         self._open_toplevel(ShelfForm, mode="create")
-        
+
 

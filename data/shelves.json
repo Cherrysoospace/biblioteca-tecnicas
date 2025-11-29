@@ -175,5 +175,22 @@
         "isBorrowed": false
       }
     ]
+  },
+  {
+    "id": "S004",
+    "name": "Autoayuda",
+    "capacity": 8.0,
+    "current_capacity": 0.85,
+    "books": [
+      {
+        "id": "B008",
+        "ISBNCode": "9780446310789",
+        "title": "Mockingjay",
+        "author": "Suzanne Collins",
+        "weight": 0.85,
+        "price": 26000,
+        "isBorrowed": false
+      }
+    ]
   }
 ]

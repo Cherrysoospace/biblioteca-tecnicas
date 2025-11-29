@@ -11,6 +11,13 @@ class LoanForm(ctk.CTkToplevel):
 
         # attach to parent and set basic geometry
         self._parent_window = parent
+        
+        # Apply window scaling for this toplevel
+        try:
+            ctk.set_window_scaling(ctk._get_window_scaling(self))
+        except Exception:
+            pass
+        
         self.title("Create Loan")
         self.geometry("400x300")
         try:
