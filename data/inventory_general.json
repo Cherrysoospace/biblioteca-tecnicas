@@ -1,7 +1,7 @@
 [
   {
     "ISBNCode": "9780140449136",
-    "stock": 1,
+    "stock": 0,
     "items": [
       {
         "id": "B001",
@@ -9,13 +9,13 @@
         "author": "Homer",
         "weight": 1.1,
         "price": 30000,
-        "isBorrowed": false
+        "isBorrowed": true
       }
     ]
   },
   {
     "ISBNCode": "9780679783268",
-    "stock": 1,
+    "stock": 0,
     "items": [
       {
         "id": "B002",
@@ -23,7 +23,7 @@
         "author": "Jane Austen",
         "weight": 0.9,
         "price": 25000,
-        "isBorrowed": false
+        "isBorrowed": true
       }
     ]
   },
