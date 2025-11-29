@@ -123,9 +123,7 @@ class BookList(ctk.CTkToplevel):
         close_btn.pack(side="left")
 
         # Load data initially
-        self._books_path = os.path.join(os.path.dirname(__file__), "..", "data", "books.json")
-        # normalize path
-        self._books_path = os.path.abspath(self._books_path)
+        self._books_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "data", "books.json"))
         self.load_books()
 
         try:
