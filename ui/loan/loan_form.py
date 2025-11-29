@@ -1,6 +1,8 @@
 import customtkinter as ctk
 from tkinter import messagebox
 from controllers.loan_controller import LoanController
+from services.user_service import UserService
+from services.inventory_service import InventoryService
 from ui import theme
 from ui import widget_factory as wf
 
@@ -53,13 +55,58 @@ class LoanForm(ctk.CTkToplevel):
 
     # NOTE: loan id is now generated automatically; user should not enter it
 
-        # User ID
-        self.entry_user_id = ctk.CTkEntry(form_frame, placeholder_text="User ID")
-        self.entry_user_id.pack(pady=6, fill="x")
+        # --- User selector (display: "Name (ID)")
+        self._user_map = {}  # display -> user_id
+        users = []
+        try:
+            usvc = UserService()
+            for u in usvc.get_all_users():
+                disp = f"{u.get_name()} ({u.get_id()})"
+                users.append(disp)
+                self._user_map[disp] = u.get_id()
+        except Exception:
+            users = []
 
-        # ISBN
-        self.entry_isbn = ctk.CTkEntry(form_frame, placeholder_text="ISBN")
-        self.entry_isbn.pack(pady=6, fill="x")
+        if users:
+            self.user_selector = ctk.CTkOptionMenu(form_frame, values=users)
+            # select first by default
+            try:
+                self.user_selector.set(users[0])
+            except Exception:
+                pass
+        else:
+            self.user_selector = ctk.CTkLabel(form_frame, text="No hay usuarios disponibles")
+        self.user_selector.pack(pady=6, fill="x")
+
+        # --- Book selector (only available copies with stock>0)
+        self._book_map = {}  # display -> isbn
+        books = []
+        try:
+            inv_svc = InventoryService()
+            for inv in inv_svc.inventory_general:
+                try:
+                    if inv.get_stock() > 0 and not inv.get_isBorrowed():
+                        b = inv.get_book()
+                        # show title (ISBN) [book_id]
+                        disp = f"{b.get_title()} ({b.get_ISBNCode()}) [{b.get_id()}]"
+                        # Keep only one entry per ISBN display (avoid duplicates)
+                        if disp not in self._book_map:
+                            books.append(disp)
+                            self._book_map[disp] = b.get_ISBNCode()
+                except Exception:
+                    continue
+        except Exception:
+            books = []
+
+        if books:
+            self.book_selector = ctk.CTkOptionMenu(form_frame, values=books)
+            try:
+                self.book_selector.set(books[0])
+            except Exception:
+                pass
+        else:
+            self.book_selector = ctk.CTkLabel(form_frame, text="No hay libros disponibles")
+        self.book_selector.pack(pady=6, fill="x")
 
         # Action area with primary and cancel buttons
         action_frame = ctk.CTkFrame(container, fg_color=theme.BG_COLOR, corner_radius=0)
@@ -78,13 +125,31 @@ class LoanForm(ctk.CTkToplevel):
             pass
 
     def create_loan(self):
-        user_id = self.entry_user_id.get().strip()
-        isbn = self.entry_isbn.get().strip()
+        # Map selected display values to actual ids
+        try:
+            # user_selector may be a label if no users
+            if isinstance(self.user_selector, ctk.CTkLabel):
+                messagebox.showerror("Error", "No hay usuarios disponibles")
+                return
+            sel_user = self.user_selector.get().strip()
+            user_id = self._user_map.get(sel_user)
+        except Exception:
+            user_id = None
+
+        try:
+            if isinstance(self.book_selector, ctk.CTkLabel):
+                messagebox.showerror("Error", "No hay libros disponibles")
+                return
+            sel_book = self.book_selector.get().strip()
+            isbn = self._book_map.get(sel_book)
+        except Exception:
+            isbn = None
 
         if not user_id or not isbn:
-            messagebox.showerror("Error", "All fields are required")
+            messagebox.showerror("Error", "Debe seleccionar usuario y libro disponibles")
             return
 
+        # controller.create_loan expects (user_id, isbn)
         res = self.controller.create_loan(user_id, isbn)
         if res.get('success'):
             # show created loan id when available
