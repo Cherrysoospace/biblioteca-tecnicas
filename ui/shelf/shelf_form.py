@@ -21,6 +21,13 @@ class ShelfForm(ctk.CTkToplevel):
     def __init__(self, parent=None, mode="create", shelf_id=None):
         super().__init__(parent)
         self._parent_window = parent
+        
+        # Apply window scaling for this toplevel
+        try:
+            ctk.set_window_scaling(ctk._get_window_scaling(self))
+        except Exception:
+            pass
+        
         self.controller = ShelfController()
         self.mode = mode
         self.shelf_id = shelf_id

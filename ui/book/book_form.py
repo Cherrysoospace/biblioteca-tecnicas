@@ -14,6 +14,13 @@ class BookForm(ctk.CTkToplevel):
         super().__init__(parent)
         # keep parent reference to restore focus when closing
         self._parent_window = parent
+        
+        # Apply window scaling for this toplevel
+        try:
+            ctk.set_window_scaling(ctk._get_window_scaling(self))
+        except Exception:
+            pass
+        
         # Apply theme colors to this window and create a main container to match MainMenu
         try:
             theme.apply_theme(self)
