@@ -1,7 +1,7 @@
 [
   {
     "ISBNCode": "123",
-    "stock": 0,
+    "stock": 1,
     "items": [
       {
         "id": "B021",
@@ -71,7 +71,7 @@
   },
   {
     "ISBNCode": "9780140449136",
-    "stock": 0,
+    "stock": 1,
     "items": [
       {
         "id": "B001",
@@ -225,7 +225,7 @@
   },
   {
     "ISBNCode": "9780679783268",
-    "stock": 0,
+    "stock": 1,
     "items": [
       {
         "id": "B002",

@@ -47,6 +47,12 @@ class Reservation:
 		# Reservation status string. Common values: 'pending', 'assigned', 'cancelled'.
 		self.__status = status
 
+		# Assigned date (when the reservation was given a book)
+		self.__assigned_date = None
+
+		# Position in the queue (optional, for convenience when serialized)
+		self.__position = None
+
 	def get_reservation_id(self):
 		"""Return the reservation's unique identifier.
 
@@ -72,6 +78,14 @@ class Reservation:
 	def get_status(self):
 		"""Return the current reservation status string."""
 		return self.__status
+
+	def get_assigned_date(self):
+		"""Return the datetime when the reservation was assigned (or None)."""
+		return self.__assigned_date
+
+	def get_position(self):
+		"""Return the reservation position in a queue (if set)."""
+		return self.__position
 
 
 	def set_reservation_id(self, reservation_id):
@@ -106,12 +120,61 @@ class Reservation:
 		"""Update the reservation status string (e.g. 'pending', 'assigned')."""
 		self.__status = status
 
+	def set_assigned_date(self, assigned_date: datetime):
+		"""Set the datetime when the reservation was assigned."""
+		self.__assigned_date = assigned_date
+
+	def set_position(self, position: int):
+		"""Set the reservation position in queue."""
+		self.__position = position
+
+	def to_dict(self) -> dict:
+		"""Serialize reservation to a plain dictionary for JSON storage.
+
+		Dates are converted to ISO 8601 strings when possible.
+		"""
+		try:
+			reserved = self.__reserved_date.isoformat()
+		except Exception:
+			reserved = self.__reserved_date
+
+		try:
+			assigned = self.__assigned_date.isoformat() if self.__assigned_date else None
+		except Exception:
+			assigned = self.__assigned_date
+
+		return {
+			"reservation_id": self.__reservation_id,
+			"user_id": self.__user_id,
+			"isbn": self.__isbn,
+			"reserved_date": reserved,
+			"status": self.__status,
+			"assigned_date": assigned,
+			"position": self.__position,
+		}
+
+	@classmethod
+	def from_dict(cls, data: dict):
+		"""Construct a Reservation from a dict (as stored in JSON)."""
+		res_date = data.get('reserved_date')
+		assigned_date = data.get('assigned_date')
+		# leave date strings as-is; service may parse them if necessary
+		r = cls(data.get('reservation_id'), data.get('user_id'), data.get('isbn'), res_date, data.get('status', 'pending'))
+		if assigned_date:
+			try:
+				from datetime import datetime as _dt
+				r.set_assigned_date(_dt.fromisoformat(assigned_date))
+			except Exception:
+				r.set_assigned_date(assigned_date)
+		r.set_position(data.get('position'))
+		return r
+
 
 	def __str__(self):
 		"""Return a readable string representation of the reservation."""
 		return (f"Reservation[ID: {self.__reservation_id}, User: {self.__user_id}, "
-				f"ISBN: {self.__isbn}, Date: {self.__reserved_date}, Status: {self.__status}, "
-				f"Position: {self.__position}, Assigned: {self.__assigned_date}]")
+			f"ISBN: {self.__isbn}, Date: {self.__reserved_date}, Status: {self.__status}, "
+			f"Position: {self.__position}, Assigned: {self.__assigned_date}]")
 
 
 __all__ = ["Reservation"]

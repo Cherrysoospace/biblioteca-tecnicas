@@ -18,6 +18,6 @@
     "user_id": "U001",
     "isbn": "9780679783268",
     "loan_date": "2025-11-29",
-    "returned": false
+    "returned": true
   }
 ]

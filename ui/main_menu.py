@@ -17,6 +17,8 @@ from tkinter import messagebox
 from ui.loan.loan_form import LoanForm
 from ui.shelf.shelf_form import ShelfForm
 from ui.shelf.assign_book_form import AssignBookForm
+from ui.reservation.reservation_form import ReservationForm
+from ui.reservation.reservation_list import ReservationList
 
 class MainMenu(ctk.CTk):
     def __init__(self):
@@ -153,11 +155,16 @@ class MainMenu(ctk.CTk):
         title = wf.create_title_label(title_frame, "Biblioteca Mitrauma")
         title.pack(side="left")
 
-        # Buttons frame (centered column)
-        btn_frame = ctk.CTkFrame(container, fg_color=theme.BG_COLOR)
-        btn_frame.pack(expand=True)
+        # Buttons frame (centered). We'll use a scrollable area and arrange
+        # primary actions into two columns so options remain visible on
+        # smaller screens.
+        try:
+            btn_frame = ctk.CTkScrollableFrame(container, fg_color=theme.BG_COLOR)
+        except Exception:
+            btn_frame = ctk.CTkFrame(container, fg_color=theme.BG_COLOR)
+        btn_frame.pack(expand=True, fill="both")
 
-        # Primary actions (big, vertical, centered)
+        # Primary actions: arrange into two columns
         # load icons for buttons
         try:
             # use bookpile icon for "Crear Libro"
@@ -184,20 +191,39 @@ class MainMenu(ctk.CTk):
             except Exception:
                 self.icon_loan = None
 
-        b1 = wf.create_primary_button(btn_frame, "Crear Libro", command=self.open_create_book, image=self.icon_book)
-        b1.pack(pady=10)
-        b2 = wf.create_primary_button(btn_frame, "Crear Usuario", command=self.open_create_user, image=self.icon_user)
-        b2.pack(pady=10)
-        b3 = wf.create_primary_button(btn_frame, "Ver Libros", command=self.open_view_books, image=self.icon_view)
-        b3.pack(pady=10)
-        b4 = wf.create_primary_button(btn_frame, "Ver Usuarios", command=self.open_view_users, image=self.icon_user)
-        b4.pack(pady=10)
-        # View loans button
-        b_view_loans = wf.create_primary_button(btn_frame, "Ver Préstamos", command=self.open_view_loans, image=self.icon_loan)
-        b_view_loans.pack(pady=10)
-        # Assign books to shelf
-        b_assign = wf.create_primary_button(btn_frame, "Asignar Libros", command=self.open_assign_books, image=self.icon_book)
-        b_assign.pack(pady=10)
+        # Build a list of button specs to create and place in a 2-column grid
+        button_specs = [
+            ("Crear Libro", self.open_create_book, self.icon_book),
+            ("Crear Usuario", self.open_create_user, self.icon_user),
+            ("Ver Libros", self.open_view_books, self.icon_view),
+            ("Ver Usuarios", self.open_view_users, self.icon_user),
+            ("Ver Préstamos", self.open_view_loans, self.icon_loan),
+            ("Ver Reservas", self.open_view_reservations, self.icon_view),
+            ("Crear Préstamo", self.open_create_loan, self.icon_loan),
+            ("Asignar Libros", self.open_assign_books, self.icon_book),
+            ("Gestionar Estanterías", self.open_shelf_manager, self.icon_view),
+            ("Crear Reserva", self.open_create_reservation, self.icon_loan),
+        ]
+
+        # Create an inner frame to host the grid inside the scrollable frame
+        inner = ctk.CTkFrame(btn_frame, fg_color=theme.BG_COLOR)
+        # Use pack here so that if btn_frame is not scrollable it still lays out
+        inner.pack(padx=10, pady=6, anchor="n")
+
+        # Place buttons in 2 columns
+        for idx, (label, cmd, img) in enumerate(button_specs):
+            col = idx % 2
+            row = idx // 2
+            try:
+                btn = wf.create_primary_button(inner, label, command=cmd, image=img)
+                btn.grid(row=row, column=col, padx=8, pady=10)
+            except Exception:
+                # fallback to pack if grid fails for the widget
+                try:
+                    btn = wf.create_primary_button(inner, label, command=cmd, image=img)
+                    btn.pack(pady=6)
+                except Exception:
+                    pass
 
         # Bottom exit button separated
         bottom_frame = ctk.CTkFrame(container, fg_color=theme.BG_COLOR)
@@ -217,9 +243,16 @@ class MainMenu(ctk.CTk):
         # Shelf manager button
         b6 = wf.create_primary_button(btn_frame, "Gestionar Estanterías", command=self.open_shelf_manager, image=self.icon_view)
         b6.pack(pady=10)
+        # Reservation form button
+        b_res = wf.create_primary_button(btn_frame, "Crear Reserva", command=self.open_create_reservation, image=self.icon_loan)
+        b_res.pack(pady=10)
 
     def open_assign_books(self):
         self._open_toplevel(AssignBookForm)
+
+    def open_view_reservations(self):
+        # Open the reservations list viewer
+        self._open_toplevel(ReservationList)
 
     # ------------------- OPEN WINDOWS -------------------
     def _open_toplevel(self, cls, *args, **kwargs):
@@ -261,5 +294,7 @@ class MainMenu(ctk.CTk):
     def open_shelf_manager(self):
         # Open the shelf management form (create mode)
         self._open_toplevel(ShelfForm, mode="create")
+    def open_create_reservation(self):
+        self._open_toplevel(ReservationForm)
         
 

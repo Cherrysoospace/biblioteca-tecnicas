@@ -15,7 +15,7 @@
   },
   {
     "ISBNCode": "9780679783268",
-    "stock": 0,
+    "stock": 1,
     "items": [
       {
         "id": "B002",
@@ -23,7 +23,7 @@
         "author": "Jane Austen",
         "weight": 0.9,
         "price": 25000,
-        "isBorrowed": true
+        "isBorrowed": false
       }
     ]
   },
