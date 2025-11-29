@@ -206,41 +206,6 @@ class MainMenu(ctk.CTk):
             except Exception:
                 self.icon_loan = None
 
-<<<<<<< HEAD
-        # Build a list of button specs to create and place in a 2-column grid
-        button_specs = [
-            ("Crear Libro", self.open_create_book, self.icon_book),
-            ("Crear Usuario", self.open_create_user, self.icon_user),
-            ("Ver Libros", self.open_view_books, self.icon_view),
-            ("Ver Usuarios", self.open_view_users, self.icon_user),
-            ("Ver Préstamos", self.open_view_loans, self.icon_loan),
-            ("Ver Reservas", self.open_view_reservations, self.icon_view),
-            ("Crear Préstamo", self.open_create_loan, self.icon_loan),
-            ("Asignar Libros", self.open_assign_books, self.icon_book),
-            ("Gestionar Estanterías", self.open_shelf_manager, self.icon_view),
-            ("Crear Reserva", self.open_create_reservation, self.icon_loan),
-        ]
-
-        # Create an inner frame to host the grid inside the scrollable frame
-        inner = ctk.CTkFrame(btn_frame, fg_color=theme.BG_COLOR)
-        # Use pack here so that if btn_frame is not scrollable it still lays out
-        inner.pack(padx=10, pady=6, anchor="n")
-
-        # Place buttons in 2 columns
-        for idx, (label, cmd, img) in enumerate(button_specs):
-            col = idx % 2
-            row = idx // 2
-            try:
-                btn = wf.create_primary_button(inner, label, command=cmd, image=img)
-                btn.grid(row=row, column=col, padx=8, pady=10)
-            except Exception:
-                # fallback to pack if grid fails for the widget
-                try:
-                    btn = wf.create_primary_button(inner, label, command=cmd, image=img)
-                    btn.pack(pady=6)
-                except Exception:
-                    pass
-=======
         # Buttons frame (centered column)
         btn_frame = ctk.CTkFrame(container, fg_color=theme.BG_COLOR)
         btn_frame.pack(expand=True, fill="both")
@@ -287,7 +252,6 @@ class MainMenu(ctk.CTk):
         b5.pack(pady=10)
         b6 = wf.create_primary_button(scrollable_frame, "Gestionar Estanterías", command=self.open_shelf_manager, image=self.icon_view)
         b6.pack(pady=10)
->>>>>>> 2db6573b8bbd9983c657814a016c678deca7c08e
 
         # Bottom exit button separated
         bottom_frame = ctk.CTkFrame(container, fg_color=theme.BG_COLOR)
@@ -300,20 +264,6 @@ class MainMenu(ctk.CTk):
         # Keep references to opened windows to avoid GC
         self._open_windows = []
 
-<<<<<<< HEAD
-        # Add loan button to the primary actions frame
-        b5 = wf.create_primary_button(btn_frame, "Crear Préstamo", command=self.open_create_loan, image=self.icon_loan)
-        b5.pack(pady=10)
-
-        # Shelf manager button
-        b6 = wf.create_primary_button(btn_frame, "Gestionar Estanterías", command=self.open_shelf_manager, image=self.icon_view)
-        b6.pack(pady=10)
-        # Reservation form button
-        b_res = wf.create_primary_button(btn_frame, "Crear Reserva", command=self.open_create_reservation, image=self.icon_loan)
-        b_res.pack(pady=10)
-
-=======
->>>>>>> 2db6573b8bbd9983c657814a016c678deca7c08e
     def open_assign_books(self):
         self._open_toplevel(AssignBookForm)
 
@@ -361,11 +311,4 @@ class MainMenu(ctk.CTk):
     def open_shelf_manager(self):
         # Open the shelf management form (create mode)
         self._open_toplevel(ShelfForm, mode="create")
-<<<<<<< HEAD
-    def open_create_reservation(self):
-        self._open_toplevel(ReservationForm)
-        
-=======
-
->>>>>>> 2db6573b8bbd9983c657814a016c678deca7c08e
 
