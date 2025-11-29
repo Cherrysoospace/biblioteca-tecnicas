@@ -35,3 +35,19 @@ class LoanController:
 	def get_loan(self, loan_id: str):
 		return self.service.find_by_id(loan_id)
 
+	def delete_loan(self, loan_id: str) -> dict:
+		"""Delete a loan record. Returns dict with success/message."""
+		try:
+			self.service.delete_loan(loan_id)
+			return {"success": True, "message": "Loan deleted"}
+		except Exception as e:
+			return {"success": False, "message": str(e)}
+
+	def update_loan(self, loan_id: str, user_id: str = None, isbn: str = None, returned: bool = None, loan_date=None) -> dict:
+		"""Update a loan record fields. Only provided fields are updated."""
+		try:
+			loan = self.service.update_loan(loan_id, user_id=user_id, isbn=isbn, returned=returned, loan_date=loan_date)
+			return {"success": True, "message": "Loan updated", "loan": loan}
+		except Exception as e:
+			return {"success": False, "message": str(e), "loan": None}
+

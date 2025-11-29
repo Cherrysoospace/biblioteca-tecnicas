@@ -11,6 +11,7 @@ from ui.book.book_form import BookForm
 from ui.user.user_form import UserForm
 from ui.book.book_list import BookList
 from ui.user.user_list import UserList
+from ui.loan.loan_list import LoanList
 from tkinter import messagebox
 
 from ui.loan.loan_form import LoanForm
@@ -191,6 +192,9 @@ class MainMenu(ctk.CTk):
         b3.pack(pady=10)
         b4 = wf.create_primary_button(btn_frame, "Ver Usuarios", command=self.open_view_users, image=self.icon_user)
         b4.pack(pady=10)
+        # View loans button
+        b_view_loans = wf.create_primary_button(btn_frame, "Ver Préstamos", command=self.open_view_loans, image=self.icon_loan)
+        b_view_loans.pack(pady=10)
         # Assign books to shelf
         b_assign = wf.create_primary_button(btn_frame, "Asignar Libros", command=self.open_assign_books, image=self.icon_book)
         b_assign.pack(pady=10)
@@ -248,6 +252,9 @@ class MainMenu(ctk.CTk):
     def open_view_users(self):
         # Open the user list viewer
         self._open_toplevel(UserList)
+    def open_view_loans(self):
+        # Open the loans list viewer
+        self._open_toplevel(LoanList)
     def open_create_loan(self):
         # Use the generic toplevel opener so errors are handled uniformly
         self._open_toplevel(LoanForm)
