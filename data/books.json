@@ -166,5 +166,21 @@
     "author": "YO",
     "weight": 0.9,
     "price": 20000
+  },
+  {
+    "id": "B022",
+    "ISBNCode": "Prueba del sorted",
+    "title": "Pruebaaaaa",
+    "author": "978956346790",
+    "weight": 0.4,
+    "price": 100000
+  },
+  {
+    "id": "B023",
+    "ISBNCode": "1",
+    "title": "Prueba 2",
+    "author": "2222",
+    "weight": 0.1,
+    "price": 12000
   }
 ]

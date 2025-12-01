@@ -1,0 +1,31 @@
+def insercion_ordenada(lista_libros):
+    if not lista_libros or len(lista_libros) <= 1:
+        return lista_libros
+
+    for i in range(1, len(lista_libros)):
+        libro_actual = lista_libros[i]
+        isbn_actual = libro_actual.isbn
+        j = i - 1
+        while j >= 0 and lista_libros[j].isbn > isbn_actual:
+            lista_libros[j + 1] = lista_libros[j]
+            j -= 1
+        lista_libros[j + 1] = libro_actual
+
+    return lista_libros
+
+def busqueda_binaria_recursiva(lista_libros, isbn_buscado, inicio=0, fin=None):
+    if fin is None:
+        fin = len(lista_libros) - 1
+
+    if inicio > fin:
+        return -1
+
+    mid = (inicio + fin) // 2
+    isbn_medio = lista_libros[mid].ISBNCode
+
+    if isbn_medio == isbn_buscado:
+        return mid
+    elif isbn_medio > isbn_buscado:
+        return busqueda_binaria_recursiva(lista_libros, isbn_buscado, inicio, mid - 1)
+    else:
+        return busqueda_binaria_recursiva(lista_libros, isbn_buscado, mid + 1, fin)

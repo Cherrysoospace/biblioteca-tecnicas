@@ -292,5 +292,33 @@
         "isBorrowed": true
       }
     ]
+  },
+  {
+    "ISBNCode": "Prueba del sorted",
+    "stock": 1,
+    "items": [
+      {
+        "id": "B022",
+        "title": "Pruebaaaaa",
+        "author": "978956346790",
+        "weight": 0.4,
+        "price": 100000,
+        "isBorrowed": false
+      }
+    ]
+  },
+  {
+    "ISBNCode": "1",
+    "stock": 1,
+    "items": [
+      {
+        "id": "B023",
+        "title": "Prueba 2",
+        "author": "2222",
+        "weight": 0.1,
+        "price": 12000,
+        "isBorrowed": false
+      }
+    ]
   }
 ]

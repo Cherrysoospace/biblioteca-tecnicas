@@ -403,6 +403,33 @@ class InventoryService:
         self._save_general()
         self._save_sorted()
 
+    def add_and_sort_inventory(self, new_book: Book) -> None:
+        """
+        Add a new book to the inventory, sort it, and save the updated inventory.
+
+        Parameters:
+        - new_book: Book instance to add to inventory.
+
+        Returns: None
+
+        Raises:
+        - Exception: for IO errors while saving.
+        """
+        # Add the new book to the general inventory
+        new_inventory_item = Inventory(new_book, 1)
+        self.inventory_general.append(new_inventory_item)
+
+        # Sort the inventory using insertion sort
+        if insertion_sort_inventory is None:
+            # Fallback to Python's built-in sort if the algorithm is unavailable
+            self.inventory_sorted = sorted(self.inventory_general, key=lambda inv: inv.get_book().get_ISBNCode())
+        else:
+            self.inventory_sorted = insertion_sort_inventory(self.inventory_general)
+
+        # Save the updated inventories
+        self._save_general()
+        self._save_sorted()
+
     def update_stock(self, book_id: str, new_stock: int) -> None:
         """Update the stock for an existing inventory item.
 
@@ -690,6 +717,29 @@ class InventoryService:
             raise ImportError("Required algorithm `merge_sort_inventory_by_price` not found in utils.algoritmos/merge_sort")
 
         return merge_sort_inventory_by_price(self.inventory_general)
+
+    def synchronize_inventories(self) -> None:
+        """
+        Synchronize the unordered inventory with the ordered inventory.
+
+        This method ensures that the unordered inventory is converted to a list,
+        sorted using the insertion sort algorithm, and saved to the ordered inventory JSON file.
+
+        Raises:
+        - Exception: for IO errors while saving.
+        """
+        # Ensure the unordered inventory is loaded
+        self._load_general()
+
+        # Sort the inventory using insertion sort
+        if insertion_sort_inventory is None:
+            # Fallback to Python's built-in sort if the algorithm is unavailable
+            self.inventory_sorted = sorted(self.inventory_general, key=lambda inv: inv.get_book().get_ISBNCode())
+        else:
+            self.inventory_sorted = insertion_sort_inventory(self.inventory_general)
+
+        # Save the sorted inventory to the ordered JSON file
+        self._save_sorted()
 
 
 # Example usage:
