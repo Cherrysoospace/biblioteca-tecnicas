@@ -1,0 +1,306 @@
+{
+  "total_libros": 33,
+  "precio_total": 902054,
+  "precio_promedio": 27334.969696969696,
+  "precio_minimo": 1000,
+  "precio_maximo": 120000,
+  "libros": [
+    {
+      "id": "B031",
+      "isbn": "34567",
+      "titulo": "Prueba después de cambios potentes",
+      "autor": "es que 1000 lineas",
+      "peso": 0.5,
+      "precio": 1000,
+      "prestado": false
+    },
+    {
+      "id": "B025",
+      "isbn": "4",
+      "titulo": "Hike",
+      "autor": "Hikeee",
+      "peso": 0.1,
+      "precio": 2000,
+      "prestado": false
+    },
+    {
+      "id": "B029",
+      "isbn": "225",
+      "titulo": "prueba2345",
+      "autor": "DU DU DU",
+      "peso": 0.3,
+      "precio": 4500,
+      "prestado": false
+    },
+    {
+      "id": "B024",
+      "isbn": "2",
+      "titulo": "Pruebaaaaa 3",
+      "autor": "3 ",
+      "peso": 0.2,
+      "precio": 5000,
+      "prestado": false
+    },
+    {
+      "id": "B026",
+      "isbn": "345",
+      "titulo": "prueba del isborrowes",
+      "autor": "h",
+      "peso": 0.1,
+      "precio": 5000,
+      "prestado": false
+    },
+    {
+      "id": "B030",
+      "isbn": "123456",
+      "titulo": "Prueba rapida",
+      "autor": "salitude",
+      "peso": 0.1,
+      "precio": 5000,
+      "prestado": false
+    },
+    {
+      "id": "B023",
+      "isbn": "1",
+      "titulo": "Prueba 2",
+      "autor": "2222",
+      "peso": 0.1,
+      "precio": 12000,
+      "prestado": false
+    },
+    {
+      "id": "B027",
+      "isbn": "123456",
+      "titulo": "Hola",
+      "autor": "holi x2",
+      "peso": 0.3,
+      "precio": 15000,
+      "prestado": false
+    },
+    {
+      "id": "B033",
+      "isbn": "789",
+      "titulo": "prueba 3000",
+      "autor": "hi",
+      "peso": 0.2,
+      "precio": 15000,
+      "prestado": false
+    },
+    {
+      "id": "B020",
+      "isbn": "9780156012196",
+      "titulo": "The Little Prince",
+      "autor": "Antoine de Saint-Exupéry",
+      "peso": 0.4,
+      "precio": 18000,
+      "prestado": false
+    },
+    {
+      "id": "B007",
+      "isbn": "9780307387899",
+      "titulo": "The Alchemist",
+      "autor": "Paulo Coelho",
+      "peso": 0.7,
+      "precio": 20000,
+      "prestado": false
+    },
+    {
+      "id": "B021",
+      "isbn": "123",
+      "titulo": "ABCDEF",
+      "autor": "YO",
+      "peso": 0.9,
+      "precio": 20000,
+      "prestado": false
+    },
+    {
+      "id": "B028",
+      "isbn": "123456",
+      "titulo": "Hola",
+      "autor": "holi x2",
+      "peso": 0.3,
+      "precio": 20000,
+      "prestado": false
+    },
+    {
+      "id": "B019",
+      "isbn": "9780140185850",
+      "titulo": "WE",
+      "autor": "Yevgeny Zamyatin",
+      "peso": 0.5,
+      "precio": 22554,
+      "prestado": false
+    },
+    {
+      "id": "B002",
+      "isbn": "9780679783268",
+      "titulo": "Pride and Prejudice",
+      "autor": "Jane Austen",
+      "peso": 0.9,
+      "precio": 25000,
+      "prestado": false
+    },
+    {
+      "id": "B017",
+      "isbn": "9780143105988",
+      "titulo": "The Art of War",
+      "autor": "Sun Tzu",
+      "peso": 0.6,
+      "precio": 25000,
+      "prestado": false
+    },
+    {
+      "id": "B008",
+      "isbn": "9780446310789",
+      "titulo": "Mockingjay",
+      "autor": "Suzanne Collins",
+      "peso": 0.85,
+      "precio": 26000,
+      "prestado": false
+    },
+    {
+      "id": "B003",
+      "isbn": "9780743273565",
+      "titulo": "The Great Gatsby",
+      "autor": "F. Scott Fitzgerald",
+      "peso": 0.8,
+      "precio": 27000,
+      "prestado": false
+    },
+    {
+      "id": "B004",
+      "isbn": "9780061120084",
+      "titulo": "To Kill a Mockingbird",
+      "autor": "Harper Lee",
+      "peso": 0.95,
+      "precio": 28000,
+      "prestado": false
+    },
+    {
+      "id": "B016",
+      "isbn": "9780061122415",
+      "titulo": "Of Mice and Men",
+      "autor": "John Steinbeck",
+      "peso": 0.68,
+      "precio": 28000,
+      "prestado": false
+    },
+    {
+      "id": "B001",
+      "isbn": "9780140449136",
+      "titulo": "The Odyssey",
+      "autor": "Homer",
+      "peso": 1.1,
+      "precio": 30000,
+      "prestado": false
+    },
+    {
+      "id": "B014",
+      "isbn": "9781451673319",
+      "titulo": "Fahrenheit 451",
+      "autor": "Ray Bradbury",
+      "peso": 0.7,
+      "precio": 30000,
+      "prestado": false
+    },
+    {
+      "id": "B005",
+      "isbn": "9780307277671",
+      "titulo": "The Road",
+      "autor": "Cormac McCarthy",
+      "peso": 1.0,
+      "precio": 32000,
+      "prestado": false
+    },
+    {
+      "id": "B013",
+      "isbn": "9780316769488",
+      "titulo": "The Catcher in the Rye",
+      "autor": "J.D. Salinger",
+      "peso": 0.72,
+      "precio": 32000,
+      "prestado": false
+    },
+    {
+      "id": "B009",
+      "isbn": "9780307743657",
+      "titulo": "Ready Player One",
+      "autor": "Ernest Cline",
+      "peso": 1.05,
+      "precio": 35000,
+      "prestado": false
+    },
+    {
+      "id": "B010",
+      "isbn": "9780143126560",
+      "titulo": "The Martian",
+      "autor": "Andy Weir",
+      "peso": 1.2,
+      "precio": 38000,
+      "prestado": false
+    },
+    {
+      "id": "B015",
+      "isbn": "9780060850524",
+      "titulo": "Life of Pi",
+      "autor": "Yann Martel",
+      "peso": 0.9,
+      "precio": 39000,
+      "prestado": false
+    },
+    {
+      "id": "B012",
+      "isbn": "9781594633669",
+      "titulo": "The Kite Runner",
+      "autor": "Khaled Hosseini",
+      "peso": 0.88,
+      "precio": 40000,
+      "prestado": false
+    },
+    {
+      "id": "B006",
+      "isbn": "9781982137274",
+      "titulo": "The Institute",
+      "autor": "Stephen King",
+      "peso": 1.3,
+      "precio": 45000,
+      "prestado": false
+    },
+    {
+      "id": "B011",
+      "isbn": "9780439023528",
+      "titulo": "The Hunger Games",
+      "autor": "Suzanne Collins",
+      "peso": 0.95,
+      "precio": 45000,
+      "prestado": false
+    },
+    {
+      "id": "B032",
+      "isbn": "5678",
+      "titulo": "cambios mas potentes",
+      "autor": "hi",
+      "peso": 0.25,
+      "precio": 45000,
+      "prestado": false
+    },
+    {
+      "id": "B018",
+      "isbn": "9780345339683",
+      "titulo": "Kafka on the Shore",
+      "autor": "Haruki Murakami",
+      "peso": 0.98,
+      "precio": 47000,
+      "prestado": false
+    },
+    {
+      "id": "B034",
+      "isbn": "2789",
+      "titulo": "prueba de merge",
+      "autor": "Soy colosal",
+      "peso": 0.7,
+      "precio": 120000,
+      "prestado": false
+    }
+  ]
+}

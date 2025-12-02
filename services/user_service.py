@@ -4,6 +4,11 @@ from typing import List, Optional, Dict, Any
 
 from models.user import User
 from repositories.user_repository import UserRepository
+from utils.validators import UserValidator, ValidationError
+from utils.logger import LibraryLogger
+
+# Configurar logger
+logger = LibraryLogger.get_logger(__name__)
 
 # Attempt to import algorithms. If not available, set to None and raise ImportError when used.
 # The project should not rely on a custom insertion sort here; use Python's built-in sorted().
@@ -82,10 +87,19 @@ class UserService:
 		Returns: None
 
 		Raises:
+		- ValidationError: if user data is invalid (name empty)
 		- ValueError: if a user with the same `id` already exists.
 		- ImportError: if `insertion_sort_users` is not available when attempting to order.
 		- Exception: for IO errors.
 		"""
+		# Validar datos del usuario ANTES de agregar
+		try:
+			UserValidator.validate_name(user.get_name())
+			UserValidator.validate_id(user.get_id())
+		except ValidationError as e:
+			logger.error(f"Validación fallida al agregar usuario: {e}")
+			raise
+		
 		if any(u.get_id() == user.get_id() for u in self.users_general):
 			raise ValueError(f"A user with id '{user.get_id()}' already exists")
 
@@ -94,8 +108,8 @@ class UserService:
 		# Update sorted list view using builtin sort
 		self.users_sorted = sorted(self.users_general, key=lambda u: u.get_name())
 
-
 		self._save_users()
+		logger.info(f"Usuario agregado: id={user.get_id()}, nombre={user.get_name()}")
 
 	def create_user(self, name: str) -> User:
 		"""Create a new user with an auto-generated unique ID and persist it.
@@ -106,7 +120,17 @@ class UserService:
 		  suffix and increment. If none found, start at 1 (U001).
 		- Ensure the generated ID does not collide with any existing id; if it does
 		  (unlikely), append a suffix '-1', '-2', ... until unique.
+		  
+		Raises:
+		- ValidationError: if name is empty or invalid
 		"""
+		# VALIDAR nombre ANTES de crear usuario
+		try:
+			name_clean = UserValidator.validate_name(name)
+		except ValidationError as e:
+			logger.error(f"Validación fallida al crear usuario: {e}")
+			raise
+		
 		# collect existing ids
 		existing_ids = {u.get_id() for u in self.users_general}
 		# find numeric suffixes for IDs like U123
@@ -131,8 +155,9 @@ class UserService:
 			counter += 1
 
 		from models.user import User as UserModel
-		user = UserModel(new_id, name)
+		user = UserModel(new_id, name_clean)  # Usar nombre validado
 		self.add_user(user)
+		logger.info(f"Usuario creado: id={new_id}, nombre={name_clean}")
 		return user
 
 	def get_all_users(self) -> List[User]:

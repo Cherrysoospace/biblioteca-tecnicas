@@ -1,6 +1,10 @@
 import customtkinter as ctk
 from . import theme
 from typing import Callable, Optional
+from utils.logger import LibraryLogger, UIErrorHandler
+
+# Configurar logger para este módulo
+logger = LibraryLogger.get_logger(__name__)
 
 
 def create_title_label(parent, text: str):
@@ -29,8 +33,8 @@ def create_primary_button(parent, text: str, command: Optional[Callable] = None,
     # use strong border to echo the black line art in the background
     try:
         btn.configure(border_width=1, border_color=theme.BORDER_COLOR)
-    except Exception:
-        pass
+    except Exception as e:
+        UIErrorHandler.log_and_pass(logger, "configurar borde de botón primario", e)
     return btn
 
 
@@ -51,6 +55,6 @@ def create_small_button(parent, text: str, command: Optional[Callable] = None, w
     )
     try:
         btn.configure(border_width=1, border_color=theme.BORDER_COLOR)
-    except Exception:
-        pass
+    except Exception as e:
+        UIErrorHandler.log_and_pass(logger, "configurar borde de botón pequeño", e)
     return btn

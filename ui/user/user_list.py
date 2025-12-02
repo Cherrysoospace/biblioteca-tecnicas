@@ -6,6 +6,10 @@ from ui import theme
 from ui import widget_factory as wf
 from ui.user.user_form import UserForm
 from controllers.user_controller import UserController
+from utils.logger import LibraryLogger, UIErrorHandler
+
+# Configurar logger para este módulo
+logger = LibraryLogger.get_logger(__name__)
 
 
 class UserList(ctk.CTkToplevel):
@@ -17,24 +21,25 @@ class UserList(ctk.CTkToplevel):
         # Apply window scaling for this toplevel
         try:
             ctk.set_window_scaling(ctk._get_window_scaling(self))
-        except Exception:
-            pass
+        except Exception as e:
+            UIErrorHandler.log_and_pass(logger, "aplicar window scaling", e)
         
         try:
             theme.apply_theme(self)
-        except Exception:
+        except Exception as e:
+            UIErrorHandler.log_and_pass(logger, "aplicar tema", e)
             try:
                 self.configure(fg_color=theme.BG_COLOR)
-            except Exception:
-                pass
+            except Exception as config_e:
+                UIErrorHandler.log_and_pass(logger, "configurar color de fondo", config_e)
 
         self.title("Listado de Usuarios")
         self.geometry("600x420")
         try:
             if parent is not None:
                 self.transient(parent)
-        except Exception:
-            pass
+        except Exception as e:
+            UIErrorHandler.log_and_pass(logger, "configurar ventana transient", e)
 
         container = ctk.CTkFrame(self, fg_color=theme.BG_COLOR, corner_radius=12)
         container.pack(expand=True, fill="both", padx=12, pady=12)
@@ -52,19 +57,21 @@ class UserList(ctk.CTkToplevel):
         style = ttk.Style()
         try:
             style.theme_use('clam')
-        except Exception:
-            pass
+        except Exception as e:
+            UIErrorHandler.log_and_pass(logger, "configurar tema ttk 'clam'", e)
 
         try:
             fam, fsize, fweight = theme.get_font(self, size=10)
-        except Exception:
+        except Exception as e:
+            UIErrorHandler.log_and_pass(logger, "obtener font de tema", e)
             fam, fsize, fweight = ("Segoe UI", 10, "normal")
         row_font = tkfont.Font(family=fam, size=fsize)
         style.configure("Treeview", font=row_font, rowheight=24, fieldbackground=theme.BG_COLOR)
 
         try:
             hfam, hfsize, _ = theme.get_font(self, size=11, weight="bold")
-        except Exception:
+        except Exception as e:
+            UIErrorHandler.log_and_pass(logger, "obtener font bold de tema", e)
             hfam, hfsize = (fam, fsize + 1)
         head_font = tkfont.Font(family=hfam, size=hfsize, weight="bold")
         style.configure("Treeview.Heading", font=head_font, background=theme.BORDER_COLOR, foreground=theme.BG_COLOR)
@@ -73,8 +80,8 @@ class UserList(ctk.CTkToplevel):
             style.map("Treeview",
                       background=[('selected', theme.ACCENT_RED)],
                       foreground=[('selected', '#ffffff')])
-        except Exception:
-            pass
+        except Exception as e:
+            UIErrorHandler.log_and_pass(logger, "mapear colores de Treeview", e)
 
         self.tree = ttk.Treeview(table_holder, columns=cols, show="headings")
         headings = {"id": "ID", "name": "Nombre"}
@@ -109,13 +116,13 @@ class UserList(ctk.CTkToplevel):
 
         try:
             self.protocol("WM_DELETE_WINDOW", self._on_close)
-        except Exception:
-            pass
+        except Exception as e:
+            UIErrorHandler.log_and_pass(logger, "configurar protocolo WM_DELETE_WINDOW", e)
 
         try:
             self.tree.bind("<Double-1>", lambda e: self.open_selected_for_edit())
-        except Exception:
-            pass
+        except Exception as e:
+            UIErrorHandler.log_and_pass(logger, "bind double-click en tree", e)
 
         # initial load
         self.load_users()
@@ -127,8 +134,13 @@ class UserList(ctk.CTkToplevel):
 
         try:
             users = self.controller.get_all_users()
+            logger.info(f"Cargados {len(users)} usuarios")
         except Exception as e:
-            messagebox.showerror("Error", f"No se pudo cargar usuarios: {e}")
+            UIErrorHandler.handle_error(
+                logger, e,
+                title="Error al cargar usuarios",
+                user_message="No se pudo cargar la lista de usuarios. Por favor, intente nuevamente."
+            )
             return
 
         for i, u in enumerate(users):
@@ -137,33 +149,35 @@ class UserList(ctk.CTkToplevel):
                 name = u.get_name()
                 tag = 'even' if i % 2 == 0 else 'odd'
                 self.tree.insert("", "end", values=(uid, name), tags=(tag,))
-            except Exception:
+            except Exception as e:
+                logger.warning(f"Error insertando usuario en tabla (índice {i}): {e}")
                 continue
 
         try:
             self.tree.tag_configure('odd', background='#F7F1E6')
             self.tree.tag_configure('even', background=theme.BG_COLOR)
-        except Exception:
-            pass
+        except Exception as e:
+            UIErrorHandler.log_and_pass(logger, "configurar tags de colores en tree", e)
 
     def _on_close(self):
         try:
             self.destroy()
-        except Exception:
+        except Exception as e:
+            UIErrorHandler.log_and_pass(logger, "destroy ventana", e)
             try:
                 self.withdraw()
-            except Exception:
-                pass
+            except Exception as withdraw_e:
+                UIErrorHandler.log_and_pass(logger, "withdraw ventana", withdraw_e)
 
         try:
             if getattr(self, '_parent_window', None):
                 try:
                     self._parent_window.lift()
                     self._parent_window.focus_force()
-                except Exception:
-                    pass
-        except Exception:
-            pass
+                except Exception as e:
+                    UIErrorHandler.log_and_pass(logger, "retornar foco a ventana padre", e)
+        except Exception as e:
+            UIErrorHandler.log_and_pass(logger, "_on_close manejo de ventana padre", e)
 
     def open_selected_for_edit(self):
         sel = self.tree.selection()
@@ -180,11 +194,16 @@ class UserList(ctk.CTkToplevel):
         try:
             user = self.controller.find_by_id(user_id)
             if user is None:
-                messagebox.showerror("Error", f"Usuario {user_id} no encontrado")
+                UIErrorHandler.handle_error(
+                    logger, ValueError(f"Usuario no encontrado: {user_id}"),
+                    title="Usuario no encontrado",
+                    user_message=f"El usuario {user_id} no fue encontrado en el sistema."
+                )
                 return
 
             parent = self._parent_window or self
             win = UserForm(parent, mode="edit", user=user)
+            logger.info(f"Ventana de edición abierta para usuario: {user_id}")
 
             # refresh the list when the edit window is closed
             try:
@@ -193,15 +212,19 @@ class UserList(ctk.CTkToplevel):
                     try:
                         if getattr(self, 'tree', None) and self.tree.winfo_exists():
                             self.load_users()
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        UIErrorHandler.log_and_pass(logger, "reload después de editar", e)
 
                 win.bind('<Destroy>', _on_child_destroy)
-            except Exception:
-                pass
+            except Exception as e:
+                UIErrorHandler.log_and_pass(logger, "bind destroy para refresh", e)
 
         except Exception as e:
-            messagebox.showerror("Error", str(e))
+            UIErrorHandler.handle_error(
+                logger, e,
+                title="Error al editar usuario",
+                user_message=f"No se pudo abrir el formulario de edición.\nError: {str(e)}"
+            )
 
     def delete_selected(self):
         sel = self.tree.selection()
@@ -211,19 +234,29 @@ class UserList(ctk.CTkToplevel):
         try:
             values = self.tree.item(sel[0], "values")
             user_id = values[0]
-        except Exception:
-            messagebox.showerror("Error", "No se pudo leer la fila seleccionada.")
+        except Exception as e:
+            UIErrorHandler.handle_error(
+                logger, e,
+                title="Error de selección",
+                user_message="No se pudo leer la fila seleccionada. Intente nuevamente."
+            )
             return
 
         if not messagebox.askyesno("Confirmar", f"¿Eliminar el usuario {user_id}? Esta acción no se puede deshacer?"):
+            logger.info(f"Usuario canceló eliminación de {user_id}")
             return
 
         try:
             self.controller.delete_user(user_id)
+            logger.info(f"Usuario eliminado: {user_id}")
             messagebox.showinfo("Borrado", "Usuario eliminado correctamente.")
             self.load_users()
         except Exception as e:
-            messagebox.showerror("Error", str(e))
+            UIErrorHandler.handle_error(
+                logger, e,
+                title="Error al eliminar usuario",
+                user_message=f"No se pudo eliminar el usuario {user_id}.\nError: {str(e)}"
+            )
 
 
 __all__ = ["UserList"]

@@ -1,18 +1,44 @@
-"""
-AlgoritmosOrdenamiento.py
+"""AlgoritmosOrdenamiento.py
 
-Módulo que contiene algoritmos de ordenamiento para el Sistema de Gestión de Bibliotecas.
-Este archivo implementa algoritmos de ordenamiento puros (sin dependencias externas)
-que pueden ser utilizados para ordenar colecciones de libros por diferentes atributos.
+Módulo de algoritmos de ordenamiento para el Sistema de Gestión de Bibliotecas.
+
+Este módulo implementa Merge Sort para ordenar el Inventario General de libros
+por precio (valor en COP). El algoritmo se implementa manualmente sin usar
+las funciones built-in sorted() o .sort() de Python.
+
+Características:
+- Merge Sort: Algoritmo de ordenamiento estable O(n log n)
+- Ordena objetos Book por precio (menor a mayor)
+- Genera reportes globales serializables
+- Código modular y reutilizable
+
+¿Por qué Merge Sort?
+====================
+1. ESTABILIDAD: Merge Sort es un algoritmo estable, lo que significa que preserva
+   el orden relativo de elementos con el mismo precio. Ejemplo:
+   - Libro A: $10,000 (posición 1)
+   - Libro B: $10,000 (posición 2)
+   Después del ordenamiento, A seguirá antes que B.
+
+2. COMPLEJIDAD GARANTIZADA: O(n log n) en TODOS los casos (mejor, promedio, peor).
+   No hay degradación de rendimiento como en QuickSort (que puede ser O(n²) en
+   el peor caso).
+
+3. PREDECIBILIDAD: Ideal para inventarios grandes donde necesitamos rendimiento
+   consistente sin importar el estado inicial de los datos.
+
+4. DIVIDE Y CONQUISTA: Facilita el debugging y pruebas al dividir el problema
+   en subproblemas más pequeños.
 
 Autor: Sistema de Gestión de Bibliotecas
-Fecha: 2025-11-29
+Fecha: 2025-12-02
 """
 
+from typing import List, Dict, Any
+from utils.logger import LibraryLogger
 
-# ==============================================================================
-# FUNCIONES AUXILIARES PARA COMPARACIÓN DE ISBNs
-# ==============================================================================
+# Configurar logger
+logger = LibraryLogger.get_logger(__name__)
 
 def _comparar_isbn_mayor(isbn1, isbn2):
     """
@@ -190,189 +216,420 @@ def insercion_ordenada(lista_libros):
     return lista_libros
 
 
-# ==============================================================================
-# FUNCIONES AUXILIARES (OPCIONALES - PARA EXTENSIBILIDAD FUTURA)
-# ==============================================================================
 
-def insercion_ordenada_reversa(lista_libros):
-    """
-    Ordena una lista de objetos Libro por ISBN en orden DESCENDENTE.
+def merge_sort_books_by_price(lista_libros: List[Any]) -> List[Any]:
+    """Ordenar una lista de objetos Book por precio usando Merge Sort.
     
-    Esta función es una variante de insercion_ordenada() que ordena
-    en sentido inverso. Útil para mostrar los libros más recientes primero
-    (asumiendo que ISBNs mayores corresponden a libros más nuevos).
+    ALGORITMO:
+    ==========
+    Merge Sort es un algoritmo de ordenamiento basado en el paradigma "Divide y Conquista":
+    
+    1. DIVIDIR: Dividir la lista en dos mitades aproximadamente iguales
+    2. CONQUISTAR: Ordenar recursivamente cada mitad
+    3. COMBINAR: Mezclar (merge) las dos mitades ordenadas en una lista ordenada
+    
+    CASO BASE:
+    ----------
+    Si la lista tiene 0 o 1 elementos, ya está ordenada (retornar directamente).
+    
+    PASO RECURSIVO:
+    ---------------
+    - Dividir lista en mitad izquierda y mitad derecha
+    - Ordenar recursivamente cada mitad
+    - Combinar las mitades ordenadas usando merge()
+    
+    COMPLEJIDAD:
+    ============
+    - Tiempo: O(n log n) en TODOS los casos
+      * n divisiones de la lista (cada nivel del árbol de recursión)
+      * log n niveles de recursión (altura del árbol)
+    - Espacio: O(n) para almacenar las sublistas temporales
+    
+    ESTABILIDAD:
+    ============
+    Merge Sort es ESTABLE porque:
+    - Durante el merge, cuando dos elementos tienen el mismo precio, siempre
+      se toma primero el de la lista izquierda (que venía antes en la lista original)
+    - Esto preserva el orden relativo de elementos iguales
     
     PARÁMETROS:
     ===========
-    lista_libros : list
-        Lista de objetos Libro a ordenar.
+    lista_libros : List[Any]
+        Lista de objetos Book a ordenar. Cada objeto debe tener el método
+        get_price() que retorna el precio como int o float.
         
     RETORNO:
     ========
-    list
-        Lista ordenada por isbn en orden descendente.
+    List[Any]
+        Nueva lista con los mismos objetos Book ordenados por precio
+        de menor a mayor (orden ascendente).
+        
+    EXCEPCIONES:
+    ============
+    - AttributeError: si algún objeto no tiene el método get_price()
+    - TypeError: si get_price() no retorna un valor comparable
+    
+    EJEMPLO:
+    ========
+    >>> from models.Books import Book
+    >>> libros = [
+    ...     Book("B001", "978-1", "Libro C", "Autor", 1.0, 50000, False),
+    ...     Book("B002", "978-2", "Libro A", "Autor", 1.0, 20000, False),
+    ...     Book("B003", "978-3", "Libro B", "Autor", 1.0, 35000, False),
+    ... ]
+    >>> ordenados = merge_sort_books_by_price(libros)
+    >>> [b.get_price() for b in ordenados]
+    [20000, 35000, 50000]
     """
-    if not lista_libros or len(lista_libros) <= 1:
+    # CASO BASE: Lista vacía o de un solo elemento ya está ordenada
+    if len(lista_libros) <= 1:
         return lista_libros
     
-    for i in range(1, len(lista_libros)):
-        libro_actual = lista_libros[i]
-        isbn_actual = libro_actual.isbn
-        j = i - 1
-        
-        # CAMBIO CLAVE: Comparación invertida (< en lugar de >)
-        while j >= 0 and lista_libros[j].isbn < isbn_actual:
-            lista_libros[j + 1] = lista_libros[j]
-            j -= 1
-        
-        lista_libros[j + 1] = libro_actual
+    # DIVIDIR: Encontrar el punto medio de la lista
+    punto_medio = len(lista_libros) // 2
     
-    return lista_libros
+    # Dividir la lista en dos mitades
+    mitad_izquierda = lista_libros[:punto_medio]
+    mitad_derecha = lista_libros[punto_medio:]
+    
+    logger.debug(f"Dividiendo lista de {len(lista_libros)} libros en {len(mitad_izquierda)} + {len(mitad_derecha)}")
+    
+    # CONQUISTAR: Ordenar recursivamente cada mitad
+    # Estas llamadas recursivas seguirán dividiendo hasta llegar al caso base
+    izquierda_ordenada = merge_sort_books_by_price(mitad_izquierda)
+    derecha_ordenada = merge_sort_books_by_price(mitad_derecha)
+    
+    # COMBINAR: Mezclar las dos mitades ordenadas
+    resultado = merge(izquierda_ordenada, derecha_ordenada)
+    
+    return resultado
 
 
-def insercion_ordenada_por_atributo(lista_libros, atributo='isbn', orden='asc'):
+def merge(left: List[Any], right: List[Any]) -> List[Any]:
+    """Combinar dos listas ordenadas de Books en una sola lista ordenada por precio.
+    
+    ALGORITMO:
+    ==========
+    Este es el corazón de Merge Sort. Combina dos listas ya ordenadas en una
+    sola lista ordenada mediante un proceso de "intercalación" (interleaving):
+    
+    1. Comparar los elementos en las posiciones actuales de ambas listas
+    2. Tomar el menor de los dos y agregarlo al resultado
+    3. Avanzar el índice de la lista de donde se tomó el elemento
+    4. Repetir hasta que se hayan procesado todos los elementos
+    5. Agregar los elementos restantes de la lista que aún tenga elementos
+    
+    INVARIANTE:
+    -----------
+    En cada iteración del bucle while:
+    - El resultado contiene los elementos más pequeños vistos hasta ahora, ordenados
+    - left[i:] y right[j:] contienen los elementos aún no procesados
+    - Ambas sublistas left y right están ordenadas
+    
+    PRESERVACIÓN DE ESTABILIDAD:
+    ============================
+    Cuando left[i].get_price() == right[j].get_price():
+    - Siempre tomamos el elemento de LEFT primero
+    - Esto preserva el orden original porque left contiene elementos que
+      aparecían ANTES en la lista original
+    
+    PARÁMETROS:
+    ===========
+    left : List[Any]
+        Primera lista de objetos Book, ya ordenada por precio (ascendente)
+    right : List[Any]
+        Segunda lista de objetos Book, ya ordenada por precio (ascendente)
+        
+    RETORNO:
+    ========
+    List[Any]
+        Nueva lista que contiene todos los elementos de left y right,
+        ordenados por precio de menor a mayor.
+        
+    COMPLEJIDAD:
+    ============
+    - Tiempo: O(n + m) donde n = len(left), m = len(right)
+      Cada elemento se visita exactamente una vez
+    - Espacio: O(n + m) para la lista resultado
+    
+    EJEMPLO:
+    ========
+    >>> # Supongamos que tenemos dos listas ordenadas
+    >>> left = [libro_20k, libro_35k]   # Precios: [20000, 35000]
+    >>> right = [libro_25k, libro_50k]  # Precios: [25000, 50000]
+    >>> resultado = merge(left, right)
+    >>> [b.get_price() for b in resultado]
+    [20000, 25000, 35000, 50000]
     """
-    Versión genérica de insercion_ordenada que permite ordenar por cualquier
-    atributo y en cualquier dirección.
+    # Lista resultado que contendrá los elementos combinados y ordenados
+    resultado = []
+    
+    # Índices para recorrer las listas left y right
+    i = 0  # Índice para la lista left
+    j = 0  # Índice para la lista right
+    
+    # FASE 1: Intercalar elementos mientras ambas listas tengan elementos
+    # -----------------------------------------------------------------------
+    # Comparamos los elementos actuales de cada lista y tomamos el menor
+    while i < len(left) and j < len(right):
+        # Obtener precios de los elementos actuales
+        precio_izq = left[i].get_price()
+        precio_der = right[j].get_price()
+        
+        # IMPORTANTE: Usar <= en lugar de < garantiza ESTABILIDAD
+        # Si los precios son iguales, tomamos el de la izquierda primero
+        # (que apareció antes en la lista original)
+        if precio_izq <= precio_der:
+            resultado.append(left[i])
+            i += 1  # Avanzar el índice de la lista izquierda
+        else:
+            resultado.append(right[j])
+            j += 1  # Avanzar el índice de la lista derecha
+    
+    # FASE 2: Agregar elementos restantes de la lista izquierda
+    # ----------------------------------------------------------
+    # Si la lista derecha se agotó primero, quedan elementos en left
+    while i < len(left):
+        resultado.append(left[i])
+        i += 1
+    
+    # FASE 3: Agregar elementos restantes de la lista derecha
+    # --------------------------------------------------------
+    # Si la lista izquierda se agotó primero, quedan elementos en right
+    while j < len(right):
+        resultado.append(right[j])
+        j += 1
+    
+    # INVARIANTE POSTCONDICIÓN:
+    # - len(resultado) == len(left) + len(right)
+    # - resultado está ordenado por precio
+    # - todos los elementos de left y right están en resultado
+    
+    return resultado
+
+
+def generar_reporte_global(lista_ordenada: List[Any]) -> List[Dict[str, Any]]:
+    """Generar un reporte global serializable del inventario ordenado por precio.
     
     PROPÓSITO:
     ==========
-    Proporciona flexibilidad para ordenar libros por diferentes atributos
-    sin necesidad de escribir una función separada para cada caso.
+    Convertir una lista de objetos Book ordenados en una estructura de datos
+    serializable (lista de diccionarios) que puede ser:
+    - Guardada en un archivo JSON
+    - Enviada como respuesta de API
+    - Mostrada en la UI
+    - Exportada a otros formatos (CSV, Excel, etc.)
+    
+    ESTRUCTURA DEL REPORTE:
+    =======================
+    Cada libro se convierte en un diccionario con los siguientes campos:
+    - id: str - Identificador único del libro
+    - isbn: str - Código ISBN
+    - titulo: str - Título del libro
+    - autor: str - Nombre del autor
+    - peso: float - Peso en kilogramos
+    - precio: int - Precio en pesos colombianos (COP)
+    - prestado: bool - Estado de préstamo
+    
+    USO TÍPICO:
+    ===========
+    1. Ordenar inventario:
+       >>> libros_ordenados = merge_sort_books_by_price(inventario_general)
+    
+    2. Generar reporte:
+       >>> reporte = generar_reporte_global(libros_ordenados)
+    
+    3. Guardar en JSON:
+       >>> import json
+       >>> with open('reporte_inventario.json', 'w') as f:
+       ...     json.dump(reporte, f, indent=2, ensure_ascii=False)
     
     PARÁMETROS:
     ===========
-    lista_libros : list
-        Lista de objetos Libro a ordenar.
-    atributo : str, opcional
-        Nombre del atributo por el cual ordenar (default: 'isbn').
-        Ejemplos: 'isbn', 'title', 'author', 'price', etc.
-    orden : str, opcional
-        Dirección del ordenamiento: 'asc' (ascendente) o 'desc' (descendente).
-        Default: 'asc'.
+    lista_ordenada : List[Any]
+        Lista de objetos Book ya ordenados por precio (resultado de
+        merge_sort_books_by_price). Cada objeto debe tener los siguientes
+        métodos getter:
+        - get_id() -> str
+        - get_ISBNCode() -> str
+        - get_title() -> str
+        - get_author() -> str
+        - get_weight() -> float
+        - get_price() -> int
+        - get_isBorrowed() -> bool
         
     RETORNO:
     ========
-    list
-        Lista ordenada según el atributo y orden especificados.
+    List[Dict[str, Any]]
+        Lista de diccionarios, donde cada diccionario representa un libro
+        con sus atributos. La lista mantiene el orden de lista_ordenada.
         
+    EXCEPCIONES:
+    ============
+    - AttributeError: si algún libro no tiene todos los getters requeridos
+    
     EJEMPLO:
     ========
-    >>> insercion_ordenada_por_atributo(libros, atributo='title', orden='asc')
-    >>> insercion_ordenada_por_atributo(libros, atributo='price', orden='desc')
+    >>> libros = [libro1, libro2, libro3]  # Ya ordenados por precio
+    >>> reporte = generar_reporte_global(libros)
+    >>> reporte[0]
+    {
+        'id': 'B001',
+        'isbn': '978-1234567890',
+        'titulo': 'El Quijote',
+        'autor': 'Miguel de Cervantes',
+        'peso': 1.2,
+        'precio': 25000,
+        'prestado': False
+    }
     """
-    if not lista_libros or len(lista_libros) <= 1:
-        return lista_libros
+    reporte = []
     
-    # Determinar la función de comparación según el orden
-    if orden.lower() == 'desc':
-        comparar = lambda a, b: a < b  # Orden descendente
-    else:
-        comparar = lambda a, b: a > b  # Orden ascendente (default)
+    logger.info(f"Generando reporte global de {len(lista_ordenada)} libros ordenados por precio")
     
-    for i in range(1, len(lista_libros)):
-        libro_actual = lista_libros[i]
-        
-        # Obtener el valor del atributo de forma dinámica usando getattr
-        # NOTA: Se puede agregar manejo de excepciones aquí si el atributo no existe
-        valor_actual = getattr(libro_actual, atributo)
-        
-        j = i - 1
-        
-        while j >= 0 and comparar(getattr(lista_libros[j], atributo), valor_actual):
-            lista_libros[j + 1] = lista_libros[j]
-            j -= 1
-        
-        lista_libros[j + 1] = libro_actual
+    for libro in lista_ordenada:
+        try:
+            # Extraer información de cada libro usando sus getters
+            libro_dict = {
+                'id': libro.get_id(),
+                'isbn': libro.get_ISBNCode(),
+                'titulo': libro.get_title(),
+                'autor': libro.get_author(),
+                'peso': libro.get_weight(),
+                'precio': libro.get_price(),
+                'prestado': libro.get_isBorrowed(),
+            }
+            
+            reporte.append(libro_dict)
+            
+        except AttributeError as e:
+            # Si un libro no tiene algún getter, loguear error y continuar
+            logger.error(f"Error al procesar libro en reporte: {e}")
+            # Agregar entrada con información parcial
+            reporte.append({
+                'error': f'Libro con atributos faltantes: {str(e)}',
+                'libro': str(libro)
+            })
     
-    return lista_libros
+    logger.info(f"Reporte global generado exitosamente con {len(reporte)} entradas")
+    
+    return reporte
 
 
-# ==============================================================================
-# FUNCIÓN DE VALIDACIÓN (PARA TESTING Y DEBUGGING)
-# ==============================================================================
-
-def verificar_ordenamiento(lista_libros, atributo='isbn'):
-    """
-    Verifica si una lista de libros está ordenada correctamente por un atributo dado.
+def ordenar_y_generar_reporte(inventario_general: List[Any]) -> Dict[str, Any]:
+    """Función de conveniencia: ordenar inventario y generar reporte en un solo paso.
     
-    Útil para testing y validación después de aplicar un algoritmo de ordenamiento.
+    PROPÓSITO:
+    ==========
+    Combina merge_sort_books_by_price() y generar_reporte_global() en una sola
+    función para simplificar el uso común del módulo.
     
     PARÁMETROS:
     ===========
-    lista_libros : list
-        Lista de objetos Libro a verificar.
-    atributo : str, opcional
-        Atributo por el cual verificar el orden (default: 'isbn').
+    inventario_general : List[Any]
+        Lista desordenada de objetos Book (el Inventario General)
+        
+    RETORNO:
+    ========
+    Dict[str, Any]
+        Diccionario con dos claves:
+        - 'libros_ordenados': List[Any] - Lista ordenada de objetos Book
+        - 'reporte': List[Dict[str, Any]] - Reporte serializable
+        - 'total_libros': int - Cantidad de libros procesados
+        - 'precio_total': int - Suma de todos los precios
+        - 'precio_promedio': float - Precio promedio
+        - 'precio_minimo': int - Precio más bajo
+        - 'precio_maximo': int - Precio más alto
+        
+    EJEMPLO:
+    ========
+    >>> resultado = ordenar_y_generar_reporte(inventario_general)
+    >>> print(f"Total libros: {resultado['total_libros']}")
+    >>> print(f"Precio promedio: ${resultado['precio_promedio']:,.0f}")
+    >>> 
+    >>> # Guardar reporte en JSON
+    >>> import json
+    >>> with open('reporte.json', 'w') as f:
+    ...     json.dump(resultado['reporte'], f, indent=2, ensure_ascii=False)
+    """
+    logger.info(f"Iniciando ordenamiento de {len(inventario_general)} libros por precio")
+    
+    # Paso 1: Ordenar usando Merge Sort
+    libros_ordenados = merge_sort_books_by_price(inventario_general)
+    
+    # Paso 2: Generar reporte serializable
+    reporte = generar_reporte_global(libros_ordenados)
+    
+    # Paso 3: Calcular estadísticas del inventario
+    total_libros = len(libros_ordenados)
+    
+    if total_libros > 0:
+        precios = [libro.get_price() for libro in libros_ordenados]
+        precio_total = sum(precios)
+        precio_promedio = precio_total / total_libros
+        precio_minimo = precios[0]  # Primera posición (ya ordenado)
+        precio_maximo = precios[-1]  # Última posición (ya ordenado)
+    else:
+        precio_total = 0
+        precio_promedio = 0.0
+        precio_minimo = 0
+        precio_maximo = 0
+    
+    logger.info(f"Ordenamiento completado: {total_libros} libros, precio total: ${precio_total:,}")
+    
+    return {
+        'libros_ordenados': libros_ordenados,
+        'reporte': reporte,
+        'total_libros': total_libros,
+        'precio_total': precio_total,
+        'precio_promedio': precio_promedio,
+        'precio_minimo': precio_minimo,
+        'precio_maximo': precio_maximo,
+    }
+
+
+# ==================== FUNCIONES DE UTILIDAD ====================
+
+def verificar_ordenamiento(lista: List[Any]) -> bool:
+    """Verificar si una lista de Books está ordenada por precio (ascendente).
+    
+    UTILIDAD:
+    =========
+    Función de debugging y testing para validar que el ordenamiento funciona
+    correctamente. Útil para pruebas unitarias.
+    
+    PARÁMETROS:
+    ===========
+    lista : List[Any]
+        Lista de objetos Book a verificar
         
     RETORNO:
     ========
     bool
-        True si la lista está ordenada en orden ascendente, False en caso contrario.
+        True si la lista está ordenada por precio (menor a mayor)
+        False en caso contrario
         
     EJEMPLO:
     ========
-    >>> insercion_ordenada(libros)
-    >>> if verificar_ordenamiento(libros):
-    ...     print("Lista ordenada correctamente")
+    >>> ordenados = merge_sort_books_by_price(libros)
+    >>> assert verificar_ordenamiento(ordenados), "Error: lista no está ordenada"
     """
-    if not lista_libros or len(lista_libros) <= 1:
+    if len(lista) <= 1:
         return True
     
-    for i in range(len(lista_libros) - 1):
-        valor_actual = getattr(lista_libros[i], atributo)
-        valor_siguiente = getattr(lista_libros[i + 1], atributo)
-        
-        if valor_actual > valor_siguiente:
+    for i in range(len(lista) - 1):
+        if lista[i].get_price() > lista[i + 1].get_price():
             return False
     
     return True
 
 
-# ==============================================================================
-# NOTAS PARA SUSTENTACIÓN
-# ==============================================================================
-"""
-PUNTOS CLAVE PARA EXPLICAR EN LA SUSTENTACIÓN:
-===============================================
+__all__ = [
+    'insercion_ordenada',
+    'merge_sort_books_by_price',
+    'merge',
+    'generar_reporte_global',
+    'ordenar_y_generar_reporte',
+    'verificar_ordenamiento',
+]
 
-1. COMPLEJIDAD TEMPORAL:
-   - Mejor caso O(n): Lista ya ordenada, solo hacemos n-1 comparaciones
-   - Peor caso O(n²): Lista en orden inverso, hacemos n*(n-1)/2 comparaciones
-   - Caso promedio O(n²): En promedio, cada inserción requiere n/2 comparaciones
-
-2. COMPLEJIDAD ESPACIAL:
-   - O(1): Solo usamos variables temporales (libro_actual, j, isbn_actual)
-   - No requiere arrays auxiliares ni recursión
-
-3. ESTABILIDAD:
-   - El algoritmo es ESTABLE: mantiene el orden relativo de elementos iguales
-   - Importante cuando se ordena por un atributo pero se quiere preservar
-     el orden de un ordenamiento previo por otro atributo
-
-4. VENTAJAS vs OTROS ALGORITMOS:
-   - Más simple que QuickSort o MergeSort
-   - Mejor que Selection Sort y Bubble Sort en la práctica
-   - Ideal para listas pequeñas o casi ordenadas
-   - Usado como sub-rutina en algoritmos híbridos (ej: TimSort de Python)
-
-5. CUÁNDO USAR INSERTION SORT:
-   - Listas pequeñas (< 50 elementos)
-   - Listas parcialmente ordenadas
-   - Cuando se necesita estabilidad
-   - Cuando se insertan elementos de forma incremental
-
-6. CUÁNDO NO USAR INSERTION SORT:
-   - Listas grandes (> 1000 elementos) -> Usar QuickSort o MergeSort
-   - Cuando el rendimiento es crítico -> Usar algoritmos O(n log n)
-
-7. POSIBLES MEJORAS:
-   - Binary Insertion Sort: Usar búsqueda binaria para encontrar posición
-   - Shell Sort: Variante optimizada de Insertion Sort
-   - Ordenamiento adaptativo: Detectar si ya está ordenada
-
-8. INTEGRACIÓN CON EL SISTEMA:
-   - Se puede llamar después de cargar libros desde JSON
-   - Se puede usar en vistas de listado para mostrar libros ordenados
-   - Se puede combinar con algoritmos de búsqueda para mejorar eficiencia
-"""

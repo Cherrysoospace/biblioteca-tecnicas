@@ -241,10 +241,10 @@ class InventoryService:
         if not os.path.exists(books_json):
             return
 
-        # Read books.json
+        # Read books.json using JSONFileHandler
         try:
-            with open(books_json, 'r', encoding='utf-8') as f:
-                books_data = json.load(f)
+            from utils.file_handler import JSONFileHandler
+            books_data = JSONFileHandler.load_json(books_json, expected_type=list)
         except Exception:
             return
 
@@ -305,11 +305,11 @@ class InventoryService:
         # determine books.json path
         books_json = books_path or FilePaths.BOOKS
 
-        # read books.json
+        # read books.json using JSONFileHandler
         try:
-            with open(books_json, 'r', encoding='utf-8') as f:
-                books_data = json.load(f)
-        except json.JSONDecodeError as e:
+            from utils.file_handler import JSONFileHandler
+            books_data = JSONFileHandler.load_json(books_json, expected_type=list)
+        except ValueError as e:
             raise ValueError(f"{books_json} contains invalid JSON: {e}")
         except Exception as e:
             raise Exception(f"Unable to read {books_json}: {e}")

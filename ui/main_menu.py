@@ -2,11 +2,15 @@ import os
 import customtkinter as ctk
 try:
     from PIL import Image, ImageTk
-except Exception:
+except Exception as pil_error:
     Image = None
     ImageTk = None
 from ui import theme
 from ui import widget_factory as wf
+from utils.logger import LibraryLogger, UIErrorHandler
+
+# Configurar logger para este módulo
+logger = LibraryLogger.get_logger(__name__)
 from ui.book.book_form import BookForm
 from ui.user.user_form import UserForm
 from ui.book.book_list import BookList
@@ -38,8 +42,9 @@ class MainMenu(ctk.CTk):
             
             ctk.set_widget_scaling(scale)
             ctk.set_window_scaling(scale)  # Also scale toplevel windows
-        except Exception:
-            pass
+            logger.info(f"Escalado UI configurado: {scale}x (pantalla {screen_width}px)")
+        except Exception as e:
+            UIErrorHandler.log_and_pass(logger, "configurar escalado de UI", e)
 
         # Apply theme and sizing
         theme.apply_theme(self)
@@ -55,8 +60,8 @@ class MainMenu(ctk.CTk):
             x = (screen_w // 2) - (width // 2)
             y = (screen_h // 2) - (height // 2)
             self.geometry(f"{width}x{height}+{x}+{y}")
-        except Exception:
-            pass
+        except Exception as e:
+            UIErrorHandler.log_and_pass(logger, "centrar ventana", e)
 
         # Main container for vertical centering
         container = ctk.CTkFrame(self, fg_color=theme.BG_COLOR, corner_radius=12)
@@ -98,9 +103,10 @@ class MainMenu(ctk.CTk):
                 try:
                     if self.bg_label is not None:
                         self.bg_label.lower()
-                except Exception:
-                    pass
-            except Exception:
+                except Exception as e:
+                    UIErrorHandler.log_and_pass(logger, "colocar background al fondo", e)
+            except Exception as e:
+                UIErrorHandler.log_and_pass(logger, "cargar imagen de fondo", e)
                 self.bg_pil_original = None
 
         # bind resize to keep background responsive (pixelated using NEAREST)
@@ -121,15 +127,16 @@ class MainMenu(ctk.CTk):
                         self.bg_label.place(x=0, y=0, relwidth=1, relheight=1)
                         try:
                             self.bg_label.lower()
-                        except Exception:
-                            pass
+                        except Exception as e:
+                            UIErrorHandler.log_and_pass(logger, "lower bg_label en resize", e)
                     else:
                         try:
                             self.bg_label.configure(image=self.bg_image)
-                        except Exception:
-                            pass
-                except Exception:
+                        except Exception as e:
+                            UIErrorHandler.log_and_pass(logger, "configurar bg_image en resize", e)
+                except Exception as ctk_error:
                     # fallback to ImageTk
+                    UIErrorHandler.log_and_pass(logger, "CTkImage en resize", ctk_error)
                     try:
                         if ImageTk is not None:
                             self.bg_photo = ImageTk.PhotoImage(pil)
@@ -138,28 +145,29 @@ class MainMenu(ctk.CTk):
                                 self.bg_label.place(x=0, y=0, relwidth=1, relheight=1)
                                 try:
                                     self.bg_label.lower()
-                                except Exception:
-                                    pass
+                                except Exception as e:
+                                    UIErrorHandler.log_and_pass(logger, "lower bg_label ImageTk resize", e)
                             else:
                                 try:
                                     self.bg_label.configure(image=self.bg_photo)
-                                except Exception:
-                                    pass
-                    except Exception:
-                        pass
-            except Exception:
-                pass
+                                except Exception as e:
+                                    UIErrorHandler.log_and_pass(logger, "configurar bg_photo en resize", e)
+                    except Exception as e:
+                        UIErrorHandler.log_and_pass(logger, "ImageTk fallback en resize", e)
+            except Exception as e:
+                UIErrorHandler.log_and_pass(logger, "resize background completo", e)
 
         try:
             self.bind('<Configure>', _on_bg_resize)
-        except Exception:
-            pass
+        except Exception as e:
+            UIErrorHandler.log_and_pass(logger, "bind resize event", e)
 
         # Title with lantern icon on the left
         assets_path = os.path.join(os.path.dirname(__file__), "assets", "twemoji")
         try:
             self.icon_lantern = ctk.CTkImage(Image.open(os.path.join(assets_path, "lantern.png")), size=(40, 40))
-        except Exception:
+        except Exception as e:
+            UIErrorHandler.log_and_pass(logger, "cargar icono lanterna", e)
             self.icon_lantern = None
 
         title_frame = ctk.CTkFrame(container, fg_color=theme.BG_COLOR, corner_radius=0)
@@ -177,7 +185,8 @@ class MainMenu(ctk.CTk):
         # smaller screens.
         try:
             btn_frame = ctk.CTkScrollableFrame(container, fg_color=theme.BG_COLOR)
-        except Exception:
+        except Exception as e:
+            UIErrorHandler.log_and_pass(logger, "crear CTkScrollableFrame", e)
             btn_frame = ctk.CTkFrame(container, fg_color=theme.BG_COLOR)
         btn_frame.pack(expand=True, fill="both")
 
@@ -185,25 +194,30 @@ class MainMenu(ctk.CTk):
         # load icons for buttons
         try:
             self.icon_book = ctk.CTkImage(Image.open(os.path.join(assets_path, "bookpile.png")), size=(36, 36))
-        except Exception:
+        except Exception as e:
+            UIErrorHandler.log_and_pass(logger, "cargar icono libro", e)
             self.icon_book = None
         
         try:
             self.icon_user = ctk.CTkImage(Image.open(os.path.join(assets_path, "user.png")), size=(36, 36))
-        except Exception:
+        except Exception as e:
+            UIErrorHandler.log_and_pass(logger, "cargar icono usuario", e)
             self.icon_user = None
         
         try:
             self.icon_view = ctk.CTkImage(Image.open(os.path.join(assets_path, "openbook.png")), size=(36, 36))
-        except Exception:
+        except Exception as e:
+            UIErrorHandler.log_and_pass(logger, "cargar icono ver", e)
             self.icon_view = None
         
         try:
             self.icon_loan = ctk.CTkImage(Image.open(os.path.join(assets_path, "prestamo.png")), size=(36, 36))
-        except Exception:
+        except Exception as e:
+            UIErrorHandler.log_and_pass(logger, "cargar icono préstamo", e)
             try:
                 self.icon_loan = ctk.CTkImage(Image.open(os.path.join(assets_path, "sakura.png")), size=(36, 36))
-            except Exception:
+            except Exception as fallback_e:
+                UIErrorHandler.log_and_pass(logger, "cargar icono sakura (fallback)", fallback_e)
                 self.icon_loan = None
 
         # Build a list of button specs to create and place in a 2-column grid
@@ -232,13 +246,19 @@ class MainMenu(ctk.CTk):
             try:
                 btn = wf.create_primary_button(inner, label, command=cmd, image=img)
                 btn.grid(row=row, column=col, padx=8, pady=10)
-            except Exception:
+            except Exception as e:
                 # fallback to pack if grid fails for the widget
+                UIErrorHandler.log_and_pass(logger, f"grid para botón '{label}'", e)
                 try:
                     btn = wf.create_primary_button(inner, label, command=cmd, image=img)
                     btn.pack(pady=6)
-                except Exception:
-                    pass
+                except Exception as pack_e:
+                    UIErrorHandler.handle_error(
+                        logger, pack_e,
+                        title="Error creando botón",
+                        user_message=f"No se pudo crear el botón '{label}'",
+                        show_dialog=False  # No saturar al usuario con múltiples dialogs
+                    )
 
         # Bottom exit button separated
         bottom_frame = ctk.CTkFrame(container, fg_color=theme.BG_COLOR)
@@ -272,9 +292,14 @@ class MainMenu(ctk.CTk):
     # ------------------- OPEN WINDOWS -------------------
     def _open_toplevel(self, cls, *args, **kwargs):
         try:
+            logger.info(f"Abriendo ventana: {cls.__name__}")
             win = cls(self, *args, **kwargs)
         except Exception as e:
-            messagebox.showerror("Error", f"No se pudo abrir la ventana: {e}")
+            UIErrorHandler.handle_error(
+                logger, e,
+                title="Error al abrir ventana",
+                user_message=f"No se pudo abrir la ventana {cls.__name__}.\nError: {str(e)}"
+            )
             return None
 
         # keep reference
@@ -283,8 +308,9 @@ class MainMenu(ctk.CTk):
             win.deiconify()
             win.lift()
             win.focus()
-        except Exception:
-            pass
+            logger.debug(f"Ventana {cls.__name__} abierta exitosamente")
+        except Exception as e:
+            UIErrorHandler.log_and_pass(logger, f"mostrar ventana {cls.__name__}", e)
         return win
 
     def open_create_book(self):

@@ -422,5 +422,33 @@
         "isBorrowed": false
       }
     ]
+  },
+  {
+    "stock": 1,
+    "items": [
+      {
+        "id": "B033",
+        "ISBNCode": "789",
+        "title": "prueba 3000",
+        "author": "hi",
+        "weight": 0.2,
+        "price": 15000,
+        "isBorrowed": false
+      }
+    ]
+  },
+  {
+    "stock": 1,
+    "items": [
+      {
+        "id": "B034",
+        "ISBNCode": "2789",
+        "title": "prueba de merge",
+        "author": "Soy colosal",
+        "weight": 0.7,
+        "price": 120000,
+        "isBorrowed": false
+      }
+    ]
   }
 ]

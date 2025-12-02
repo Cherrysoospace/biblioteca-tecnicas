@@ -4,6 +4,14 @@ from typing import List, Optional, Dict, Any
 
 from models.Books import Book
 from repositories.book_repository import BookRepository
+from utils.validators import BookValidator, ValidationError
+from utils.logger import LibraryLogger
+from utils.algorithms.AlgoritmosOrdenamiento import ordenar_y_generar_reporte
+from utils.config import FilePaths
+import json
+
+# Configurar logger
+logger = LibraryLogger.get_logger(__name__)
 
 
 class BookService:
@@ -86,14 +94,33 @@ class BookService:
         Returns: None
 
         Raises:
+        - ValidationError: if book data is invalid (ISBN, title, weight, price)
         - ValueError: if a book with the same `id` already exists.
         - Exception: for IO errors when saving.
         """
+        # Validar datos del libro ANTES de agregar
+        try:
+            BookValidator.validate_book_data(
+                isbn=book.get_ISBNCode(),
+                title=book.get_title(),
+                author=book.get_author(),
+                weight=book.get_weight(),
+                price=book.get_price(),
+                book_id=book.get_id()
+            )
+        except ValidationError as e:
+            logger.error(f"Validación fallida al agregar libro: {e}")
+            raise  # Re-lanzar la excepción para que el controlador la maneje
+        
         if any(b.get_id() == book.get_id() for b in self.books):
             raise ValueError(f"A book with id '{book.get_id()}' already exists")
 
         self.books.append(book)
         self._save_books()
+        logger.info(f"Libro agregado: id={book.get_id()}, ISBN={book.get_ISBNCode()}, título={book.get_title()}")
+        
+        # Generar reporte actualizado ordenado por precio (Merge Sort)
+        self.generate_and_export_price_report()
 
     def update_book(self, id: str, new_data: Dict[str, Any]) -> None:
         """Update fields of a book identified by `id`.
@@ -126,6 +153,24 @@ class BookService:
             'isBorrowed': book.set_isBorrowed,
         }
 
+        # VALIDAR campos ANTES de actualizar
+        try:
+            if 'ISBNCode' in new_data:
+                new_data['ISBNCode'] = BookValidator.validate_isbn(new_data['ISBNCode'])
+            if 'title' in new_data:
+                new_data['title'] = BookValidator.validate_title(new_data['title'])
+            if 'author' in new_data:
+                new_data['author'] = BookValidator.validate_author(new_data['author'])
+            if 'weight' in new_data:
+                new_data['weight'] = BookValidator.validate_weight(new_data['weight'])
+            if 'price' in new_data:
+                new_data['price'] = BookValidator.validate_price(new_data['price'])
+            if 'id' in new_data:
+                new_data['id'] = BookValidator.validate_id(new_data['id'])
+        except ValidationError as e:
+            logger.error(f"Validación fallida al actualizar libro {id}: {e}")
+            raise
+
         if 'id' in new_data:
             new_id = new_data['id']
             if new_id != id and any(b.get_id() == new_id for b in self.books):
@@ -138,16 +183,16 @@ class BookService:
         for key, value in new_data.items():
             if key not in setters:
                 continue
-            if key == 'weight':
-                value = float(value)
-            if key == 'price':
-                value = int(value)
+            # Los valores ya fueron validados y convertidos arriba
             if key == 'isBorrowed':
                 value = bool(value)
             setters[key](value)
 
         # persist books.json
         self._save_books()
+        
+        # Generar reporte actualizado ordenado por precio (Merge Sort)
+        self.generate_and_export_price_report()
 
         # Synchronize with inventory
         try:
@@ -185,6 +230,9 @@ class BookService:
 
         self.books = [b for b in self.books if b.get_id() != id]
         self._save_books()
+        
+        # Generar reporte actualizado ordenado por precio (Merge Sort)
+        self.generate_and_export_price_report()
         
         # Synchronize with inventory - delete the book
         try:
@@ -231,6 +279,111 @@ class BookService:
         - List[Book]
         """
         return list(self.books)
+    
+    def generate_and_export_price_report(self) -> None:
+        """Generar reporte global de libros ordenados por precio usando Merge Sort.
+        
+        PROPÓSITO:
+        ==========
+        Este método cumple con el requisito del proyecto:
+        "Ordenamiento por Mezcla (Merge Sort): Este algoritmo debe usarse para generar un
+        Reporte Global de inventario, ordenado por el atributo Valor (COP). El reporte
+        generado también debe poder almacenarse en un archivo."
+        
+        FUNCIONAMIENTO:
+        ===============
+        1. Obtiene todos los libros del catálogo (self.books)
+        2. Aplica Merge Sort para ordenarlos por precio (menor a mayor)
+        3. Genera un reporte serializable con estadísticas:
+           - Lista de libros ordenados con todos sus atributos
+           - Total de libros
+           - Precio total del inventario
+           - Precio promedio
+           - Precio mínimo y máximo
+        4. Exporta el reporte a 'reports/inventory_value.json'
+        
+        TRIGGER:
+        ========
+        Este método se ejecuta automáticamente cuando:
+        - Se agrega un nuevo libro (add_book)
+        - Se actualiza un libro existente (update_book)
+        - Se elimina un libro (delete_book)
+        
+        Esto asegura que el reporte siempre esté actualizado con los datos más recientes.
+        
+        FORMATO DEL REPORTE:
+        ====================
+        {
+            "total_libros": 10,
+            "precio_total": 500000,
+            "precio_promedio": 50000.0,
+            "precio_minimo": 20000,
+            "precio_maximo": 100000,
+            "libros": [
+                {
+                    "id": "B001",
+                    "isbn": "978-1234567890",
+                    "titulo": "Libro Barato",
+                    "autor": "Autor A",
+                    "peso": 1.2,
+                    "precio": 20000,
+                    "prestado": false
+                },
+                // ... más libros ordenados por precio ...
+            ]
+        }
+        
+        EXCEPCIONES:
+        ============
+        - IOError: si no se puede escribir el archivo de reporte
+        - AttributeError: si algún libro no tiene los getters necesarios
+        
+        RETORNO:
+        ========
+        None (el reporte se guarda en archivo, no se retorna)
+        """
+        try:
+            # Si no hay libros, crear reporte vacío
+            if len(self.books) == 0:
+                reporte_final = {
+                    'total_libros': 0,
+                    'precio_total': 0,
+                    'precio_promedio': 0.0,
+                    'precio_minimo': 0,
+                    'precio_maximo': 0,
+                    'libros': []
+                }
+                logger.info("Reporte de precios generado (catálogo vacío)")
+            else:
+                # Usar la función de ordenamiento que combina merge_sort + generación de reporte
+                resultado = ordenar_y_generar_reporte(self.books)
+                
+                # Construir estructura final del reporte
+                reporte_final = {
+                    'total_libros': resultado['total_libros'],
+                    'precio_total': resultado['precio_total'],
+                    'precio_promedio': resultado['precio_promedio'],
+                    'precio_minimo': resultado['precio_minimo'],
+                    'precio_maximo': resultado['precio_maximo'],
+                    'libros': resultado['reporte']  # Lista de diccionarios ya ordenada
+                }
+                
+                logger.info(
+                    f"Reporte de precios generado: {resultado['total_libros']} libros, "
+                    f"precio total: ${resultado['precio_total']:,}, "
+                    f"promedio: ${resultado['precio_promedio']:,.2f}"
+                )
+            
+            # Exportar a archivo JSON
+            with open(FilePaths.INVENTORY_VALUE_REPORT, 'w', encoding='utf-8') as f:
+                json.dump(reporte_final, f, indent=2, ensure_ascii=False)
+            
+            logger.info(f"Reporte exportado a: {FilePaths.INVENTORY_VALUE_REPORT}")
+            
+        except Exception as e:
+            # Loguear error pero no bloquear operación principal
+            logger.error(f"Error al generar reporte de precios: {e}")
+            # No re-lanzar excepción para no bloquear add/update/delete de libros
 
 
 # Example:

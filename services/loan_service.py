@@ -6,6 +6,11 @@ from typing import List, Optional
 from models.loan import Loan
 from repositories.loan_repository import LoanRepository
 from utils.structures.stack import Stack
+from utils.validators import LoanValidator, ValidationError
+from utils.logger import LibraryLogger
+
+# Configurar logger
+logger = LibraryLogger.get_logger(__name__)
 
 
 class LoanService:
@@ -78,13 +83,29 @@ class LoanService:
         """Create a loan for a book identified by ISBN.
 
         Behavior:
+        - Validates user_id and isbn BEFORE creating loan
         - Finds an inventory item matching the ISBN with stock > 0.
         - Decrements stock by 1 via InventoryService.update_stock.
         - Persists the new loan to disk and returns the Loan instance.
 
         Raises:
+        - ValidationError: if user_id or isbn are invalid
         - ValueError if no matching inventory item or no stock available.
         """
+        # VALIDAR datos ANTES de crear préstamo
+        # Nota: book_id se validará después de encontrar el libro por ISBN
+        try:
+            validated = LoanValidator.validate_loan_data(
+                user_id=user_id,
+                book_id="temp",  # Se validará después
+                isbn=isbn
+            )
+            user_id = validated['user_id']
+            isbn = validated['isbn']
+        except ValidationError as e:
+            logger.error(f"Validación fallida al crear préstamo: {e}")
+            raise
+        
         # If caller didn't supply a loan_id, create one automatically following
         # the project's ID style (prefix + zero-padded numeric), consistent
         # with other services (e.g. Users: U001, Books: B001). Use prefix 'L'.
@@ -132,6 +153,15 @@ class LoanService:
 
         # decrement stock in inventory and persist
         book_id = chosen_inv.get_book().get_id()
+        
+        # VALIDAR book_id ahora que lo conocemos
+        try:
+            from utils.validators import BookValidator
+            book_id = BookValidator.validate_id(book_id)
+        except ValidationError as e:
+            logger.error(f"book_id inválido al crear préstamo: {e}")
+            raise
+        
         new_stock = chosen_inv.get_stock() - 1
         if new_stock < 0:
             raise ValueError("Computed negative stock; aborting")
@@ -146,6 +176,8 @@ class LoanService:
         # Create loan record and persist
         loan = Loan(loan_id, user_id, isbn)
         self.loans.append(loan)
+        logger.info(f"Préstamo creado: id={loan_id}, user={user_id}, isbn={isbn}, book={book_id}")
+        
         # Push minimal loan info onto the stack (user, isbn, loan_date)
         try:
             ld = loan.get_loan_date()

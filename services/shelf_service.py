@@ -15,10 +15,10 @@ Design notes:
 """
 
 from typing import List, Optional, Dict, Any
-import json
 
 from models.shelf import Shelf
 from models.Books import Book
+from utils.file_handler import JSONFileHandler
 
 
 class ShelfService:
@@ -357,8 +357,7 @@ class ShelfService:
 			path: Filesystem path where JSON will be written.
 		"""
 		payload = [self.shelf_to_dict(s) for s in self._shelves]
-		with open(path, 'w', encoding='utf-8') as fh:
-			json.dump(payload, fh, ensure_ascii=False, indent=2)
+		JSONFileHandler.save_json(path, payload)
 
 	def load_from_file(self, path: str) -> None:
 		"""Load shelves from a JSON file and register them.
@@ -368,8 +367,7 @@ class ShelfService:
 		Args:
 			path: Path to JSON file produced by :meth:`save_to_file`.
 		"""
-		with open(path, 'r', encoding='utf-8') as fh:
-			payload = json.load(fh)
+		payload = JSONFileHandler.load_json(path, expected_type=list)
 		# clear existing
 		self._shelves = []
 		for sd in payload:
