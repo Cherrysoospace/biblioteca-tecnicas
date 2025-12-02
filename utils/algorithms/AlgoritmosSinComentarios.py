@@ -1,17 +1,4 @@
-def insercion_ordenada(lista_libros):
-    if not lista_libros or len(lista_libros) <= 1:
-        return lista_libros
 
-    for i in range(1, len(lista_libros)):
-        libro_actual = lista_libros[i]
-        isbn_actual = libro_actual.isbn
-        j = i - 1
-        while j >= 0 and lista_libros[j].isbn > isbn_actual:
-            lista_libros[j + 1] = lista_libros[j]
-            j -= 1
-        lista_libros[j + 1] = libro_actual
-
-    return lista_libros
 
 def busqueda_binaria_recursiva(lista_libros, isbn_buscado, inicio=0, fin=None):
     if fin is None:
@@ -29,3 +16,28 @@ def busqueda_binaria_recursiva(lista_libros, isbn_buscado, inicio=0, fin=None):
         return busqueda_binaria_recursiva(lista_libros, isbn_buscado, inicio, mid - 1)
     else:
         return busqueda_binaria_recursiva(lista_libros, isbn_buscado, mid + 1, fin)
+
+
+def _comparar_isbn_mayor(isbn1, isbn2):
+    try:
+        return int(isbn1) > int(isbn2)
+    except (ValueError, TypeError):
+        return isbn1 > isbn2
+
+
+def insercion_ordenada(lista_libros):
+    if not lista_libros or len(lista_libros) <= 1:
+        return lista_libros
+    
+    for i in range(1, len(lista_libros)):
+        inventario_actual = lista_libros[i]
+        isbn_actual = inventario_actual.get_isbn()
+        j = i - 1
+        
+        while j >= 0 and _comparar_isbn_mayor(lista_libros[j].get_isbn(), isbn_actual):
+            lista_libros[j + 1] = lista_libros[j]
+            j -= 1
+        
+        lista_libros[j + 1] = inventario_actual
+    
+    return lista_libros
