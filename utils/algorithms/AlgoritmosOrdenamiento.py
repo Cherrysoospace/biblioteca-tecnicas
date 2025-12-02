@@ -10,10 +10,54 @@ Fecha: 2025-11-29
 """
 
 
+# ==============================================================================
+# FUNCIONES AUXILIARES PARA COMPARACIÓN DE ISBNs
+# ==============================================================================
+
+def _comparar_isbn_mayor(isbn1, isbn2):
+    """
+    Compara dos ISBNs numéricamente si es posible, lexicográficamente como fallback.
+    
+    Esta función resuelve el problema de ordenamiento lexicográfico vs numérico:
+    - Lexicográfico: "2" > "123" (incorrecto numéricamente)
+    - Numérico: 2 < 123 (correcto)
+    
+    PARÁMETROS:
+    ===========
+    isbn1 : str
+        Primer ISBN a comparar
+    isbn2 : str
+        Segundo ISBN a comparar
+        
+    RETORNO:
+    ========
+    bool
+        True si isbn1 > isbn2 (numéricamente cuando es posible)
+    
+    EJEMPLOS:
+    =========
+    >>> _comparar_isbn_mayor("123", "2")
+    True  # 123 > 2 (comparación numérica)
+    >>> _comparar_isbn_mayor("2", "345")
+    False  # 2 < 345 (comparación numérica)
+    >>> _comparar_isbn_mayor("ABC", "DEF")
+    False  # "ABC" < "DEF" (comparación lexicográfica)
+    """
+    try:
+        # Intentar conversión numérica
+        # Si ambos ISBNs son puramente numéricos, compararlos como enteros
+        return int(isbn1) > int(isbn2)
+    except (ValueError, TypeError):
+        # Si la conversión falla (ISBNs con letras o guiones),
+        # usar comparación lexicográfica estándar como fallback
+        # Esto mantiene compatibilidad con ISBNs con formato "978-..." o similares
+        return isbn1 > isbn2
+
+
 def insercion_ordenada(lista_libros):
     """
-    Ordena una lista de objetos Libro usando el algoritmo de Ordenamiento por Inserción
-    (Insertion Sort) basándose en el atributo 'isbn' en orden ascendente.
+    Ordena una lista de objetos Inventory usando el algoritmo de Ordenamiento por Inserción
+    (Insertion Sort) basándose en el ISBN en orden ascendente.
     
     PROPÓSITO:
     =========
@@ -25,14 +69,14 @@ def insercion_ordenada(lista_libros):
     PARÁMETROS:
     ===========
     lista_libros : list
-        Lista de objetos Libro que se desea ordenar. Cada objeto debe tener
-        un atributo 'isbn' (string o número) que será usado como criterio
-        de ordenamiento.
+        Lista de objetos Inventory que se desea ordenar. Cada objeto debe tener
+        un método get_isbn() que retorna el ISBN (string o número) que será usado 
+        como criterio de ordenamiento.
         
     RETORNO:
     ========
     list
-        La misma lista ordenada por isbn en orden ascendente.
+        La misma lista ordenada por ISBN en orden ascendente.
         Nota: La función modifica la lista original (ordenamiento in-place).
     
     COMPLEJIDAD:
@@ -52,28 +96,22 @@ def insercion_ordenada(lista_libros):
     
     CASOS DE USO:
     =============
-    - Ordenar catálogo de libros al cargar desde archivo
-    - Mantener lista ordenada al insertar nuevos libros
+    - Ordenar catálogo de inventarios al cargar desde archivo
+    - Mantener lista ordenada al insertar nuevos inventarios
     - Ordenar resultados de búsqueda
     
     EJEMPLO DE USO:
     ===============
+    >>> from models.inventory import Inventory
     >>> from models.Books import Book
-    >>> libros = [
-    ...     Book(isbn="978-3-16-148410-0", title="Libro A"),
-    ...     Book(isbn="978-0-306-40615-7", title="Libro B"),
-    ...     Book(isbn="978-1-234-56789-7", title="Libro C")
+    >>> inventarios = [
+    ...     Inventory(items=[Book(id="B1", ISBNCode="978-3-16-148410-0", ...)]),
+    ...     Inventory(items=[Book(id="B2", ISBNCode="978-0-306-40615-7", ...)]),
+    ...     Inventory(items=[Book(id="B3", ISBNCode="978-1-234-56789-7", ...)])
     ... ]
-    >>> insercion_ordenada(libros)
-    >>> print([libro.isbn for libro in libros])
+    >>> insercion_ordenada(inventarios)
+    >>> print([inv.get_isbn() for inv in inventarios])
     ['978-0-306-40615-7', '978-1-234-56789-7', '978-3-16-148410-0']
-    
-    MODIFICACIONES FUTURAS SUGERIDAS:
-    ==================================
-    1. Agregar parámetro 'atributo' para ordenar por otros campos (title, author, etc.)
-    2. Agregar parámetro 'orden' para soportar orden descendente
-    3. Implementar validación de que los objetos tienen el atributo isbn
-    4. Agregar soporte para función de comparación personalizada
     """
     
     # VALIDACIÓN INICIAL
@@ -95,47 +133,51 @@ def insercion_ordenada(lista_libros):
         # -----------------------------------------------------------------------
         # PASO 1: SELECCIONAR EL ELEMENTO A INSERTAR
         # -----------------------------------------------------------------------
-        # 'libro_actual' es el libro que vamos a insertar en su posición correcta
+        # 'inventario_actual' es el inventario que vamos a insertar en su posición correcta
         # dentro de la parte ya ordenada (elementos desde 0 hasta i-1)
-        libro_actual = lista_libros[i]
+        inventario_actual = lista_libros[i]
         
-        # Guardamos el ISBN del libro actual para las comparaciones
-        # NOTA: Si en el futuro se desea ordenar por otro atributo,
-        # esta línea es la que debe modificarse (ej: libro_actual.title)
-        isbn_actual = libro_actual.isbn
+        # Guardamos el ISBN del inventario actual para las comparaciones
+        # Usamos get_isbn() que obtiene el ISBN del primer libro en items
+        isbn_actual = inventario_actual.get_isbn()
         
         # -----------------------------------------------------------------------
         # PASO 2: ENCONTRAR LA POSICIÓN CORRECTA
         # -----------------------------------------------------------------------
         # 'j' es el índice que usaremos para recorrer la parte ordenada
-        # de derecha a izquierda, buscando dónde insertar el libro_actual
+        # de derecha a izquierda, buscando dónde insertar el inventario_actual
         j = i - 1
         
         # Mientras no lleguemos al inicio de la lista (j >= 0) Y
-        # mientras el ISBN del libro en la posición j sea mayor que el ISBN actual,
-        # desplazamos los libros una posición a la derecha
+        # mientras el ISBN del inventario en la posición j sea mayor que el ISBN actual,
+        # desplazamos los inventarios una posición a la derecha
+        #
+        # NOTA IMPORTANTE SOBRE COMPARACIÓN DE ISBNs:
+        # Los ISBNs son strings, pero queremos compararlos numéricamente.
+        # Usamos una función helper que compara numéricamente cuando es posible,
+        # y lexicográficamente como fallback.
         #
         # EXPLICACIÓN DEL DESPLAZAMIENTO:
-        # Si lista_libros[j].isbn > isbn_actual, significa que el libro en j
-        # debe estar DESPUÉS del libro_actual en la lista ordenada.
+        # Si el ISBN en posición j es mayor que isbn_actual (comparado numéricamente),
+        # significa que el inventario en j debe estar DESPUÉS del inventario_actual.
         # Por lo tanto, movemos lista_libros[j] una posición a la derecha (j+1)
-        # para hacer espacio para el libro_actual.
-        while j >= 0 and lista_libros[j].isbn > isbn_actual:
-            # Desplazar el libro en posición j una posición a la derecha
+        # para hacer espacio para el inventario_actual.
+        while j >= 0 and _comparar_isbn_mayor(lista_libros[j].get_isbn(), isbn_actual):
+            # Desplazar el inventario en posición j una posición a la derecha
             lista_libros[j + 1] = lista_libros[j]
             
             # Retroceder el índice para seguir comparando con los elementos anteriores
             j -= 1
         
         # -----------------------------------------------------------------------
-        # PASO 3: INSERTAR EL LIBRO EN SU POSICIÓN CORRECTA
+        # PASO 3: INSERTAR EL INVENTARIO EN SU POSICIÓN CORRECTA
         # -----------------------------------------------------------------------
         # Cuando salimos del while, tenemos dos posibilidades:
         # 1. j = -1: todos los elementos eran mayores, insertar al inicio
         # 2. j >= 0: encontramos un elemento menor o igual, insertar después de él
         #
         # En ambos casos, la posición correcta es j+1
-        lista_libros[j + 1] = libro_actual
+        lista_libros[j + 1] = inventario_actual
         
         # ESTADO DESPUÉS DE CADA ITERACIÓN:
         # Los elementos desde índice 0 hasta i (inclusive) están ordenados
