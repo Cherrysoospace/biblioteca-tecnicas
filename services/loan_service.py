@@ -4,8 +4,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from models.loan import Loan
-from services.book_service import BookService
-from services.inventory_service import InventoryService
+from repositories.loan_repository import LoanRepository
 from utils.structures.stack import Stack
 
 
@@ -13,92 +12,66 @@ class LoanService:
     """Service to manage loans (borrow records).
 
     Responsibilities:
-    - Persist loans to `data/loan.json` as a list of dicts (using Loan.to_dict())
+    - BUSINESS LOGIC ONLY: loan creation/update logic, inventory coordination
+    - Persistence delegated to LoanRepository (SRP compliance)
     - Create loans and, when a loan is created, decrement the corresponding
       inventory stock by 1. If no stock is available, raises ValueError.
     - Mark loans returned (optionally increment stock back by 1).
     """
 
-    def __init__(self, json_path: Optional[str] = None, book_service: Optional[BookService] = None, inventory_service: Optional[InventoryService] = None):
-        base = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-        if json_path:
-            self.json_path = os.path.abspath(json_path)
-        else:
-            self.json_path = os.path.join(base, 'data', 'loan.json')
-        # BookService: catalog access
-        self.book_service = book_service or BookService()
-        # InventoryService: manage stock and borrow state
-        self.inventory_service = inventory_service or InventoryService()
+    def __init__(self, repository: LoanRepository = None, book_service=None, inventory_service=None):
+        self.repository = repository or LoanRepository()
+        # Lazy imports to avoid circular dependencies
+        self._book_service = book_service
+        self._inventory_service = inventory_service
 
         self.loans: List[Loan] = []
         # Stack to store quick-access loan entries (user, isbn, loan_date)
         self.stack = Stack()
 
-        self._ensure_file()
-        self._load_from_file()
+        self._load_loans()
+    
+    @property
+    def book_service(self):
+        if self._book_service is None:
+            from services.book_service import BookService
+            self._book_service = BookService()
+        return self._book_service
+    
+    @property
+    def inventory_service(self):
+        if self._inventory_service is None:
+            from services.inventory_service import InventoryService
+            self._inventory_service = InventoryService()
+        return self._inventory_service
 
-    def _ensure_file(self) -> None:
-        directory = os.path.dirname(self.json_path)
-        if not os.path.isdir(directory):
-            os.makedirs(directory, exist_ok=True)
-        if not os.path.exists(self.json_path):
-            try:
-                with open(self.json_path, 'w', encoding='utf-8') as f:
-                    json.dump([], f, ensure_ascii=False, indent=2)
-            except Exception as e:
-                raise Exception(f"Unable to create loan JSON file: {e}")
-
-    def _load_from_file(self) -> None:
+    def _load_loans(self) -> None:
+        """Load loans from repository and build stack."""
         try:
-            with open(self.json_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-        except json.JSONDecodeError:
-            # if file is empty or malformed, start with empty list
-            data = []
-        except Exception as e:
-            raise Exception(f"Unable to read loan JSON file: {e}")
-
-        loaded: List[Loan] = []
-        if isinstance(data, list):
-            for item in data:
+            self.loans = self.repository.load_all()
+            # Rebuild stack from loaded loans
+            for loan in self.loans:
                 try:
-                    loan = Loan(
-                        item.get('loan_id'),
-                        item.get('user_id'),
-                        item.get('isbn'),
-                        item.get('loan_date'),
-                        item.get('returned', False),
-                    )
-                    loaded.append(loan)
-                    # Also push the minimal loan record onto the stack in the
-                    # requested order: user, ISBN, loan_date (ISO string)
+                    loan_date = loan.get_loan_date()
                     try:
-                        loan_date = loan.get_loan_date()
-                        try:
-                            loan_date_serial = loan_date.isoformat()
-                        except Exception:
-                            loan_date_serial = loan_date
-                        self.stack.push({
-                            'user_id': loan.get_user_id(),
-                            'isbn': loan.get_isbn(),
-                            'loan_date': loan_date_serial,
-                        })
+                        loan_date_serial = loan_date.isoformat()
                     except Exception:
-                        # if any issue pushing to stack, continue without failing
-                        pass
+                        loan_date_serial = loan_date
+                    self.stack.push({
+                        'user_id': loan.get_user_id(),
+                        'isbn': loan.get_isbn(),
+                        'loan_date': loan_date_serial,
+                    })
                 except Exception:
-                    # skip invalid entries
-                    continue
+                    # if any issue pushing to stack, continue without failing
+                    pass
+        except Exception:
+            # Start with empty list if load fails
+            self.loans = []
 
-        self.loans = loaded
-
-    def _save_to_file(self) -> None:
-        data = [l.to_dict() for l in self.loans]
-        try:
-            with open(self.json_path, 'w', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-        except Exception as e:
-            raise Exception(f"Unable to write loan JSON file: {e}")
+    def _save_loans(self) -> None:
+        """Persist loans using repository."""
+        self.repository.save_all(self.loans)
 
     # -------------------- CRUD / Actions --------------------
     def create_loan(self, loan_id: Optional[str], user_id: str, isbn: str) -> Loan:
@@ -184,7 +157,7 @@ class LoanService:
         except Exception:
             # non-fatal: proceed even if stack push fails
             pass
-        self._save_to_file()
+        self._save_loans()
         return loan
 
     def mark_returned(self, loan_id: str) -> None:
@@ -219,7 +192,7 @@ class LoanService:
             pass
 
         loan.mark_returned()
-        self._save_to_file()
+        self._save_loans()
 
     def get_all_loans(self) -> List[Loan]:
         return list(self.loans)
@@ -247,7 +220,7 @@ class LoanService:
 
         # remove from list and persist
         self.loans = [l for l in self.loans if l.get_loan_id() != loan_id]
-        self._save_to_file()
+        self._save_loans()
 
     def update_loan(self, loan_id: str, user_id: Optional[str] = None, isbn: Optional[str] = None, returned: Optional[bool] = None, loan_date=None) -> Loan:
         """Update loan fields. Supported updates: user_id, isbn (best-effort), returned flag.
@@ -353,7 +326,7 @@ class LoanService:
                     raise ValueError(f"Invalid loan_date value: {e}")
 
         # persist changes
-        self._save_to_file()
+        self._save_loans()
         return loan
 
 

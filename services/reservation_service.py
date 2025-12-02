@@ -4,83 +4,35 @@ from datetime import datetime
 from typing import List, Optional
 
 from models.reservation import Reservation
+from repositories.reservation_repository import ReservationRepository
 
 
 class ReservationService:
 	"""Service to manage reservations.
 
 	Responsibilities:
-	- Persist reservations to `data/reservations.json` as a list of dicts
+	- BUSINESS LOGIC ONLY: reservation queue management, status updates
+	- Persistence delegated to ReservationRepository (SRP compliance)
 	- Create, list, find, update, cancel, assign reservations
 	- Treat the stored list order as the FIFO queue for pending reservations
 	"""
 
-	def __init__(self, json_path: Optional[str] = None):
-		base = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-		if json_path:
-			self.json_path = os.path.abspath(json_path)
-		else:
-			self.json_path = os.path.join(base, 'data', 'reservations.json')
-
+	def __init__(self, repository: ReservationRepository = None):
+		self.repository = repository or ReservationRepository()
 		self.reservations: List[Reservation] = []
+		self._load_reservations()
 
-		self._ensure_file()
-		self._load_from_file()
-
-	def _ensure_file(self) -> None:
-		directory = os.path.dirname(self.json_path)
-		if not os.path.isdir(directory):
-			os.makedirs(directory, exist_ok=True)
-		if not os.path.exists(self.json_path):
-			try:
-				with open(self.json_path, 'w', encoding='utf-8') as f:
-					json.dump([], f, ensure_ascii=False, indent=2)
-			except Exception as e:
-				raise Exception(f"Unable to create reservations JSON file: {e}")
-
-	def _load_from_file(self) -> None:
+	def _load_reservations(self) -> None:
+		"""Load reservations from repository."""
 		try:
-			with open(self.json_path, 'r', encoding='utf-8') as f:
-				data = json.load(f)
-		except json.JSONDecodeError:
-			data = []
-		except Exception as e:
-			raise Exception(f"Unable to read reservations JSON file: {e}")
+			self.reservations = self.repository.load_all()
+		except Exception:
+			# Start with empty list if load fails
+			self.reservations = []
 
-		loaded: List[Reservation] = []
-		if isinstance(data, list):
-			for item in data:
-				if not isinstance(item, dict):
-					continue
-				try:
-					# prefer using from_dict if available
-					try:
-						r = Reservation.from_dict(item)
-					except Exception:
-						# fallback: construct with raw fields
-						r = Reservation(item.get('reservation_id'), item.get('user_id'), item.get('isbn'), item.get('reserved_date'), item.get('status', 'pending'))
-					# restore assigned_date/position if present
-					if 'assigned_date' in item and item.get('assigned_date'):
-						try:
-							from datetime import datetime as _dt
-							r.set_assigned_date(_dt.fromisoformat(item.get('assigned_date')))
-						except Exception:
-							r.set_assigned_date(item.get('assigned_date'))
-					if 'position' in item:
-						r.set_position(item.get('position'))
-					loaded.append(r)
-				except Exception:
-					continue
-
-		self.reservations = loaded
-
-	def _save_to_file(self) -> None:
-		data = [r.to_dict() for r in self.reservations]
-		try:
-			with open(self.json_path, 'w', encoding='utf-8') as f:
-				json.dump(data, f, ensure_ascii=False, indent=2)
-		except Exception as e:
-			raise Exception(f"Unable to write reservations JSON file: {e}")
+	def _save_reservations(self) -> None:
+		"""Persist reservations using repository."""
+		self.repository.save_all(self.reservations)
 
 	# -------------------- CRUD / Actions --------------------
 	def _generate_next_id(self) -> str:
@@ -117,7 +69,7 @@ class ReservationService:
 
 		res = Reservation(reservation_id, user_id, isbn)
 		self.reservations.append(res)
-		self._save_to_file()
+		self._save_reservations()
 		return res
 
 	def get_all_reservations(self) -> List[Reservation]:
@@ -146,7 +98,7 @@ class ReservationService:
 		next_res.set_assigned_date(datetime.utcnow())
 		# update positions for queue convenience
 		self._recompute_positions_for_isbn(isbn)
-		self._save_to_file()
+		self._save_reservations()
 		return next_res
 
 	def _recompute_positions_for_isbn(self, isbn: str) -> None:
@@ -161,7 +113,7 @@ class ReservationService:
 			raise ValueError(f"No reservation found with id '{reservation_id}'")
 		res.set_status('cancelled')
 		self._recompute_positions_for_isbn(res.get_isbn())
-		self._save_to_file()
+		self._save_reservations()
 
 	def delete_reservation(self, reservation_id: str) -> None:
 		res = self.find_by_id(reservation_id)
@@ -169,7 +121,7 @@ class ReservationService:
 			raise ValueError(f"No reservation found with id '{reservation_id}'")
 		self.reservations = [r for r in self.reservations if r.get_reservation_id() != reservation_id]
 		self._recompute_positions_for_isbn(res.get_isbn())
-		self._save_to_file()
+		self._save_reservations()
 
 	def update_reservation(self, reservation_id: str, **kwargs) -> Reservation:
 		"""Update reservation fields: user_id, isbn, status. Returns updated Reservation."""
@@ -185,7 +137,7 @@ class ReservationService:
 		if 'assigned_date' in kwargs:
 			res.set_assigned_date(kwargs.get('assigned_date'))
 		self._recompute_positions_for_isbn(res.get_isbn())
-		self._save_to_file()
+		self._save_reservations()
 		return res
 
 

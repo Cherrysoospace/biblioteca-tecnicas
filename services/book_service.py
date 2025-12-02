@@ -3,38 +3,28 @@ import json
 from typing import List, Optional, Dict, Any
 
 from models.Books import Book
+from repositories.book_repository import BookRepository
 
 
 class BookService:
     """Service for basic management of Book objects (no inventory, no algorithms).
 
     Responsibilities:
-    - Maintain an internal list `self.books: List[Book]` representing the book catalog.
-    - Persist the catalog to `./data/books.json` (create if missing, validate, serialize/deserialize).
+    - BUSINESS LOGIC ONLY: ID generation, validation, synchronization with inventory
+    - Persistence delegated to BookRepository (SRP compliance)
 
     Important: This service does NOT handle stock, sorted lists, or call any algorithms.
     """
 
-    def __init__(self, json_path: Optional[str] = None):
-        """Initialize BookService and load books from JSON.
+    def __init__(self, repository: BookRepository = None):
+        """Initialize BookService with a repository.
 
         Parameters:
-        - json_path: Optional path to the books JSON file. If None, defaults to `./data/books.json`.
-
-        Raises:
-        - ValueError: if the JSON file exists but contains invalid format.
-        - Exception: for unexpected IO errors.
+        - repository: Optional BookRepository instance. If None, creates a new one.
         """
-        if json_path:
-            self.json_path = os.path.abspath(json_path)
-        else:
-            base = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-            self.json_path = os.path.join(base, 'data', 'books.json')
-
+        self.repository = repository or BookRepository()
         self.books: List[Book] = []
-
-        self._ensure_file()
-        self._load_from_file()
+        self._load_books()
 
     def generate_next_id(self, prefix: str = 'B', min_width: int = 3) -> str:
         """Generate the next chronological ID for a Book.
@@ -68,95 +58,23 @@ class BookService:
         next_num = (max(nums) + 1) if nums else 1
         return f"{prefix}{str(next_num).zfill(max_width)}"
 
-    # -------------------- File handling --------------------
-    def _ensure_file(self) -> None:
-        """Ensure the JSON file and its directory exist; create with an empty list if missing.
-
+    # -------------------- Persistence (delegated to repository) --------------------
+    def _load_books(self) -> None:
+        """Load books from repository.
+        
         Raises:
-        - Exception: if the directory or file cannot be created.
+        - ValueError: if JSON structure is invalid
+        - Exception: for IO errors
         """
-        directory = os.path.dirname(self.json_path)
-        if not os.path.isdir(directory):
-            os.makedirs(directory, exist_ok=True)
-        if not os.path.exists(self.json_path):
-            try:
-                with open(self.json_path, 'w', encoding='utf-8') as f:
-                    json.dump([], f, ensure_ascii=False, indent=2)
-            except Exception as e:
-                raise Exception(f"Unable to create books JSON file: {e}")
+        self.books = self.repository.load_all()
 
-    def _load_from_file(self) -> None:
-        """Load books from JSON into `self.books`.
-
-        Expected JSON format: list of objects with keys
-        ['id','ISBNCode','title','author','weight','price','isBorrowed'].
-
+    def _save_books(self) -> None:
+        """Persist books using repository.
+        
         Raises:
-        - ValueError: if JSON structure is invalid or required fields are missing.
-        - Exception: for IO errors.
+        - Exception: for IO errors
         """
-        try:
-            with open(self.json_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-        except json.JSONDecodeError as e:
-            raise ValueError(f"books.json contains invalid JSON: {e}")
-        except Exception as e:
-            raise Exception(f"Unable to read books JSON file: {e}")
-
-        if not isinstance(data, list):
-            raise ValueError("books.json must contain a JSON list of book objects")
-
-        loaded: List[Book] = []
-        for idx, item in enumerate(data):
-            if not isinstance(item, dict):
-                raise ValueError(f"Invalid book entry at index {idx}: expected object/dict")
-
-            required = ['id', 'ISBNCode', 'title', 'author', 'weight', 'price']
-            for key in required:
-                if key not in item:
-                    raise ValueError(f"Missing '{key}' in book entry at index {idx}")
-
-            try:
-                book = Book(
-                    item['id'],
-                    item['ISBNCode'],
-                    item['title'],
-                    item['author'],
-                    float(item['weight']),
-                    int(item['price']),
-                    bool(item.get('isBorrowed', False))
-                )
-            except Exception as e:
-                raise ValueError(f"Invalid data types in book entry at index {idx}: {e}")
-            loaded.append(book)
-
-        self.books = loaded
-
-    def _save_to_file(self) -> None:
-        """Persist `self.books` to the JSON file in flattened format.
-
-        Each book is saved as a plain object; stock or inventory fields are NOT saved.
-
-        Raises:
-        - Exception: for IO errors while writing the file.
-        """
-        data = []
-        for b in self.books:
-            data.append({
-                'id': b.get_id(),
-                'ISBNCode': b.get_ISBNCode(),
-                'title': b.get_title(),
-                'author': b.get_author(),
-                'weight': b.get_weight(),
-                'price': b.get_price(),
-                'isBorrowed': b.get_isBorrowed(),
-            })
-
-        try:
-            with open(self.json_path, 'w', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-        except Exception as e:
-            raise Exception(f"Unable to write books JSON file: {e}")
+        self.repository.save_all(self.books)
 
     # -------------------- CRUD --------------------
     def add_book(self, book: Book) -> None:
@@ -175,7 +93,7 @@ class BookService:
             raise ValueError(f"A book with id '{book.get_id()}' already exists")
 
         self.books.append(book)
-        self._save_to_file()
+        self._save_books()
 
     def update_book(self, id: str, new_data: Dict[str, Any]) -> None:
         """Update fields of a book identified by `id`.
@@ -229,7 +147,7 @@ class BookService:
             setters[key](value)
 
         # persist books.json
-        self._save_to_file()
+        self._save_books()
 
         # Synchronize with inventory
         try:
@@ -266,7 +184,7 @@ class BookService:
             raise ValueError("Cannot delete a book that is currently borrowed")
 
         self.books = [b for b in self.books if b.get_id() != id]
-        self._save_to_file()
+        self._save_books()
         
         # Synchronize with inventory - delete the book
         try:

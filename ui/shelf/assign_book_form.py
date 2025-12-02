@@ -9,6 +9,7 @@ from ui import theme
 from ui import widget_factory as wf
 from controllers.book_controller import BookController
 from controllers.shelf_controller import ShelfController
+from utils.config import FilePaths
 
 
 class AssignBookForm(ctk.CTkToplevel):
@@ -180,8 +181,7 @@ class AssignBookForm(ctk.CTkToplevel):
             books = self.book_controller.get_all_books()
         except Exception:
             # fallback: try to read raw JSON file
-            books_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'books.json')
-            books_path = os.path.abspath(books_path)
+            books_path = FilePaths.BOOKS
             try:
                 with open(books_path, 'r', encoding='utf-8') as fh:
                     data = json.load(fh)

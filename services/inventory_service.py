@@ -4,13 +4,19 @@ from typing import List, Optional, Dict, Any
 
 from models.Books import Book
 from models.inventory import Inventory
+from repositories.inventory_repository import InventoryRepository
 from utils.algorithms.AlgoritmosOrdenamiento import insercion_ordenada
+from utils.config import FilePaths
 
 
 class InventoryService:
-    """Service responsible for managing inventory groups persisted as JSON.
+    """Service responsible for managing inventory groups.
 
-    Manages two JSON files (general and sorted), keeps in-memory lists:
+    Responsibilities:
+    - BUSINESS LOGIC ONLY: inventory synchronization, stock management, ordering
+    - Persistence delegated to InventoryRepository (SRP compliance)
+    
+    Manages in-memory lists:
     - self.inventory_general: List[Inventory] (unsorted, grouped by ISBN)
     - self.inventory_sorted: List[Inventory] (sorted by ISBN using insercion_ordenada)
     
@@ -19,34 +25,21 @@ class InventoryService:
     - items: list of Book objects (physical copies)
     """
 
-    def __init__(self, general_path: Optional[str] = None, sorted_path: Optional[str] = None):
-        """Initialize InventoryService and load inventories from JSON files.
+    def __init__(self, repository: InventoryRepository = None):
+        """Initialize InventoryService with a repository.
 
         Parameters:
-        - general_path: Optional path for `inventory_general.json`. Defaults to `./data/inventory_general.json`.
-        - sorted_path: Optional path for `inventory_sorted.json`. Defaults to `./data/inventory_sorted.json`.
+        - repository: Optional InventoryRepository instance. If None, creates a new one.
 
         Raises:
         - Exception: for IO errors or invalid JSON format.
         """
-        base = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-        data_dir = os.path.join(base, 'data')
-
-        if general_path:
-            self.general_path = os.path.abspath(general_path)
-        else:
-            self.general_path = os.path.join(data_dir, 'inventory_general.json')
-
-        if sorted_path:
-            self.sorted_path = os.path.abspath(sorted_path)
-        else:
-            self.sorted_path = os.path.join(data_dir, 'inventory_sorted.json')
+        self.repository = repository or InventoryRepository()
 
         self.inventory_general: List[Inventory] = []
         self.inventory_sorted: List[Inventory] = []
 
-        self._ensure_files_exist()
-        self._load_general()
+        self._load_inventories()
         
         # If inventory is empty, regenerate from books.json
         if len(self.inventory_general) == 0:
@@ -54,218 +47,27 @@ class InventoryService:
         
         self.synchronize_inventories()  # Ensure synchronization at initialization
 
-    # -------------------- File IO --------------------
-    def _ensure_files_exist(self) -> None:
-        """Ensure both JSON files and their parent directory exist.
-
-        Creates files with empty list content if they don't exist.
-
+    # -------------------- Persistence (delegated to repository) --------------------
+    def _load_inventories(self) -> None:
+        """Load inventories from repository.
+        
         Raises:
-        - Exception: if directories or files cannot be created.
-        """
-        for path in (self.general_path, self.sorted_path):
-            directory = os.path.dirname(path)
-            if not os.path.isdir(directory):
-                os.makedirs(directory, exist_ok=True)
-            if not os.path.exists(path):
-                try:
-                    with open(path, 'w', encoding='utf-8') as f:
-                        json.dump([], f, ensure_ascii=False, indent=2)
-                except Exception as e:
-                    raise Exception(f"Unable to create inventory JSON file '{path}': {e}")
-
-    def _load_general(self) -> None:
-        """Load `inventory_general.json` into `self.inventory_general`.
-
-        Expects a JSON list with structure:
-        [
-          {
-            "stock": 2,
-            "items": [
-              { "id": "B001", "ISBNCode": "...", "title": "...", ... },
-              { "id": "B002", "ISBNCode": "...", "title": "...", ... }
-            ]
-          },
-          ...
-        ]
-
-        Raises:
-        - ValueError: if JSON is malformed or entries missing required fields.
+        - ValueError: if JSON is malformed
         - Exception: for IO errors.
         """
         try:
-            with open(self.general_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-        except json.JSONDecodeError as e:
-            raise ValueError(f"{self.general_path} contains invalid JSON: {e}")
-        except Exception as e:
-            raise Exception(f"Unable to read {self.general_path}: {e}")
+            self.inventory_general = self.repository.load_general()
+        except Exception:
+            # Start with empty if load fails
+            self.inventory_general = []
 
-        if not isinstance(data, list):
-            raise ValueError(f"{self.general_path} must contain a JSON list of inventory groups")
-
-        loaded: List[Inventory] = []
-
-        for idx, group in enumerate(data):
-            if not isinstance(group, dict):
-                raise ValueError(f"Invalid inventory group at index {idx}: expected object/dict")
-            
-            if 'items' not in group:
-                raise ValueError(f"Missing 'items' in inventory group at index {idx}")
-            
-            items_data = group['items']
-            if not isinstance(items_data, list):
-                raise ValueError(f"'items' must be a list in inventory group at index {idx}")
-
-            # Parse each book in items
-            books: List[Book] = []
-            for item_idx, item in enumerate(items_data):
-                if not isinstance(item, dict):
-                    continue
-                
-                try:
-                    book = Book(
-                        item['id'],
-                        item['ISBNCode'],
-                        item['title'],
-                        item['author'],
-                        float(item['weight']),
-                        int(item['price']),
-                        bool(item.get('isBorrowed', False))
-                    )
-                    books.append(book)
-                except KeyError as e:
-                    raise ValueError(f"Missing field {e} in item {item_idx} of group {idx}")
-                except Exception as e:
-                    raise ValueError(f"Invalid data in item {item_idx} of group {idx}: {e}")
-
-            # Create Inventory group
-            stock = int(group.get('stock', len(books)))
-            inventory = Inventory(stock=stock, items=books)
-            loaded.append(inventory)
-
-        self.inventory_general = loaded
-
-    def _load_sorted(self) -> None:
-        """Load `inventory_sorted.json` into `self.inventory_sorted`.
-
-        If the file is empty or invalid, attempts to regenerate sorted inventory from general.
-
+    def _save_inventories(self) -> None:
+        """Persist both inventory lists using repository.
+        
         Raises:
-        - Exception: for IO errors or malformed JSON.
+        - Exception: for IO errors
         """
-        try:
-            with open(self.sorted_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-        except (json.JSONDecodeError, Exception):
-            # If malformed or unreadable, regenerate from general
-            self.synchronize_inventories()
-            return
-
-        if not isinstance(data, list) or len(data) == 0:
-            # Regenerate if empty
-            self.synchronize_inventories()
-            return
-
-        loaded: List[Inventory] = []
-        for item in data:
-            if not isinstance(item, dict):
-                continue
-            try:
-                book = Book(
-                    item['id'],
-                    item['ISBNCode'],
-                    item['title'],
-                    item['author'],
-                    item['weight'],
-                    item['price'],
-                    item['isBorrowed']
-                )
-                inventory_item = Inventory(book, item['stock'])
-                loaded.append(inventory_item)
-            except KeyError:
-                continue
-
-        self.inventory_sorted = loaded
-        insercion_ordenada(self.inventory_sorted)
-
-    def _save_general(self) -> None:
-        """Serialize `self.inventory_general` to `inventory_general.json`.
-
-        Format:
-        [
-          {
-            "stock": 2,
-            "items": [
-              { "id": "B001", "ISBNCode": "...", ... },
-              { "id": "B002", "ISBNCode": "...", ... }
-            ]
-          },
-          ...
-        ]
-
-        Raises:
-        - Exception: for IO errors.
-        """
-        data = []
-        for inventory in self.inventory_general:
-            group = {
-                'stock': inventory.get_stock(),
-                'items': []
-            }
-            
-            for book in inventory.get_items():
-                group['items'].append({
-                    'id': book.get_id(),
-                    'ISBNCode': book.get_ISBNCode(),
-                    'title': book.get_title(),
-                    'author': book.get_author(),
-                    'weight': book.get_weight(),
-                    'price': book.get_price(),
-                    'isBorrowed': book.get_isBorrowed(),
-                })
-            
-            data.append(group)
-
-        try:
-            with open(self.general_path, 'w', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-        except Exception as e:
-            raise Exception(f"Unable to write {self.general_path}: {e}")
-
-    def _save_sorted(self) -> None:
-        """Serialize `self.inventory_sorted` to `inventory_sorted.json`.
-
-        Same format as _save_general but with sorted groups.
-
-        Raises:
-        - Exception: for IO errors.
-        """
-        data = []
-        for inventory in self.inventory_sorted:
-            group = {
-                'stock': inventory.get_stock(),
-                'items': []
-            }
-            
-            for book in inventory.get_items():
-                group['items'].append({
-                    'id': book.get_id(),
-                    'ISBNCode': book.get_ISBNCode(),
-                    'title': book.get_title(),
-                    'author': book.get_author(),
-                    'weight': book.get_weight(),
-                    'price': book.get_price(),
-                    'isBorrowed': book.get_isBorrowed(),
-                })
-            
-            data.append(group)
-
-        try:
-            with open(self.sorted_path, 'w', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-        except Exception as e:
-            raise Exception(f"Unable to write {self.sorted_path}: {e}")
+        self.repository.save_both(self.inventory_general, self.inventory_sorted)
 
     # -------------------- CRUD --------------------
     def add_item(self, book: Book, stock: int = 1) -> None:
@@ -424,8 +226,7 @@ class InventoryService:
         insercion_ordenada(self.inventory_sorted)
 
         # Save both inventories
-        self._save_general()
-        self._save_sorted()
+        self._save_inventories()
 
     def _regenerate_from_books(self) -> None:
         """
@@ -434,8 +235,7 @@ class InventoryService:
         This method loads all books from books.json and creates inventory groups
         organized by ISBN. Each book becomes an item in the appropriate group.
         """
-        base = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-        books_json = os.path.join(base, 'data', 'books.json')
+        books_json = FilePaths.BOOKS
 
         # Check if books.json exists
         if not os.path.exists(books_json):
@@ -503,11 +303,7 @@ class InventoryService:
         - Exception: for IO errors while reading/writing files.
         """
         # determine books.json path
-        base = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-        if books_path:
-            books_json = os.path.abspath(books_path)
-        else:
-            books_json = os.path.join(base, 'data', 'books.json')
+        books_json = books_path or FilePaths.BOOKS
 
         # read books.json
         try:
@@ -564,8 +360,7 @@ class InventoryService:
             raise ValueError(f"No inventory item found with book id '{book_id}'")
 
         # persist changes
-        self._save_general()
-        self._save_sorted()
+        self._save_inventories()
 
     # -------------------- Searches & Reports --------------------
     def find_by_book_id(self, id: str) -> Optional[Inventory]:

@@ -8,6 +8,8 @@ from ui import theme
 from ui import widget_factory as wf
 from ui.book.book_form import BookForm
 from controllers.book_controller import BookController
+from utils.config import FilePaths
+from utils.config import FilePaths
 
 
 class BookList(ctk.CTkToplevel):
@@ -130,7 +132,7 @@ class BookList(ctk.CTkToplevel):
         close_btn.pack(side="left")
 
         # Load data initially
-        self._books_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "data", "books.json"))
+        self._books_path = FilePaths.BOOKS
         self.load_books()
 
         try:

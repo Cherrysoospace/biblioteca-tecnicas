@@ -4,6 +4,7 @@ import os
 
 from services.shelf_service import ShelfService
 from models.Books import Book
+from utils.config import FilePaths
 
 
 class ShelfController:
@@ -19,7 +20,7 @@ class ShelfController:
 		self.service = ShelfService()
 		# Attempt to load existing shelves from data/shelves.json on startup
 		try:
-			data_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'shelves.json')
+			data_path = FilePaths.SHELVES
 			if os.path.exists(data_path):
 				# load existing shelves into the service so ids are generated sequentially
 				try:
@@ -80,7 +81,7 @@ class ShelfController:
 					pass
 		# persist shelves to default data file (best-effort)
 		try:
-			path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'shelves.json')
+			path = FilePaths.SHELVES
 			self.service.save_to_file(path)
 		except Exception:
 			# do not fail creation if saving fails
@@ -103,7 +104,7 @@ class ShelfController:
 		res = self.service.add_book(shelf_id, book)
 		if res:
 			try:
-				path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'shelves.json')
+				path = FilePaths.SHELVES
 				self.service.save_to_file(path)
 			except Exception:
 				pass
@@ -117,7 +118,7 @@ class ShelfController:
 		removed = self.service.remove_book_by_isbn(shelf_id, isbn)
 		if removed is not None:
 			try:
-				path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'shelves.json')
+				path = FilePaths.SHELVES
 				self.service.save_to_file(path)
 			except Exception:
 				pass
@@ -131,7 +132,7 @@ class ShelfController:
 		res = self.service.move_book(from_shelf_id, to_shelf_id, isbn)
 		if res:
 			try:
-				path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'shelves.json')
+				path = FilePaths.SHELVES
 				self.service.save_to_file(path)
 			except Exception:
 				pass
@@ -142,7 +143,7 @@ class ShelfController:
 		ok = self.service.set_capacity(shelf_id, capacity)
 		if ok:
 			try:
-				path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'shelves.json')
+				path = FilePaths.SHELVES
 				self.service.save_to_file(path)
 			except Exception:
 				pass
@@ -157,7 +158,7 @@ class ShelfController:
 		removed = self.service.clear_shelf(shelf_id)
 		# persist
 		try:
-			path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'shelves.json')
+			path = FilePaths.SHELVES
 			self.service.save_to_file(path)
 		except Exception:
 			pass

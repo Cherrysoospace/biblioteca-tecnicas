@@ -3,6 +3,7 @@ import json
 from typing import List, Optional, Dict, Any
 
 from models.user import User
+from repositories.user_repository import UserRepository
 
 # Attempt to import algorithms. If not available, set to None and raise ImportError when used.
 # The project should not rely on a custom insertion sort here; use Python's built-in sorted().
@@ -20,9 +21,12 @@ except Exception:
 
 
 class UserService:
-	"""Service for managing simple User catalog and persistence.
+	"""Service for managing simple User catalog.
 
-	- Uses a single JSON file: `./data/users.json` storing a list of flattened users: {'id','name'}.
+	Responsibilities:
+	- BUSINESS LOGIC ONLY: ID generation, validation, sorting
+	- Persistence delegated to UserRepository (SRP compliance)
+
 	- Keeps two in-memory lists:
 		`users_general`: insertion-order list loaded from JSON.
 		`users_sorted`: list ordered by `name` (built using external insertion_sort_users).
@@ -30,99 +34,43 @@ class UserService:
 	Algorithms are imported from `utils/algoritmos` but not implemented here.
 	"""
 
-	def __init__(self, json_path: Optional[str] = None):
-		"""Initialize UserService and load users from JSON.
+	def __init__(self, repository: UserRepository = None):
+		"""Initialize UserService with a repository.
 
 		Parameters:
-		- json_path: optional path to `users.json`. If None, defaults to `./data/users.json`.
+		- repository: optional UserRepository instance. If None, creates a new one.
 
 		Raises:
 		- ValueError: if JSON exists but is malformed.
 		- Exception: for IO errors.
 		"""
-		if json_path:
-			self.json_path = os.path.abspath(json_path)
-		else:
-			base = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-			self.json_path = os.path.join(base, 'data', 'users.json')
+		self.repository = repository or UserRepository()
 
 		self.users_general: List[User] = []
 		self.users_sorted: List[User] = []
 
-		self._ensure_file()
-		self._load_from_file()
+		self._load_users()
 
-	# -------------------- File handling --------------------
-	def _ensure_file(self) -> None:
-		"""Ensure `users.json` exists; create it with an empty list if missing.
-
-		Raises:
-		- Exception: if directory or file cannot be created.
-		"""
-		directory = os.path.dirname(self.json_path)
-		if not os.path.isdir(directory):
-			os.makedirs(directory, exist_ok=True)
-		if not os.path.exists(self.json_path):
-			try:
-				with open(self.json_path, 'w', encoding='utf-8') as f:
-					json.dump([], f, ensure_ascii=False, indent=2)
-			except Exception as e:
-				raise Exception(f"Unable to create users JSON file: {e}")
-
-	def _load_from_file(self) -> None:
-		"""Load users from `users.json` into `self.users_general` and build `users_sorted`.
-
-		Expected format: JSON list of objects with keys ['id','name'].
+	# -------------------- Persistence (delegated to repository) --------------------
+	def _load_users(self) -> None:
+		"""Load users from repository and build sorted view.
 
 		Raises:
-		- ValueError: if JSON is malformed or entries missing required fields.
+		- ValueError: if data is malformed
 		- Exception: for IO errors.
 		"""
-		try:
-			with open(self.json_path, 'r', encoding='utf-8') as f:
-				data = json.load(f)
-		except json.JSONDecodeError as e:
-			raise ValueError(f"users.json contains invalid JSON: {e}")
-		except Exception as e:
-			raise Exception(f"Unable to read users JSON file: {e}")
+		self.users_general = self.repository.load_all()
 
-		if not isinstance(data, list):
-			raise ValueError("users.json must contain a JSON list of user objects")
-
-		loaded: List[User] = []
-		for idx, item in enumerate(data):
-			if not isinstance(item, dict):
-				raise ValueError(f"Invalid user entry at index {idx}: expected object/dict")
-			for key in ('id', 'name'):
-				if key not in item:
-					raise ValueError(f"Missing '{key}' in user entry at index {idx}")
-			try:
-				user = User(item['id'], item['name'])
-			except Exception as e:
-				raise ValueError(f"Invalid data types in user entry at index {idx}: {e}")
-			loaded.append(user)
-
-		self.users_general = loaded
-
-		# Build sorted list using external insertion sort when available
-		# Keep a sorted view by name using builtin sort
+		# Build sorted list using builtin sort
 		self.users_sorted = sorted(self.users_general, key=lambda u: u.get_name())
 
-	def _save_to_file(self) -> None:
-		"""Persist `self.users_general` to `users.json` in flattened format.
+	def _save_users(self) -> None:
+		"""Persist users using repository.
 
 		Raises:
 		- Exception: for IO errors while writing.
 		"""
-		data = []
-		for u in self.users_general:
-			data.append({'id': u.get_id(), 'name': u.get_name()})
-
-		try:
-			with open(self.json_path, 'w', encoding='utf-8') as f:
-				json.dump(data, f, ensure_ascii=False, indent=2)
-		except Exception as e:
-			raise Exception(f"Unable to write users JSON file: {e}")
+		self.repository.save_all(self.users_general)
 
 	# -------------------- CRUD --------------------
 	def add_user(self, user: User) -> None:
@@ -147,7 +95,7 @@ class UserService:
 		self.users_sorted = sorted(self.users_general, key=lambda u: u.get_name())
 
 
-		self._save_to_file()
+		self._save_users()
 
 	def create_user(self, name: str) -> User:
 		"""Create a new user with an auto-generated unique ID and persist it.
@@ -276,7 +224,7 @@ class UserService:
 		# Rebuild the sorted view after update using builtin sort
 		self.users_sorted = sorted(self.users_general, key=lambda u: u.get_name())
 
-		self._save_to_file()
+		self._save_users()
 
 	def delete_user(self, id: str) -> None:
 		"""Delete a user by id from both lists and persist.
@@ -297,7 +245,7 @@ class UserService:
 		self.users_general = [u for u in self.users_general if u.get_id() != id]
 		self.users_sorted = [u for u in self.users_sorted if u.get_id() != id]
 
-		self._save_to_file()
+		self._save_users()
 
 
 # Example:

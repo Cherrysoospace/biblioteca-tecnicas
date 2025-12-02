@@ -350,7 +350,7 @@
     ]
   },
   {
-    "stock": 2,
+    "stock": 3,
     "items": [
       {
         "id": "B027",
@@ -369,6 +369,15 @@
         "weight": 0.3,
         "price": 20000,
         "isBorrowed": false
+      },
+      {
+        "id": "B030",
+        "ISBNCode": "123456",
+        "title": "Prueba rapida",
+        "author": "salitude",
+        "weight": 0.1,
+        "price": 5000,
+        "isBorrowed": false
       }
     ]
   },
@@ -382,6 +391,20 @@
         "author": "DU DU DU",
         "weight": 0.3,
         "price": 4500,
+        "isBorrowed": false
+      }
+    ]
+  },
+  {
+    "stock": 1,
+    "items": [
+      {
+        "id": "B031",
+        "ISBNCode": "34567",
+        "title": "Prueba después de cambios potentes",
+        "author": "es que 1000 lineas",
+        "weight": 0.5,
+        "price": 1000,
         "isBorrowed": false
       }
     ]
