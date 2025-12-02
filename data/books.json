@@ -268,5 +268,14 @@
     "weight": 0.5,
     "price": 1000,
     "isBorrowed": false
+  },
+  {
+    "id": "B032",
+    "ISBNCode": "5678",
+    "title": "cambios mas potentes",
+    "author": "hi",
+    "weight": 0.25,
+    "price": 45000,
+    "isBorrowed": false
   }
 ]

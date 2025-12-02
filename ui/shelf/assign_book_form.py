@@ -1,5 +1,4 @@
 import os
-import json
 import tkinter as tk
 import tkinter.font as tkfont
 import customtkinter as ctk
@@ -9,7 +8,6 @@ from ui import theme
 from ui import widget_factory as wf
 from controllers.book_controller import BookController
 from controllers.shelf_controller import ShelfController
-from utils.config import FilePaths
 
 
 class AssignBookForm(ctk.CTkToplevel):
@@ -179,29 +177,8 @@ class AssignBookForm(ctk.CTkToplevel):
 
         try:
             books = self.book_controller.get_all_books()
-        except Exception:
-            # fallback: try to read raw JSON file
-            books_path = FilePaths.BOOKS
-            try:
-                with open(books_path, 'r', encoding='utf-8') as fh:
-                    data = json.load(fh)
-            except Exception as e:
-                messagebox.showerror("Error", f"No se pudo cargar books.json: {e}")
-                return
-            for i, item in enumerate(data):
-                try:
-                    row = (
-                        item.get('id', ''),
-                        item.get('ISBNCode', ''),
-                        item.get('title', ''),
-                        item.get('author', ''),
-                        item.get('weight', ''),
-                        item.get('price', ''),
-                    )
-                    tag = 'even' if i % 2 == 0 else 'odd'
-                    self.tree.insert('', 'end', values=row, tags=(tag,))
-                except Exception:
-                    continue
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudieron cargar los libros: {e}")
             return
 
         # insert books from controller (Book objects)

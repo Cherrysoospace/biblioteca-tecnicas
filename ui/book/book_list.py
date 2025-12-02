@@ -1,5 +1,4 @@
 import os
-import json
 import tkinter as tk
 import tkinter.font as tkfont
 import customtkinter as ctk
@@ -8,8 +7,6 @@ from ui import theme
 from ui import widget_factory as wf
 from ui.book.book_form import BookForm
 from controllers.book_controller import BookController
-from utils.config import FilePaths
-from utils.config import FilePaths
 
 
 class BookList(ctk.CTkToplevel):
@@ -131,8 +128,10 @@ class BookList(ctk.CTkToplevel):
         close_btn = wf.create_small_button(action_frame, text="Regresar", command=self._on_close)
         close_btn.pack(side="left")
 
+        # Initialize controller
+        self.book_controller = BookController()
+        
         # Load data initially
-        self._books_path = FilePaths.BOOKS
         self.load_books()
 
         try:
@@ -152,32 +151,21 @@ class BookList(ctk.CTkToplevel):
             self.tree.delete(r)
 
         try:
-            with open(self._books_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-        except FileNotFoundError:
-            messagebox.showerror("Error", f"No se encontró {self._books_path}")
-            return
-        except json.JSONDecodeError:
-            messagebox.showerror("Error", "books.json no es un JSON válido")
-            return
+            books = self.book_controller.get_all_books()
         except Exception as e:
-            messagebox.showerror("Error", str(e))
-            return
-
-        if not isinstance(data, list):
-            messagebox.showerror("Error", "Formato de books.json inesperado (se esperaba una lista)")
+            messagebox.showerror("Error", f"No se pudieron cargar los libros: {e}")
             return
 
         # insert rows with alternating tag for subtle row striping
-        for i, item in enumerate(data):
+        for i, book in enumerate(books):
             try:
                 row = (
-                    item.get("id", ""),
-                    item.get("ISBNCode", ""),
-                    item.get("title", ""),
-                    item.get("author", ""),
-                    item.get("weight", ""),
-                    item.get("price", ""),
+                    book.get_id(),
+                    book.get_ISBNCode(),
+                    book.get_title(),
+                    book.get_author(),
+                    book.get_weight(),
+                    book.get_price(),
                 )
                 tag = 'even' if i % 2 == 0 else 'odd'
                 self.tree.insert("", "end", values=row, tags=(tag,))
