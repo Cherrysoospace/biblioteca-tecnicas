@@ -1,10 +1,10 @@
 [
   {
-    "ISBNCode": "1",
     "stock": 1,
     "items": [
       {
         "id": "B023",
+        "ISBNCode": "1",
         "title": "Prueba 2",
         "author": "2222",
         "weight": 0.1,
@@ -14,25 +14,104 @@
     ]
   },
   {
-    "ISBNCode": "123",
-    "stock": 0,
+    "stock": 1,
     "items": [
       {
-        "id": "B021",
-        "title": "ABCDEF",
-        "author": "YO",
-        "weight": 0.9,
-        "price": 20000,
-        "isBorrowed": true
+        "id": "B024",
+        "ISBNCode": "2",
+        "title": "Pruebaaaaa 3",
+        "author": "3 ",
+        "weight": 0.2,
+        "price": 5000,
+        "isBorrowed": false
       }
     ]
   },
   {
-    "ISBNCode": "9780060850524",
+    "stock": 1,
+    "items": [
+      {
+        "id": "B025",
+        "ISBNCode": "4",
+        "title": "Hike",
+        "author": "Hikeee",
+        "weight": 0.1,
+        "price": 2000,
+        "isBorrowed": false
+      }
+    ]
+  },
+  {
+    "stock": 1,
+    "items": [
+      {
+        "id": "B021",
+        "ISBNCode": "123",
+        "title": "ABCDEF",
+        "author": "YO",
+        "weight": 0.9,
+        "price": 20000,
+        "isBorrowed": false
+      }
+    ]
+  },
+  {
+    "stock": 1,
+    "items": [
+      {
+        "id": "B029",
+        "ISBNCode": "225",
+        "title": "prueba2345",
+        "author": "DU DU DU",
+        "weight": 0.3,
+        "price": 4500,
+        "isBorrowed": false
+      }
+    ]
+  },
+  {
+    "stock": 1,
+    "items": [
+      {
+        "id": "B026",
+        "ISBNCode": "345",
+        "title": "prueba del isborrowes",
+        "author": "h",
+        "weight": 0.1,
+        "price": 5000,
+        "isBorrowed": false
+      }
+    ]
+  },
+  {
+    "stock": 2,
+    "items": [
+      {
+        "id": "B027",
+        "ISBNCode": "123456",
+        "title": "Hola",
+        "author": "holi x2",
+        "weight": 0.3,
+        "price": 15000,
+        "isBorrowed": false
+      },
+      {
+        "id": "B028",
+        "ISBNCode": "123456",
+        "title": "Hola",
+        "author": "holi x2",
+        "weight": 0.3,
+        "price": 20000,
+        "isBorrowed": false
+      }
+    ]
+  },
+  {
     "stock": 1,
     "items": [
       {
         "id": "B015",
+        "ISBNCode": "9780060850524",
         "title": "Life of Pi",
         "author": "Yann Martel",
         "weight": 0.9,
@@ -42,11 +121,11 @@
     ]
   },
   {
-    "ISBNCode": "9780061120084",
     "stock": 1,
     "items": [
       {
         "id": "B004",
+        "ISBNCode": "9780061120084",
         "title": "To Kill a Mockingbird",
         "author": "Harper Lee",
         "weight": 0.95,
@@ -56,11 +135,11 @@
     ]
   },
   {
-    "ISBNCode": "9780061122415",
     "stock": 1,
     "items": [
       {
         "id": "B016",
+        "ISBNCode": "9780061122415",
         "title": "Of Mice and Men",
         "author": "John Steinbeck",
         "weight": 0.68,
@@ -70,11 +149,11 @@
     ]
   },
   {
-    "ISBNCode": "9780140185850",
     "stock": 1,
     "items": [
       {
         "id": "B019",
+        "ISBNCode": "9780140185850",
         "title": "WE",
         "author": "Yevgeny Zamyatin",
         "weight": 0.5,
@@ -84,25 +163,25 @@
     ]
   },
   {
-    "ISBNCode": "9780140449136",
-    "stock": 0,
+    "stock": 1,
     "items": [
       {
         "id": "B001",
+        "ISBNCode": "9780140449136",
         "title": "The Odyssey",
         "author": "Homer",
         "weight": 1.1,
         "price": 30000,
-        "isBorrowed": true
+        "isBorrowed": false
       }
     ]
   },
   {
-    "ISBNCode": "9780143105988",
     "stock": 1,
     "items": [
       {
         "id": "B017",
+        "ISBNCode": "9780143105988",
         "title": "The Art of War",
         "author": "Sun Tzu",
         "weight": 0.6,
@@ -112,11 +191,11 @@
     ]
   },
   {
-    "ISBNCode": "9780143126560",
     "stock": 1,
     "items": [
       {
         "id": "B010",
+        "ISBNCode": "9780143126560",
         "title": "The Martian",
         "author": "Andy Weir",
         "weight": 1.2,
@@ -126,11 +205,11 @@
     ]
   },
   {
-    "ISBNCode": "9780156012196",
     "stock": 1,
     "items": [
       {
         "id": "B020",
+        "ISBNCode": "9780156012196",
         "title": "The Little Prince",
         "author": "Antoine de Saint-Exupéry",
         "weight": 0.4,
@@ -140,11 +219,11 @@
     ]
   },
   {
-    "ISBNCode": "9780307277671",
     "stock": 1,
     "items": [
       {
         "id": "B005",
+        "ISBNCode": "9780307277671",
         "title": "The Road",
         "author": "Cormac McCarthy",
         "weight": 1.0,
@@ -154,11 +233,11 @@
     ]
   },
   {
-    "ISBNCode": "9780307387899",
     "stock": 1,
     "items": [
       {
         "id": "B007",
+        "ISBNCode": "9780307387899",
         "title": "The Alchemist",
         "author": "Paulo Coelho",
         "weight": 0.7,
@@ -168,11 +247,11 @@
     ]
   },
   {
-    "ISBNCode": "9780307743657",
     "stock": 1,
     "items": [
       {
         "id": "B009",
+        "ISBNCode": "9780307743657",
         "title": "Ready Player One",
         "author": "Ernest Cline",
         "weight": 1.05,
@@ -182,11 +261,11 @@
     ]
   },
   {
-    "ISBNCode": "9780316769488",
     "stock": 1,
     "items": [
       {
         "id": "B013",
+        "ISBNCode": "9780316769488",
         "title": "The Catcher in the Rye",
         "author": "J.D. Salinger",
         "weight": 0.72,
@@ -196,11 +275,11 @@
     ]
   },
   {
-    "ISBNCode": "9780345339683",
     "stock": 1,
     "items": [
       {
         "id": "B018",
+        "ISBNCode": "9780345339683",
         "title": "Kafka on the Shore",
         "author": "Haruki Murakami",
         "weight": 0.98,
@@ -210,11 +289,11 @@
     ]
   },
   {
-    "ISBNCode": "9780439023528",
     "stock": 1,
     "items": [
       {
         "id": "B011",
+        "ISBNCode": "9780439023528",
         "title": "The Hunger Games",
         "author": "Suzanne Collins",
         "weight": 0.95,
@@ -224,11 +303,11 @@
     ]
   },
   {
-    "ISBNCode": "9780446310789",
     "stock": 1,
     "items": [
       {
         "id": "B008",
+        "ISBNCode": "9780446310789",
         "title": "Mockingjay",
         "author": "Suzanne Collins",
         "weight": 0.85,
@@ -238,11 +317,11 @@
     ]
   },
   {
-    "ISBNCode": "9780679783268",
     "stock": 1,
     "items": [
       {
         "id": "B002",
+        "ISBNCode": "9780679783268",
         "title": "Pride and Prejudice",
         "author": "Jane Austen",
         "weight": 0.9,
@@ -252,11 +331,11 @@
     ]
   },
   {
-    "ISBNCode": "9780743273565",
     "stock": 1,
     "items": [
       {
         "id": "B003",
+        "ISBNCode": "9780743273565",
         "title": "The Great Gatsby",
         "author": "F. Scott Fitzgerald",
         "weight": 0.8,
@@ -266,11 +345,11 @@
     ]
   },
   {
-    "ISBNCode": "9781451673319",
     "stock": 1,
     "items": [
       {
         "id": "B014",
+        "ISBNCode": "9781451673319",
         "title": "Fahrenheit 451",
         "author": "Ray Bradbury",
         "weight": 0.7,
@@ -280,11 +359,11 @@
     ]
   },
   {
-    "ISBNCode": "9781594633669",
     "stock": 1,
     "items": [
       {
         "id": "B012",
+        "ISBNCode": "9781594633669",
         "title": "The Kite Runner",
         "author": "Khaled Hosseini",
         "weight": 0.88,
@@ -294,29 +373,15 @@
     ]
   },
   {
-    "ISBNCode": "9781982137274",
     "stock": 1,
     "items": [
       {
         "id": "B006",
+        "ISBNCode": "9781982137274",
         "title": "The Institute",
         "author": "Stephen King",
         "weight": 1.3,
         "price": 45000,
-        "isBorrowed": false
-      }
-    ]
-  },
-  {
-    "ISBNCode": "Prueba del sorted",
-    "stock": 1,
-    "items": [
-      {
-        "id": "B022",
-        "title": "Pruebaaaaa",
-        "author": "978956346790",
-        "weight": 0.4,
-        "price": 100000,
         "isBorrowed": false
       }
     ]

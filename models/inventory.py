@@ -1,66 +1,82 @@
+from typing import List
 from .Books import Book
 
 class Inventory:
-	"""Represents an inventory item linking a Book to its stock count.
+	"""Represents an inventory group for books with the same ISBN.
 
-	This model no longer maintains a separate `stock` attribute. Stock is
-	delegated to the associated `Book` instance. `get_stock()` accepts an
-	optional list of inventories to compute the cumulative stock for the
-	same ISBN across the provided inventories.
+	This model groups multiple physical copies (Books) of the same ISBN together.
+	- stock: total number of copies
+	- items: list of Book objects (each represents a physical copy)
 	"""
 
-	def __init__(self, book: Book, stock: int, isBorrowed: bool = False):
-		# private attributes
-		self.__book = book
-		# Inventory mantiene su propio stock (ahora Book ya no lo contiene)
-		self.__stock = int(stock)
-		# estado de préstamo para esta entrada de inventario
-		self.__isBorrowed = bool(isBorrowed)
+	def __init__(self, stock: int = 0, items: List[Book] = None):
+		"""Initialize an Inventory group.
+		
+		Parameters:
+		- stock: total number of copies (calculated from items if not provided)
+		- items: list of Book objects representing physical copies
+		"""
+		# Lista de libros (copias físicas) con el mismo ISBN
+		self.__items = items if items is not None else []
+		
+		# Stock total: se calcula automáticamente de los items si no se proporciona
+		if stock == 0 and self.__items:
+			self.__stock = len(self.__items)
+		else:
+			self.__stock = int(stock)
 
 	# Getters
-	def get_book(self):
-		return self.__book
+	def get_items(self) -> List[Book]:
+		"""Return the list of Book items (physical copies)."""
+		return self.__items
 
-	def get_stock(self, inventories: list = None):
-		"""Return the stock for this inventory item.
+	def get_stock(self) -> int:
+		"""Return the total stock count."""
+		return self.__stock
 
-		If `inventories` is provided (list of Inventory), the method will
-		compute and return the total stock across all Inventory entries that
-		share the same ISBN as this item's book. If `inventories` is None,
-		returns the stock stored in the associated Book.
-		"""
-		if inventories is None:
-			return self.__stock
-
-		# sum stocks for same ISBN across provided inventories
-		target_isbn = self.get_book().get_ISBNCode()
-		total = 0
-		for inv in inventories:
-			try:
-				if inv.get_book().get_ISBNCode() == target_isbn:
-					# sumar el stock de cada Inventory (no del Book)
-					total += int(inv.get_stock())
-			except Exception:
-				# be robust to malformed entries
-				continue
-		return total
+	def get_isbn(self) -> str:
+		"""Return the ISBN code from the first item, or empty string if no items."""
+		if self.__items and len(self.__items) > 0:
+			return self.__items[0].get_ISBNCode()
+		return ""
 
 	# Setters
-	def set_book(self, book: Book):
-		self.__book = book
+	def set_items(self, items: List[Book]):
+		"""Set the list of Book items and update stock accordingly."""
+		self.__items = items
+		self.__stock = len(items)
 
 	def set_stock(self, stock: int):
+		"""Set the stock count."""
 		self.__stock = int(stock)
 
-	def get_isBorrowed(self):
-		return self.__isBorrowed
+	def add_item(self, book: Book):
+		"""Add a Book item to this inventory group and increment stock."""
+		self.__items.append(book)
+		self.__stock = len(self.__items)
 
-	def set_isBorrowed(self, isBorrowed: bool):
-		self.__isBorrowed = bool(isBorrowed)
+	def remove_item(self, book_id: str) -> bool:
+		"""Remove a Book item by ID and update stock. Returns True if removed."""
+		for i, book in enumerate(self.__items):
+			if book.get_id() == book_id:
+				self.__items.pop(i)
+				self.__stock = len(self.__items)
+				return True
+		return False
+
+	def get_available_count(self) -> int:
+		"""Return the count of books that are NOT borrowed."""
+		return sum(1 for book in self.__items if not book.get_isBorrowed())
+
+	def get_borrowed_count(self) -> int:
+		"""Return the count of books that ARE borrowed."""
+		return sum(1 for book in self.__items if book.get_isBorrowed())
 
 	def __str__(self):
-		# show stock del Inventory
-		return f"Inventory[Book: {self.__book}, Stock: {self.__stock}, isBorrowed: {self.__isBorrowed}]"
+		isbn = self.get_isbn()
+		available = self.get_available_count()
+		borrowed = self.get_borrowed_count()
+		return f"Inventory[ISBN: {isbn}, Stock: {self.__stock}, Available: {available}, Borrowed: {borrowed}]"
 
 
 

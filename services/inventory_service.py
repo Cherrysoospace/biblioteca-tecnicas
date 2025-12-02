@@ -4,35 +4,19 @@ from typing import List, Optional, Dict, Any
 
 from models.Books import Book
 from models.inventory import Inventory
-
-# Try to import required algorithm functions from expected modules.
-try:
-    from utils.algoritmos.insertion_sort import insertion_sort_inventory
-    from utils.algoritmos.busqueda_lineal import buscar_lineal
-    from utils.algoritmos.busqueda_binaria import buscar_binario
-    from utils.algoritmos.merge_sort import merge_sort_inventory_by_price
-except Exception:
-    try:
-        from utils.algorithms.insertion_sort import insertion_sort_inventory  # type: ignore
-        from utils.algorithms.busqueda_lineal import buscar_lineal  # type: ignore
-        from utils.algorithms.busqueda_binaria import buscar_binario  # type: ignore
-        from utils.algorithms.merge_sort import merge_sort_inventory_by_price  # type: ignore
-    except Exception:
-        insertion_sort_inventory = None  # type: ignore
-        buscar_lineal = None  # type: ignore
-        buscar_binario = None  # type: ignore
-        merge_sort_inventory_by_price = None  # type: ignore
+from utils.algorithms.AlgoritmosOrdenamiento import insercion_ordenada
 
 
 class InventoryService:
-    """Service responsible for managing inventory items persisted as JSON.
+    """Service responsible for managing inventory groups persisted as JSON.
 
     Manages two JSON files (general and sorted), keeps in-memory lists:
-    - self.inventory_general: List[Inventory] (unsorted)
-    - self.inventory_sorted: List[Inventory]  (sorted by ISBN)
-
-    Algorithms (insertion sort, linear search, binary search, merge sort) are
-    expected to live in `utils/algoritmos` and are called by this service.
+    - self.inventory_general: List[Inventory] (unsorted, grouped by ISBN)
+    - self.inventory_sorted: List[Inventory] (sorted by ISBN using insercion_ordenada)
+    
+    Each Inventory object represents a group of books with the same ISBN:
+    - stock: total number of copies
+    - items: list of Book objects (physical copies)
     """
 
     def __init__(self, general_path: Optional[str] = None, sorted_path: Optional[str] = None):
@@ -63,7 +47,12 @@ class InventoryService:
 
         self._ensure_files_exist()
         self._load_general()
-        self._load_sorted()
+        
+        # If inventory is empty, regenerate from books.json
+        if len(self.inventory_general) == 0:
+            self._regenerate_from_books()
+        
+        self.synchronize_inventories()  # Ensure synchronization at initialization
 
     # -------------------- File IO --------------------
     def _ensure_files_exist(self) -> None:
@@ -88,8 +77,17 @@ class InventoryService:
     def _load_general(self) -> None:
         """Load `inventory_general.json` into `self.inventory_general`.
 
-        Expects a JSON list of flattened inventory items. Converts each entry into
-        an `Inventory(Book(...), stock)` instance.
+        Expects a JSON list with structure:
+        [
+          {
+            "stock": 2,
+            "items": [
+              { "id": "B001", "ISBNCode": "...", "title": "...", ... },
+              { "id": "B002", "ISBNCode": "...", "title": "...", ... }
+            ]
+          },
+          ...
+        ]
 
         Raises:
         - ValueError: if JSON is malformed or entries missing required fields.
@@ -104,70 +102,27 @@ class InventoryService:
             raise Exception(f"Unable to read {self.general_path}: {e}")
 
         if not isinstance(data, list):
-            raise ValueError(f"{self.general_path} must contain a JSON list of inventory objects")
+            raise ValueError(f"{self.general_path} must contain a JSON list of inventory groups")
 
         loaded: List[Inventory] = []
 
-        # Support two file formats for backwards compatibility:
-        # 1) Legacy: list of flattened inventory entries (one per physical copy).
-        #    Example element: { 'id': 'B001', 'ISBNCode': '...', 'title': '...', ..., 'stock': 1 }
-        # 2) Aggregated-by-ISBN: list of groups, one per ISBN. Each group contains
-        #    'ISBNCode', 'stock' (total) and 'items' (list of per-copy book objects).
-        #    Example: { 'ISBNCode': '...', 'stock': 3, 'items': [ { 'id': 'B001', 'title': ... }, ... ] }
+        for idx, group in enumerate(data):
+            if not isinstance(group, dict):
+                raise ValueError(f"Invalid inventory group at index {idx}: expected object/dict")
+            
+            if 'items' not in group:
+                raise ValueError(f"Missing 'items' in inventory group at index {idx}")
+            
+            items_data = group['items']
+            if not isinstance(items_data, list):
+                raise ValueError(f"'items' must be a list in inventory group at index {idx}")
 
-        if len(data) == 0:
-            self.inventory_general = []
-            return
-
-        first = data[0]
-        if isinstance(first, dict) and 'items' in first:
-            # Aggregated format
-            for grp in data:
-                if not isinstance(grp, dict) or 'ISBNCode' not in grp or 'items' not in grp:
-                    raise ValueError("Invalid aggregated inventory group format")
-                total_stock = int(grp.get('stock', 0))
-                items = grp.get('items', [])
-                if not isinstance(items, list):
-                    raise ValueError("'items' must be a list in aggregated inventory group")
-
-                # For aggregated format we derive per-item stock from the
-                # 'isBorrowed' flag unless an explicit per-item 'stock' exists.
-                # This preserves availability even though per-item 'stock' is
-                # not saved in the new format.
-                for idx_it, it in enumerate(items):
-                    if not isinstance(it, dict):
-                        raise ValueError("Invalid item in aggregated 'items' list: expected dict")
-                    try:
-                        book = Book(
-                            it['id'],
-                            grp['ISBNCode'],
-                            it['title'],
-                            it['author'],
-                            float(it['weight']),
-                            int(it['price']),
-                            bool(it.get('isBorrowed', False)),
-                        )
-                    except Exception as e:
-                        raise ValueError(f"Invalid book data in aggregated items: {e}")
-
-                    # if explicit per-item stock provided, use it; otherwise
-                    # derive: available => 1, borrowed => 0
-                    if 'stock' in it:
-                        stock = int(it.get('stock', 1))
-                    else:
-                        stock = 0 if bool(it.get('isBorrowed', False)) else 1
-
-                    loaded.append(Inventory(book, stock, bool(it.get('isBorrowed', False))))
-        else:
-            # Legacy format (per-copy entries)
-            for idx, item in enumerate(data):
+            # Parse each book in items
+            books: List[Book] = []
+            for item_idx, item in enumerate(items_data):
                 if not isinstance(item, dict):
-                    raise ValueError(f"Invalid inventory entry at index {idx}: expected object/dict")
-                required = ['id', 'ISBNCode', 'title', 'author', 'weight', 'price', 'isBorrowed']
-                for key in required:
-                    if key not in item:
-                        raise ValueError(f"Missing '{key}' in inventory entry at index {idx}")
-
+                    continue
+                
                 try:
                     book = Book(
                         item['id'],
@@ -176,15 +131,18 @@ class InventoryService:
                         item['author'],
                         float(item['weight']),
                         int(item['price']),
-                        bool(item.get('isBorrowed', False)),
+                        bool(item.get('isBorrowed', False))
                     )
-                    stock = int(item.get('stock', 0))
-                    if stock < 0:
-                        raise ValueError(f"Stock must be >= 0 at index {idx}")
+                    books.append(book)
+                except KeyError as e:
+                    raise ValueError(f"Missing field {e} in item {item_idx} of group {idx}")
                 except Exception as e:
-                    raise ValueError(f"Invalid data types in inventory entry at index {idx}: {e}")
+                    raise ValueError(f"Invalid data in item {item_idx} of group {idx}: {e}")
 
-                loaded.append(Inventory(book, stock, bool(item.get('isBorrowed', False))))
+            # Create Inventory group
+            stock = int(group.get('stock', len(books)))
+            inventory = Inventory(stock=stock, items=books)
+            loaded.append(inventory)
 
         self.inventory_general = loaded
 
@@ -199,128 +157,75 @@ class InventoryService:
         try:
             with open(self.sorted_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-        except json.JSONDecodeError:
-            # If malformed, regenerate from general
-            self.regenerate_sorted_inventory()
+        except (json.JSONDecodeError, Exception):
+            # If malformed or unreadable, regenerate from general
+            self.synchronize_inventories()
             return
-        except Exception as e:
-            raise Exception(f"Unable to read {self.sorted_path}: {e}")
 
         if not isinstance(data, list) or len(data) == 0:
-            # regenerate if empty
-            self.regenerate_sorted_inventory()
+            # Regenerate if empty
+            self.synchronize_inventories()
             return
 
         loaded: List[Inventory] = []
-        if len(data) == 0:
-            self.inventory_sorted = []
-            return
-
-        first = data[0]
-        if isinstance(first, dict) and 'items' in first:
-            # Aggregated format
-            for grp in data:
-                if not isinstance(grp, dict) or 'ISBNCode' not in grp or 'items' not in grp:
-                    self.regenerate_sorted_inventory()
-                    return
-                total_stock = int(grp.get('stock', 0))
-                items = grp.get('items', [])
-                if not isinstance(items, list):
-                    self.regenerate_sorted_inventory()
-                    return
-
-                item_stocks = [int(it.get('stock', 1)) if isinstance(it, dict) else 1 for it in items]
-                sum_items = sum(item_stocks)
-                if total_stock == 0:
-                    total_stock = sum_items
-                extra = total_stock - sum_items
-
-                for idx_it, it in enumerate(items):
-                    if not isinstance(it, dict):
-                        self.regenerate_sorted_inventory()
-                        return
-                    try:
-                        book = Book(
-                            it['id'],
-                            grp['ISBNCode'],
-                            it['title'],
-                            it['author'],
-                            float(it['weight']),
-                            int(it['price']),
-                            bool(it.get('isBorrowed', False)),
-                        )
-                    except Exception:
-                        self.regenerate_sorted_inventory()
-                        return
-
-                    stock = int(it.get('stock', 1))
-                    if idx_it == 0 and extra > 0:
-                        stock += extra
-                    loaded.append(Inventory(book, stock, bool(it.get('isBorrowed', False))))
-        else:
-            # Legacy per-copy format
+        for item in data:
+            if not isinstance(item, dict):
+                continue
             try:
-                for idx, item in enumerate(data):
-                    if not isinstance(item, dict):
-                        self.regenerate_sorted_inventory()
-                        return
-                    required = ['id', 'ISBNCode', 'title', 'author', 'weight', 'price', 'isBorrowed']
-                    for key in required:
-                        if key not in item:
-                            self.regenerate_sorted_inventory()
-                            return
-                    book = Book(
-                        item['id'],
-                        item['ISBNCode'],
-                        item['title'],
-                        item['author'],
-                        float(item['weight']),
-                        int(item['price']),
-                        bool(item.get('isBorrowed', False)),
-                    )
-                    stock = int(item.get('stock', 0))
-                    loaded.append(Inventory(book, stock, bool(item.get('isBorrowed', False))))
-            except Exception:
-                self.regenerate_sorted_inventory()
-                return
+                book = Book(
+                    item['id'],
+                    item['ISBNCode'],
+                    item['title'],
+                    item['author'],
+                    item['weight'],
+                    item['price'],
+                    item['isBorrowed']
+                )
+                inventory_item = Inventory(book, item['stock'])
+                loaded.append(inventory_item)
+            except KeyError:
+                continue
 
         self.inventory_sorted = loaded
+        insercion_ordenada(self.inventory_sorted)
 
     def _save_general(self) -> None:
-        """Serialize `self.inventory_general` to `inventory_general.json` in flattened format.
+        """Serialize `self.inventory_general` to `inventory_general.json`.
+
+        Format:
+        [
+          {
+            "stock": 2,
+            "items": [
+              { "id": "B001", "ISBNCode": "...", ... },
+              { "id": "B002", "ISBNCode": "...", ... }
+            ]
+          },
+          ...
+        ]
 
         Raises:
         - Exception: for IO errors.
         """
         data = []
-        # New aggregated-by-ISBN format: one object per ISBN with total 'stock'
-        # and an 'items' list containing per-copy book attributes.
-        groups: Dict[str, List[Inventory]] = {}
-        for inv in self.inventory_general:
-            isbn = inv.get_book().get_ISBNCode()
-            groups.setdefault(isbn, []).append(inv)
-
-        data = []
-        for isbn, items in groups.items():
-            total = sum(i.get_stock() for i in items)
-            grp: Dict[str, Any] = {
-                'ISBNCode': isbn,
-                'stock': total,
+        for inventory in self.inventory_general:
+            group = {
+                'stock': inventory.get_stock(),
                 'items': []
             }
-            for inv in items:
-                b = inv.get_book()
-                # Do NOT write per-item 'stock' into saved JSON; stock is
-                # represented only at the group (ISBN) level.
-                grp['items'].append({
-                    'id': b.get_id(),
-                    'title': b.get_title(),
-                    'author': b.get_author(),
-                    'weight': b.get_weight(),
-                    'price': b.get_price(),
-                    'isBorrowed': inv.get_isBorrowed(),
+            
+            for book in inventory.get_items():
+                group['items'].append({
+                    'id': book.get_id(),
+                    'ISBNCode': book.get_ISBNCode(),
+                    'title': book.get_title(),
+                    'author': book.get_author(),
+                    'weight': book.get_weight(),
+                    'price': book.get_price(),
+                    'isBorrowed': book.get_isBorrowed(),
                 })
-            data.append(grp)
+            
+            data.append(group)
 
         try:
             with open(self.general_path, 'w', encoding='utf-8') as f:
@@ -329,39 +234,32 @@ class InventoryService:
             raise Exception(f"Unable to write {self.general_path}: {e}")
 
     def _save_sorted(self) -> None:
-        """Serialize `self.inventory_sorted` to `inventory_sorted.json` in flattened format.
+        """Serialize `self.inventory_sorted` to `inventory_sorted.json`.
+
+        Same format as _save_general but with sorted groups.
 
         Raises:
         - Exception: for IO errors.
         """
         data = []
-        # Aggregated-by-ISBN format for sorted file as well
-        groups: Dict[str, List[Inventory]] = {}
-        for inv in self.inventory_sorted:
-            isbn = inv.get_book().get_ISBNCode()
-            groups.setdefault(isbn, []).append(inv)
-
-        data = []
-        for isbn, items in groups.items():
-            total = sum(i.get_stock() for i in items)
-            grp: Dict[str, Any] = {
-                'ISBNCode': isbn,
-                'stock': total,
+        for inventory in self.inventory_sorted:
+            group = {
+                'stock': inventory.get_stock(),
                 'items': []
             }
-            for inv in items:
-                b = inv.get_book()
-                # Save item attributes without per-copy 'stock'. The group's
-                # 'stock' contains the total count for that ISBN.
-                grp['items'].append({
-                    'id': b.get_id(),
-                    'title': b.get_title(),
-                    'author': b.get_author(),
-                    'weight': b.get_weight(),
-                    'price': b.get_price(),
-                    'isBorrowed': inv.get_isBorrowed(),
+            
+            for book in inventory.get_items():
+                group['items'].append({
+                    'id': book.get_id(),
+                    'ISBNCode': book.get_ISBNCode(),
+                    'title': book.get_title(),
+                    'author': book.get_author(),
+                    'weight': book.get_weight(),
+                    'price': book.get_price(),
+                    'isBorrowed': book.get_isBorrowed(),
                 })
-            data.append(grp)
+            
+            data.append(group)
 
         try:
             with open(self.sorted_path, 'w', encoding='utf-8') as f:
@@ -370,142 +268,219 @@ class InventoryService:
             raise Exception(f"Unable to write {self.sorted_path}: {e}")
 
     # -------------------- CRUD --------------------
-    def add_item(self, book: Book, stock: int) -> None:
-        """Add a new inventory item.
+    def add_item(self, book: Book, stock: int = 1) -> None:
+        """
+        Add a new book to the inventory.
+        
+        If an inventory group with the same ISBN already exists, adds the book to that group.
+        Otherwise, creates a new inventory group for this ISBN.
 
         Parameters:
         - book: Book instance to add to inventory.
-        - stock: non-negative integer stock value.
+        - stock: ignored (kept for compatibility), each book counts as 1 item.
 
         Returns: None
 
         Raises:
-        - ValueError: if a book with same id already exists or stock < 0.
-        - ImportError: if required insertion sort algorithm is missing when regenerating sorted list.
+        - ValueError: if a book with the same id already exists.
         - Exception: for IO errors while saving.
         """
-        if stock < 0:
-            raise ValueError("stock must be >= 0")
+        # Check if book id already exists in any inventory group
+        for inventory in self.inventory_general:
+            for existing_book in inventory.get_items():
+                if existing_book.get_id() == book.get_id():
+                    raise ValueError(f"A book with id '{book.get_id()}' already exists in inventory")
 
-        if any(inv.get_book().get_id() == book.get_id() for inv in self.inventory_general):
-            raise ValueError(f"An inventory item with book id '{book.get_id()}' already exists")
-
-        new_inv = Inventory(book, int(stock))
-        self.inventory_general.append(new_inv)
-
-        # Try to insert into sorted list using external insertion sort
-        if insertion_sort_inventory is None:
-            # fallback: regenerate sorted using builtin sort by ISBN
-            self.inventory_sorted = sorted(self.inventory_general, key=lambda inv: inv.get_book().get_ISBNCode())
-        else:
-            self.inventory_sorted = insertion_sort_inventory(list(self.inventory_general))
-
-        self._save_general()
-        self._save_sorted()
-
-    def add_and_sort_inventory(self, new_book: Book) -> None:
-        """
-        Add a new book to the inventory, sort it, and save the updated inventory.
-
-        Parameters:
-        - new_book: Book instance to add to inventory.
-
-        Returns: None
-
-        Raises:
-        - Exception: for IO errors while saving.
-        """
-        # Add the new book to the general inventory
-        new_inventory_item = Inventory(new_book, 1)
-        self.inventory_general.append(new_inventory_item)
-
-        # Sort the inventory using insertion sort
-        if insertion_sort_inventory is None:
-            # Fallback to Python's built-in sort if the algorithm is unavailable
-            self.inventory_sorted = sorted(self.inventory_general, key=lambda inv: inv.get_book().get_ISBNCode())
-        else:
-            self.inventory_sorted = insertion_sort_inventory(self.inventory_general)
-
-        # Save the updated inventories
-        self._save_general()
-        self._save_sorted()
-
-    def update_stock(self, book_id: str, new_stock: int) -> None:
-        """Update the stock for an existing inventory item.
-
-        Parameters:
-        - book_id: id of the Book to update.
-        - new_stock: non-negative integer stock value.
-
-        Returns: None
-
-        Raises:
-        - ValueError: if item not found or new_stock < 0.
-        - Exception: for IO errors while saving.
-        """
-        if new_stock < 0:
-            raise ValueError("new_stock must be >= 0")
-
-        found = False
-        for inv in self.inventory_general:
-            if inv.get_book().get_id() == book_id:
-                inv.set_stock(int(new_stock))
-                found = True
+        # Find existing inventory group with same ISBN
+        target_inventory = None
+        for inventory in self.inventory_general:
+            if inventory.get_isbn() == book.get_ISBNCode():
+                target_inventory = inventory
                 break
 
-        if not found:
-            raise ValueError(f"No inventory item found with book id '{book_id}'")
-
-        # Keep sorted consistent
-        if insertion_sort_inventory is None:
-            self.inventory_sorted = sorted(self.inventory_general, key=lambda inv: inv.get_book().get_ISBNCode())
+        if target_inventory:
+            # Add to existing group
+            target_inventory.add_item(book)
         else:
-            self.inventory_sorted = insertion_sort_inventory(list(self.inventory_general))
+            # Create new group
+            new_inventory = Inventory(stock=1, items=[book])
+            self.inventory_general.append(new_inventory)
 
-        self._save_general()
-        self._save_sorted()
+        # Synchronize and save
+        self.synchronize_inventories()
 
-    def delete_item(self, book_id: str) -> None:
-        """Delete an inventory item by book id.
+    def update_book_in_inventory(self, book_id: str, updated_book: Book) -> None:
+        """
+        Update a book's information in the inventory.
+        
+        If the ISBN changes, moves the book to the appropriate group.
 
         Parameters:
-        - book_id: id of the Book to delete.
-
-        Returns: None
+        - book_id: ID of the book to update
+        - updated_book: Book object with updated information
 
         Raises:
-        - ValueError: if item not found or book is currently borrowed.
+        - ValueError: if book not found in inventory
+        """
+        found = False
+        old_inventory = None
+        
+        # Find the book in inventory
+        for inventory in self.inventory_general:
+            for idx, book in enumerate(inventory.get_items()):
+                if book.get_id() == book_id:
+                    # Update book in place
+                    items = inventory.get_items()
+                    items[idx] = updated_book
+                    inventory.set_items(items)
+                    old_inventory = inventory
+                    found = True
+                    break
+            if found:
+                break
+        
+        if not found:
+            raise ValueError(f"Book with id '{book_id}' not found in inventory")
+        
+        # If ISBN changed, move to different group
+        if old_inventory and old_inventory.get_isbn() != updated_book.get_ISBNCode():
+            # Remove from old group
+            old_inventory.remove_item(book_id)
+            
+            # Remove empty groups
+            self.inventory_general = [inv for inv in self.inventory_general if inv.get_stock() > 0]
+            
+            # Add to new group (or create it)
+            target_inventory = None
+            for inventory in self.inventory_general:
+                if inventory.get_isbn() == updated_book.get_ISBNCode():
+                    target_inventory = inventory
+                    break
+            
+            if target_inventory:
+                target_inventory.add_item(updated_book)
+            else:
+                new_inventory = Inventory(stock=1, items=[updated_book])
+                self.inventory_general.append(new_inventory)
+        
+        self.synchronize_inventories()
+
+    def delete_book_from_inventory(self, book_id: str) -> None:
+        """
+        Delete a book from inventory.
+
+        Parameters:
+        - book_id: ID of the book to delete
+
+        Raises:
+        - ValueError: if book not found
+        """
+        found = False
+        
+        for inventory in self.inventory_general:
+            if inventory.remove_item(book_id):
+                found = True
+                break
+        
+        if not found:
+            raise ValueError(f"Book with id '{book_id}' not found in inventory")
+        
+        # Remove empty groups
+        self.inventory_general = [inv for inv in self.inventory_general if inv.get_stock() > 0]
+        
+        self.synchronize_inventories()
+
+    def synchronize_inventories(self) -> None:
+        """
+        Synchronize the unordered inventory with the ordered inventory.
+
+        This method ensures that inventory_sorted is a sorted copy of inventory_general
+        using the insertion sort algorithm (insercion_ordenada).
+
+        Raises:
         - Exception: for IO errors while saving.
         """
-        inv = next((i for i in self.inventory_general if i.get_book().get_id() == book_id), None)
-        if inv is None:
-            raise ValueError(f"No inventory item found with book id '{book_id}'")
-        if inv.get_isBorrowed():
-            raise ValueError("Cannot delete inventory item: the book is currently borrowed")
+        # Create deep copy of inventory_general to inventory_sorted
+        self.inventory_sorted = []
+        for inv in self.inventory_general:
+            # Create new Inventory with same data
+            books_copy = []
+            for book in inv.get_items():
+                book_copy = Book(
+                    book.get_id(),
+                    book.get_ISBNCode(),
+                    book.get_title(),
+                    book.get_author(),
+                    book.get_weight(),
+                    book.get_price(),
+                    book.get_isBorrowed()
+                )
+                books_copy.append(book_copy)
+            
+            inv_copy = Inventory(stock=inv.get_stock(), items=books_copy)
+            self.inventory_sorted.append(inv_copy)
 
-        self.inventory_general = [i for i in self.inventory_general if i.get_book().get_id() != book_id]
-        self.inventory_sorted = [i for i in self.inventory_sorted if i.get_book().get_id() != book_id]
+        # Sort using the insertion sort algorithm
+        insercion_ordenada(self.inventory_sorted)
 
+        # Save both inventories
         self._save_general()
         self._save_sorted()
 
-    # -------------------- Sorted regeneration --------------------
-    def regenerate_sorted_inventory(self) -> None:
-        """Rebuild `self.inventory_sorted` by applying insertion sort on `inventory_general`.
-
-        Uses external algorithm `insertion_sort_inventory`. If missing, falls back to built-in sort.
-
-        Returns: None
-
-        Raises:
-        - ImportError: if algorithm is required but missing (this service falls back instead of raising).
+    def _regenerate_from_books(self) -> None:
         """
-        if insertion_sort_inventory is None:
-            self.inventory_sorted = sorted(self.inventory_general, key=lambda inv: inv.get_book().get_ISBNCode())
-        else:
-            self.inventory_sorted = insertion_sort_inventory(list(self.inventory_general))
+        Regenerate inventory from books.json if inventory is empty.
+        
+        This method loads all books from books.json and creates inventory groups
+        organized by ISBN. Each book becomes an item in the appropriate group.
+        """
+        base = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        books_json = os.path.join(base, 'data', 'books.json')
 
-        self._save_sorted()
+        # Check if books.json exists
+        if not os.path.exists(books_json):
+            return
+
+        # Read books.json
+        try:
+            with open(books_json, 'r', encoding='utf-8') as f:
+                books_data = json.load(f)
+        except Exception:
+            return
+
+        if not isinstance(books_data, list) or len(books_data) == 0:
+            return
+
+        # Group books by ISBN
+        isbn_groups: Dict[str, List[Book]] = {}
+        
+        for item in books_data:
+            if not isinstance(item, dict):
+                continue
+            
+            try:
+                book = Book(
+                    item['id'],
+                    item['ISBNCode'],
+                    item['title'],
+                    item['author'],
+                    float(item['weight']),
+                    int(item['price']),
+                    bool(item.get('isBorrowed', False))
+                )
+                
+                isbn = book.get_ISBNCode()
+                if isbn not in isbn_groups:
+                    isbn_groups[isbn] = []
+                isbn_groups[isbn].append(book)
+                
+            except (KeyError, ValueError):
+                continue
+
+        # Create Inventory groups
+        for isbn, books in isbn_groups.items():
+            inventory = Inventory(stock=len(books), items=books)
+            self.inventory_general.append(inventory)
 
     def regenerate_general_from_books(self, books_path: Optional[str] = None, preserve_borrowed: bool = True) -> None:
         """Rebuild `self.inventory_general` from `books.json`.
@@ -534,15 +509,6 @@ class InventoryService:
         else:
             books_json = os.path.join(base, 'data', 'books.json')
 
-        # load existing borrow map if requested
-        borrow_map = {}
-        if preserve_borrowed:
-            for inv in self.inventory_general:
-                try:
-                    borrow_map[inv.get_book().get_id()] = inv.get_isBorrowed()
-                except Exception:
-                    continue
-
         # read books.json
         try:
             with open(books_json, 'r', encoding='utf-8') as f:
@@ -556,40 +522,25 @@ class InventoryService:
             raise ValueError(f"{books_json} must contain a JSON list of books")
 
         rebuilt: List[Inventory] = []
-        for idx, it in enumerate(books_data):
-            if not isinstance(it, dict):
-                raise ValueError(f"Invalid book entry at index {idx}: expected object/dict")
-            required = ['id', 'ISBNCode', 'title', 'author', 'weight', 'price']
-            for key in required:
-                if key not in it:
-                    raise ValueError(f"Missing '{key}' in book entry at index {idx}")
-
+        for it in books_data:
             try:
                 book = Book(
                     it['id'],
                     it['ISBNCode'],
                     it['title'],
                     it['author'],
-                    float(it['weight']),
-                    int(it['price']),
-                    bool(borrow_map.get(it['id'], False)),
+                    it['weight'],
+                    it['price'],
+                    False
                 )
-            except Exception as e:
-                raise ValueError(f"Invalid data types in book entry at index {idx}: {e}")
-
-            inv_item = Inventory(book, 1, bool(borrow_map.get(it['id'], False)))
-            rebuilt.append(inv_item)
+                inv_item = Inventory(book, 1)
+                rebuilt.append(inv_item)
+            except KeyError:
+                continue
 
         # replace and persist
         self.inventory_general = rebuilt
-        # regenerate sorted
-        if insertion_sort_inventory is None:
-            self.inventory_sorted = sorted(self.inventory_general, key=lambda inv: inv.get_book().get_ISBNCode())
-        else:
-            self.inventory_sorted = insertion_sort_inventory(list(self.inventory_general))
-
-        self._save_general()
-        self._save_sorted()
+        self.synchronize_inventories()
 
     def update_borrow_status(self, book_id: str, is_borrowed: bool) -> None:
         """Set the isBorrowed flag for a specific inventory entry and persist.
@@ -717,29 +668,6 @@ class InventoryService:
             raise ImportError("Required algorithm `merge_sort_inventory_by_price` not found in utils.algoritmos/merge_sort")
 
         return merge_sort_inventory_by_price(self.inventory_general)
-
-    def synchronize_inventories(self) -> None:
-        """
-        Synchronize the unordered inventory with the ordered inventory.
-
-        This method ensures that the unordered inventory is converted to a list,
-        sorted using the insertion sort algorithm, and saved to the ordered inventory JSON file.
-
-        Raises:
-        - Exception: for IO errors while saving.
-        """
-        # Ensure the unordered inventory is loaded
-        self._load_general()
-
-        # Sort the inventory using insertion sort
-        if insertion_sort_inventory is None:
-            # Fallback to Python's built-in sort if the algorithm is unavailable
-            self.inventory_sorted = sorted(self.inventory_general, key=lambda inv: inv.get_book().get_ISBNCode())
-        else:
-            self.inventory_sorted = insertion_sort_inventory(self.inventory_general)
-
-        # Save the sorted inventory to the ordered JSON file
-        self._save_sorted()
 
 
 # Example usage:
