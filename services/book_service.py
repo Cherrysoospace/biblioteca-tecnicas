@@ -367,6 +367,65 @@ class BookService:
         
         return avg_weight_by_author(books_data, author, debug=debug)
 
+    # -------------------- Brute Force Algorithm --------------------
+
+    def find_risky_book_combinations(self, threshold: float = 8.0) -> List[dict]:
+        """Find all combinations of 4 books that exceed weight threshold using brute force.
+
+        This method implements the project requirement for a brute force algorithm
+        that exhaustively explores all possible combinations of 4 books to find
+        those that exceed the shelf capacity (risky combinations).
+
+        The algorithm uses all books from the inventory to demonstrate the brute
+        force pattern on the complete book catalog.
+
+        Args:
+            threshold: Maximum weight threshold in Kg (default 8.0 - shelf capacity).
+
+        Returns:
+            List of dictionaries, each containing:
+                - 'books': List of 4 book dictionaries (id, title, author, weight)
+                - 'total_weight': Combined weight of the 4 books
+                - 'excess': How much the combination exceeds the threshold
+
+        Example:
+            >>> service = BookService()
+            >>> risky = service.find_risky_book_combinations(threshold=8.0)
+            >>> print(f"Found {len(risky)} risky combinations")
+
+        Complexity:
+            Time: O(n^4) where n is the number of books (exhaustive search)
+            Space: O(k) where k is the number of risky combinations found
+        """
+        from utils.algorithms.brute_force import find_risky_combinations
+
+        # Convert Book objects to dict format for the algorithm
+        books_data = []
+        for book in self.books:
+            books_data.append({
+                'id': book.get_id(),
+                'title': book.get_title(),
+                'author': book.get_author(),
+                'weight': book.get_weight(),
+                'price': book.get_price()
+            })
+
+        # Apply brute force algorithm
+        return find_risky_combinations(books_data, threshold)
+
+    def count_possible_combinations(self) -> int:
+        """Calculate how many 4-book combinations exist in the catalog.
+
+        Helper method to show the scale of the brute force search.
+
+        Returns:
+            Total number of 4-book combinations possible.
+        """
+        from utils.algorithms.brute_force import count_total_combinations
+
+        num_books = len(self.books)
+        return count_total_combinations(num_books)
+
 
 # Example:
 # service = BookService()

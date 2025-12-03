@@ -127,3 +127,30 @@ class BookController:
         - average weight (float) in kg
         """
         return self.service.calculate_average_weight_by_author(author, debug)
+
+    # -------------------- Brute Force Algorithm --------------------
+
+    def find_risky_book_combinations(self, threshold: float = 8.0):
+        """Find all combinations of 4 books that exceed weight threshold.
+
+        This exposes the brute force algorithm through the controller layer.
+        The algorithm exhaustively searches all possible combinations of 4 books
+        from the catalog to identify risky shelf configurations.
+
+        Args:
+            threshold: Maximum weight threshold in Kg (default 8.0 - shelf capacity).
+
+        Returns:
+            List of dictionaries containing risky combinations.
+        """
+        return self.service.find_risky_book_combinations(threshold)
+
+    def count_possible_combinations(self) -> int:
+        """Get the total number of 4-book combinations that will be explored.
+
+        Helper method to understand the scale of the brute force search.
+
+        Returns:
+            Total number of combinations the algorithm will check.
+        """
+        return self.service.count_possible_combinations()
