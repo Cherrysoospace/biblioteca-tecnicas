@@ -37,12 +37,15 @@ def generar_reporte_global(lista_ordenada: List[Any]) -> List[Dict[str, Any]]:
     =======================
     Cada libro se convierte en un diccionario con los siguientes campos:
     - id: str - Identificador único del libro
-    - isbn: str - Código ISBN
-    - titulo: str - Título del libro
-    - autor: str - Nombre del autor
-    - peso: float - Peso en kilogramos
-    - precio: int - Precio en pesos colombianos (COP)
-    - prestado: bool - Estado de préstamo
+    - ISBNCode: str - Código ISBN
+    - title: str - Título del libro
+    - author: str - Nombre del autor
+    - weight: float - Peso en kilogramos
+    - price: int - Precio en pesos colombianos (COP)
+    - isBorrowed: bool - Estado de préstamo
+    
+    NOTA: Los nombres de campos están en INGLÉS para mantener consistencia
+    con books.json, inventory_general.json y el modelo Book.
     
     USO TÍPICO:
     ===========
@@ -89,12 +92,12 @@ def generar_reporte_global(lista_ordenada: List[Any]) -> List[Dict[str, Any]]:
     >>> reporte[0]
     {
         'id': 'B001',
-        'isbn': '978-1234567890',
-        'titulo': 'El Quijote',
-        'autor': 'Miguel de Cervantes',
-        'peso': 1.2,
-        'precio': 25000,
-        'prestado': False
+        'ISBNCode': '978-1234567890',
+        'title': 'El Quijote',
+        'author': 'Miguel de Cervantes',
+        'weight': 1.2,
+        'price': 25000,
+        'isBorrowed': False
     }
     """
     reporte = []
@@ -104,14 +107,16 @@ def generar_reporte_global(lista_ordenada: List[Any]) -> List[Dict[str, Any]]:
     for libro in lista_ordenada:
         try:
             # Extraer información de cada libro usando sus getters
+            # IMPORTANTE: Usar nombres en INGLÉS para mantener consistencia
+            # con books.json, inventory_general.json y el modelo Book
             libro_dict = {
                 'id': libro.get_id(),
-                'isbn': libro.get_ISBNCode(),
-                'titulo': libro.get_title(),
-                'autor': libro.get_author(),
-                'peso': libro.get_weight(),
-                'precio': libro.get_price(),
-                'prestado': libro.get_isBorrowed(),
+                'ISBNCode': libro.get_ISBNCode(),
+                'title': libro.get_title(),
+                'author': libro.get_author(),
+                'weight': libro.get_weight(),
+                'price': libro.get_price(),
+                'isBorrowed': libro.get_isBorrowed(),
             }
             
             reporte.append(libro_dict)

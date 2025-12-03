@@ -106,20 +106,20 @@ class ReportService:
         FORMATO DEL REPORTE:
         ====================
         {
-            "total_libros": 50,  // Total de COPIAS físicas
-            "precio_total": 1250000,  // Suma de TODAS las copias
-            "precio_promedio": 25000.0,
-            "precio_minimo": 5000,
-            "precio_maximo": 120000,
-            "libros": [
+            "total_books": 50,  // Total de COPIAS físicas
+            "total_price": 1250000,  // Suma de TODAS las copias
+            "average_price": 25000.0,
+            "min_price": 5000,
+            "max_price": 120000,
+            "books": [
                 {
                     "id": "B001",
-                    "isbn": "978-1234567890",
-                    "titulo": "Libro A",
-                    "autor": "Autor A",
-                    "peso": 1.2,
-                    "precio": 5000,
-                    "prestado": false
+                    "ISBNCode": "978-1234567890",
+                    "title": "Libro A",
+                    "author": "Autor A",
+                    "weight": 1.2,
+                    "price": 5000,
+                    "isBorrowed": false
                 },
                 // ... más copias ordenadas por precio ...
             ]
@@ -166,12 +166,12 @@ class ReportService:
             if len(todos_los_libros) == 0:
                 logger.warning("Inventario vacío, generando reporte vacío")
                 reporte_final = {
-                    'total_libros': 0,
-                    'precio_total': 0,
-                    'precio_promedio': 0.0,
-                    'precio_minimo': 0,
-                    'precio_maximo': 0,
-                    'libros': []
+                    'total_books': 0,
+                    'total_price': 0,
+                    'average_price': 0.0,
+                    'min_price': 0,
+                    'max_price': 0,
+                    'books': []
                 }
             else:
                 # PASO 4: Aplicar Merge Sort para ordenar por precio
@@ -182,13 +182,14 @@ class ReportService:
                 resultado = ordenar_y_generar_reporte(todos_los_libros)
                 
                 # PASO 5: Construir estructura final del reporte
+                # IMPORTANTE: Nombres en INGLÉS para consistencia con todo el sistema
                 reporte_final = {
-                    'total_libros': resultado['total_libros'],
-                    'precio_total': resultado['precio_total'],
-                    'precio_promedio': resultado['precio_promedio'],
-                    'precio_minimo': resultado['precio_minimo'],
-                    'precio_maximo': resultado['precio_maximo'],
-                    'libros': resultado['reporte']  # Lista de diccionarios ordenada
+                    'total_books': resultado['total_libros'],
+                    'total_price': resultado['precio_total'],
+                    'average_price': resultado['precio_promedio'],
+                    'min_price': resultado['precio_minimo'],
+                    'max_price': resultado['precio_maximo'],
+                    'books': resultado['reporte']  # Lista de diccionarios ordenada
                 }
                 
                 logger.info(
