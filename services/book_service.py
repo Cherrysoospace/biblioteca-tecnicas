@@ -235,6 +235,19 @@ class BookService:
         except Exception:
             # Don't block book deletion if inventory sync fails
             pass
+        
+        # Remove the book from all shelves
+        try:
+            from services.shelf_service import ShelfService
+            shelf_svc = ShelfService()
+            try:
+                shelf_svc.remove_book_from_all_shelves(id)
+                logger.info(f"Libro {id} eliminado de todas las estanterías")
+            except Exception as e:
+                logger.warning(f"Error al eliminar libro {id} de estanterías: {e}")
+        except Exception:
+            # Don't block book deletion if shelf sync fails
+            pass
 
     def find_by_id(self, id: str) -> Optional[Book]:
         """Find and return a Book by its unique id.

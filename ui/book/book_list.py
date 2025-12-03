@@ -238,11 +238,11 @@ class BookList(ctk.CTkToplevel):
             return
 
         try:
-            # use controller/service to delete
+            # use controller to delete (this also updates reports and removes from shelves)
             controller = BookController()
-            # BookService.delete_book enforces borrow/stock checks
-            controller.service.delete_book(book_id)
-            messagebox.showinfo("Borrado", "Libro eliminado correctamente.")
+            # BookService.delete_book enforces borrow/stock checks and removes from shelves
+            controller.delete_book(book_id)
+            messagebox.showinfo("Borrado", "Libro eliminado correctamente de catálogo y estanterías.")
             self.load_books()
         except Exception as e:
             messagebox.showerror("Error", str(e))

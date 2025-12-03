@@ -283,6 +283,29 @@ class ShelfService:
 		except Exception:
 			return False
 
+	def remove_book_from_all_shelves(self, book_id: str) -> int:
+		"""Remove a book from all shelves where it appears.
+
+		Args:
+			book_id: Identifier of the book to remove.
+
+		Returns:
+			Number of shelves from which the book was removed.
+		"""
+		removed_count = 0
+		for shelf in self._shelves:
+			books_list: List[Book] = getattr(shelf, '_Shelf__books')
+			# Find and remove all instances of the book
+			original_length = len(books_list)
+			books_list[:] = [b for b in books_list if b.get_id() != book_id]
+			if len(books_list) < original_length:
+				removed_count += 1
+		
+		if removed_count > 0:
+			self._save_shelves()
+		
+		return removed_count
+
 	# -------------------- Persistence (delegated to repository) --------------------
 
 	def _load_shelves(self) -> None:
