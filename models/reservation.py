@@ -80,11 +80,6 @@ class Reservation:
 		"""Return the datetime when the reservation was assigned (or None)."""
 		return self.__assigned_date
 
-	def get_position(self):
-		"""Return the reservation position in a queue (if set)."""
-		return self.__position
-
-
 	def set_reservation_id(self, reservation_id):
 		"""Set the reservation's unique identifier.
 
@@ -120,10 +115,6 @@ class Reservation:
 	def set_assigned_date(self, assigned_date: datetime):
 		"""Set the datetime when the reservation was assigned."""
 		self.__assigned_date = assigned_date
-
-	def set_position(self, position: int):
-		"""Set the reservation position in queue."""
-		self.__position = position
 
 	def to_dict(self) -> dict:
 		"""Serialize reservation to a plain dictionary for JSON storage.
@@ -163,7 +154,6 @@ class Reservation:
 			"reserved_date": reserved,
 			"status": self.__status,
 			"assigned_date": assigned,
-			"position": self.__position,
 		}
 
 	@classmethod
@@ -194,7 +184,6 @@ class Reservation:
 			else:
 				r.set_assigned_date(assigned_date)
 		
-		r.set_position(data.get('position'))
 		return r
 
 
@@ -202,7 +191,7 @@ class Reservation:
 		"""Return a readable string representation of the reservation."""
 		return (f"Reservation[ID: {self.__reservation_id}, User: {self.__user_id}, "
 			f"ISBN: {self.__isbn}, Date: {self.__reserved_date}, Status: {self.__status}, "
-			f"Position: {self.__position}, Assigned: {self.__assigned_date}]")
+			f"Assigned: {self.__assigned_date}]")
 
 
 __all__ = ["Reservation"]
