@@ -45,9 +45,13 @@ class LoanService:
     
     @property
     def inventory_service(self):
+        # Keep property for backward compatibility but avoid using it in loan flows
         if self._inventory_service is None:
-            from services.inventory_service import InventoryService
-            self._inventory_service = InventoryService()
+            try:
+                from services.inventory_service import InventoryService
+                self._inventory_service = InventoryService()
+            except Exception:
+                self._inventory_service = None
         return self._inventory_service
 
     def _load_loans(self) -> None:
@@ -134,26 +138,25 @@ class LoanService:
                 new_id = f"L{base_num:03d}-{counter}"
                 counter += 1
             loan_id = new_id
-        # Use InventoryService to find an inventory entry with available stock
-        invs = self.inventory_service.find_by_isbn(isbn)
-        if not invs:
-            raise ValueError(f"No inventory entries found for ISBN '{isbn}'")
+        # Use BookService to find a physical book copy with this ISBN that is not borrowed
+        books = self.book_service.find_by_isbn(isbn)
+        if not books:
+            raise ValueError(f"No books found for ISBN '{isbn}'")
 
-        chosen_inv = None
-        for inv in invs:
+        chosen_book = None
+        for b in books:
             try:
-                if inv.get_stock() > 0:
-                    chosen_inv = inv
+                if not b.get_isBorrowed():
+                    chosen_book = b
                     break
             except Exception:
                 continue
 
-        if chosen_inv is None:
-            raise ValueError(f"No stock available for ISBN '{isbn}'")
+        if chosen_book is None:
+            raise ValueError(f"No available copies for ISBN '{isbn}'")
 
-        # decrement stock in inventory and persist
-        book_id = chosen_inv.get_book().get_id()
-        
+        book_id = chosen_book.get_id()
+
         # VALIDAR book_id ahora que lo conocemos
         try:
             from utils.validators import BookValidator
@@ -161,17 +164,14 @@ class LoanService:
         except ValidationError as e:
             logger.error(f"book_id inválido al crear préstamo: {e}")
             raise
-        
-        new_stock = chosen_inv.get_stock() - 1
-        if new_stock < 0:
-            raise ValueError("Computed negative stock; aborting")
 
-        self.inventory_service.update_stock(book_id, int(new_stock))
-        # mark inventory entry as borrowed
+        # Mark the chosen book as borrowed via BookService (this also persists books.json)
         try:
-            self.inventory_service.update_borrow_status(book_id, True)
-        except Exception:
-            pass
+            # Use update_book to change isBorrowed -> True
+            self.book_service.update_book(book_id, {'isBorrowed': True})
+        except Exception as e:
+            logger.error(f"Failed to mark book {book_id} as borrowed: {e}")
+            raise
 
         # Create loan record and persist
         loan = Loan(loan_id, user_id, isbn)
@@ -204,22 +204,17 @@ class LoanService:
         if loan.is_returned():
             return
 
-        # find an inventory entry by isbn and increment stock
+        # find a book by isbn that is currently marked borrowed and clear it
         try:
-            invs = self.inventory_service.find_by_isbn(loan.get_isbn())
-            if invs:
-                # Prefer to find the inventory entry that is currently marked
-                # as borrowed for this ISBN and mark it returned. If none are
-                # marked borrowed, fall back to the first entry.
-                inv_borrowed = next((i for i in invs if i.get_isBorrowed()), None)
-                target = inv_borrowed or invs[0]
-                try:
-                    # Use update_borrow_status to clear the borrowed flag and
-                    # set the per-item stock back to 1.
-                    self.inventory_service.update_borrow_status(target.get_book().get_id(), False)
-                except Exception:
-                    # ignore failures to update inventory, but continue marking returned
-                    pass
+            books = self.book_service.find_by_isbn(loan.get_isbn())
+            if books:
+                book_borrowed = next((b for b in books if b.get_isBorrowed()), None)
+                if book_borrowed:
+                    try:
+                        self.book_service.update_book(book_borrowed.get_id(), {'isBorrowed': False})
+                    except Exception:
+                        # ignore failures to update book but continue marking returned
+                        pass
         except Exception:
             pass
 
@@ -279,20 +274,16 @@ class LoanService:
                 loan = next((l for l in self.loans if l.get_loan_id() == loan_id), loan)
             # if un-marking returned -> try to decrement inventory for this isbn
             elif not returned and loan.is_returned():
-                invs = self.inventory_service.find_by_isbn(loan.get_isbn())
-                if not invs:
-                    raise ValueError(f"No inventory entries found for ISBN '{loan.get_isbn()}' to re-loan")
-                chosen = next((i for i in invs if i.get_stock() > 0), None)
+                # re-loan: find a book copy not borrowed and mark it borrowed
+                books = self.book_service.find_by_isbn(loan.get_isbn())
+                if not books:
+                    raise ValueError(f"No books found for ISBN '{loan.get_isbn()}' to re-loan")
+                chosen = next((b for b in books if not b.get_isBorrowed()), None)
                 if chosen is None:
-                    raise ValueError(f"No stock available to re-loan ISBN '{loan.get_isbn()}'")
-                # decrement stock
-                book_id = chosen.get_book().get_id()
-                new_stock = chosen.get_stock() - 1
-                if new_stock < 0:
-                    raise ValueError("Computed negative stock; aborting")
-                self.inventory_service.update_stock(book_id, int(new_stock))
+                    raise ValueError(f"No available copies to re-loan ISBN '{loan.get_isbn()}'")
+                book_id = chosen.get_id()
                 try:
-                    self.inventory_service.update_borrow_status(book_id, True)
+                    self.book_service.update_book(book_id, {'isBorrowed': True})
                 except Exception:
                     pass
                 loan.set_returned(False)
@@ -300,32 +291,32 @@ class LoanService:
         # Update ISBN: if changed and loan not returned, adjust inventories
         if isbn is not None and isbn != old_isbn:
             # find inventory for new isbn
-            new_invs = self.inventory_service.find_by_isbn(isbn)
-            if not new_invs:
-                raise ValueError(f"No inventory entries found for new ISBN '{isbn}'")
-            chosen_new = next((i for i in new_invs if i.get_stock() > 0), None)
+            # find available book copy for new isbn
+            new_books = self.book_service.find_by_isbn(isbn)
+            if not new_books:
+                raise ValueError(f"No books found for new ISBN '{isbn}'")
+            chosen_new = next((b for b in new_books if not b.get_isBorrowed()), None)
             if chosen_new is None:
-                raise ValueError(f"No stock available for new ISBN '{isbn}'")
+                raise ValueError(f"No available copies for new ISBN '{isbn}'")
 
-            # If loan currently not returned, restore old inventory and decrement new
+            # If loan currently not returned, restore old book (mark its copy returned)
             if not loan.is_returned():
-                old_invs = self.inventory_service.find_by_isbn(old_isbn)
-                if old_invs:
-                    # try to increment stock for an old inventory item
-                    try:
-                        old_book_id = old_invs[0].get_book().get_id()
-                        self.inventory_service.update_borrow_status(old_book_id, False)
-                    except Exception:
-                        pass
-
-                # decrement new
-                new_book_id = chosen_new.get_book().get_id()
-                new_stock = chosen_new.get_stock() - 1
-                if new_stock < 0:
-                    raise ValueError("Computed negative stock for new ISBN; aborting")
-                self.inventory_service.update_stock(new_book_id, int(new_stock))
                 try:
-                    self.inventory_service.update_borrow_status(new_book_id, True)
+                    old_books = self.book_service.find_by_isbn(old_isbn)
+                    if old_books:
+                        # try to mark the first borrowed copy of old_isbn as returned
+                        old_borrowed = next((b for b in old_books if b.get_isBorrowed()), None)
+                        if old_borrowed:
+                            try:
+                                self.book_service.update_book(old_borrowed.get_id(), {'isBorrowed': False})
+                            except Exception:
+                                pass
+                except Exception:
+                    pass
+
+                # mark new chosen book as borrowed
+                try:
+                    self.book_service.update_book(chosen_new.get_id(), {'isBorrowed': True})
                 except Exception:
                     pass
 

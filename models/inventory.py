@@ -19,9 +19,12 @@ class Inventory:
 		# Lista de libros (copias físicas) con el mismo ISBN
 		self.__items = items if items is not None else []
 		
-		# Stock total: se calcula automáticamente de los items si no se proporciona
+		# Stock: number of AVAILABLE (not borrowed) copies by default.
+		# If a specific stock is provided, respect it; otherwise compute
+		# available count from items so that "stock" represents availability.
 		if stock == 0 and self.__items:
-			self.__stock = len(self.__items)
+			# available = count of items not borrowed
+			self.__stock = sum(1 for b in self.__items if not b.get_isBorrowed())
 		else:
 			self.__stock = int(stock)
 
@@ -44,7 +47,12 @@ class Inventory:
 	def set_items(self, items: List[Book]):
 		"""Set the list of Book items and update stock accordingly."""
 		self.__items = items
-		self.__stock = len(items)
+		# Recompute stock as available copies (not borrowed)
+		try:
+			self.__stock = sum(1 for b in items if not b.get_isBorrowed())
+		except Exception:
+			# fallback: use total items
+			self.__stock = len(items)
 
 	def set_stock(self, stock: int):
 		"""Set the stock count."""

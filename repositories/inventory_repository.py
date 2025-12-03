@@ -76,7 +76,12 @@ class InventoryRepository:
                 except Exception:
                     continue
             
-            stock = int(group.get('stock', len(books)))
+            # Compute stock as AVAILABLE copies (not borrowed) to keep the
+            # stored 'stock' field consistent with current borrow flags.
+            try:
+                stock = sum(1 for b in books if not b.get_isBorrowed())
+            except Exception:
+                stock = int(group.get('stock', len(books)))
             inventory = Inventory(stock=stock, items=books)
             loaded.append(inventory)
         
