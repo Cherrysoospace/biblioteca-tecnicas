@@ -1,0 +1,199 @@
+{
+  "user_stacks": {
+    "U001": [
+      {
+        "user_id": "U001",
+        "isbn": "9780140449136",
+        "loan_date": "2025-12-03",
+        "loan_id": "L002",
+        "returned": true
+      },
+      {
+        "user_id": "U001",
+        "isbn": "123",
+        "loan_date": "2025-12-03",
+        "loan_id": "L003",
+        "returned": true
+      },
+      {
+        "user_id": "U001",
+        "isbn": "9780679783268",
+        "loan_date": "2025-12-03",
+        "loan_id": "L004",
+        "returned": true
+      },
+      {
+        "user_id": "U001",
+        "isbn": "9780743273565",
+        "loan_date": "2025-12-03",
+        "loan_id": "L013",
+        "returned": true
+      },
+      {
+        "user_id": "U001",
+        "isbn": "9780143105988",
+        "loan_date": "2025-12-03",
+        "loan_id": "L026",
+        "returned": true
+      },
+      {
+        "user_id": "U001",
+        "isbn": "9780061120084",
+        "loan_date": "2025-12-03",
+        "loan_id": "L029",
+        "returned": false
+      }
+    ],
+    "U004": [
+      {
+        "user_id": "U004",
+        "isbn": "2",
+        "loan_date": "2025-12-03",
+        "loan_id": "L005",
+        "returned": true
+      }
+    ],
+    "U006": [
+      {
+        "user_id": "U006",
+        "isbn": "123456",
+        "loan_date": "2025-12-03",
+        "loan_id": "L006",
+        "returned": true
+      },
+      {
+        "user_id": "U006",
+        "isbn": "2789",
+        "loan_date": "2025-12-03",
+        "loan_id": "L020",
+        "returned": false
+      },
+      {
+        "user_id": "U006",
+        "isbn": "9780446310789",
+        "loan_date": "2025-12-03",
+        "loan_id": "L028",
+        "returned": false
+      }
+    ],
+    "U007": [
+      {
+        "user_id": "U007",
+        "isbn": "9780743273565",
+        "loan_date": "2025-12-03",
+        "loan_id": "L007",
+        "returned": true
+      }
+    ],
+    "U010": [
+      {
+        "user_id": "U010",
+        "isbn": "123456",
+        "loan_date": "2025-12-03",
+        "loan_id": "L008",
+        "returned": true
+      },
+      {
+        "user_id": "U010",
+        "isbn": "9780743273565",
+        "loan_date": "2025-12-03",
+        "loan_id": "L009",
+        "returned": true
+      },
+      {
+        "user_id": "U010",
+        "isbn": "123456",
+        "loan_date": "2025-12-03",
+        "loan_id": "L010",
+        "returned": true
+      },
+      {
+        "user_id": "U010",
+        "isbn": "123456",
+        "loan_date": "2025-12-03",
+        "loan_id": "L012",
+        "returned": true
+      },
+      {
+        "user_id": "U010",
+        "isbn": "2789",
+        "loan_date": "2025-12-03",
+        "loan_id": "L014",
+        "returned": true
+      }
+    ],
+    "U009": [
+      {
+        "user_id": "U009",
+        "isbn": "9780743273565",
+        "loan_date": "2025-12-03",
+        "loan_id": "L011",
+        "returned": true
+      },
+      {
+        "user_id": "U009",
+        "isbn": "2789",
+        "loan_date": "2025-12-03",
+        "loan_id": "L016",
+        "returned": true
+      },
+      {
+        "user_id": "U009",
+        "isbn": "9780679783268",
+        "loan_date": "2025-12-03",
+        "loan_id": "L019",
+        "returned": true
+      }
+    ],
+    "U011": [
+      {
+        "user_id": "U011",
+        "isbn": "2789",
+        "loan_date": "2025-12-03",
+        "loan_id": "L015",
+        "returned": false
+      },
+      {
+        "user_id": "U011",
+        "isbn": "9780140449136",
+        "loan_date": "2025-12-03",
+        "loan_id": "L025",
+        "returned": false
+      }
+    ],
+    "U008": [
+      {
+        "user_id": "U008",
+        "isbn": "123456",
+        "loan_date": "2025-12-03",
+        "loan_id": "L017",
+        "returned": true
+      },
+      {
+        "user_id": "U008",
+        "isbn": "9780143105988",
+        "loan_date": "2025-12-03",
+        "loan_id": "L027",
+        "returned": false
+      }
+    ],
+    "U015": [
+      {
+        "user_id": "U015",
+        "isbn": "123456",
+        "loan_date": "2025-12-03",
+        "loan_id": "L018",
+        "returned": false
+      }
+    ],
+    "U013": [
+      {
+        "user_id": "U013",
+        "isbn": "2",
+        "loan_date": "2025-12-03",
+        "loan_id": "L024",
+        "returned": false
+      }
+    ]
+  }
+}

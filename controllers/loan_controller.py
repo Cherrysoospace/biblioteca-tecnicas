@@ -51,3 +51,39 @@ class LoanController:
 		except Exception as e:
 			return {"success": False, "message": str(e), "loan": None}
 
+	# -------------------- Loan History (Stack per User) --------------------
+	
+	def get_user_loan_history(self, user_id: str) -> dict:
+		"""Get complete loan history for a user in LIFO order.
+		
+		Returns dict with keys: success, history (List[dict])
+		"""
+		try:
+			history = self.service.get_user_loan_history(user_id)
+			return {"success": True, "history": history}
+		except Exception as e:
+			return {"success": False, "history": [], "message": str(e)}
+	
+	def get_user_recent_loans(self, user_id: str, n: int = 5) -> dict:
+		"""Get N most recent loans for a user.
+		
+		Returns dict with keys: success, recent_loans (List[dict])
+		"""
+		try:
+			recent = self.service.get_user_recent_loans(user_id, n)
+			return {"success": True, "recent_loans": recent}
+		except Exception as e:
+			return {"success": False, "recent_loans": [], "message": str(e)}
+	
+	def get_user_stack_size(self, user_id: str) -> dict:
+		"""Get the size of a user's loan history stack.
+		
+		Returns dict with keys: success, size (int)
+		"""
+		try:
+			size = self.service.get_user_stack_size(user_id)
+			return {"success": True, "size": size}
+		except Exception as e:
+			return {"success": False, "size": 0, "message": str(e)}
+
+

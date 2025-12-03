@@ -25,6 +25,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from ui.loan.loan_form import LoanForm
+from ui.loan.loan_history import LoanHistory
 from ui.shelf.shelf_form import ShelfForm
 from ui.shelf.assign_book_form import AssignBookForm
 from ui.shelf.shelf_list import ShelfList
@@ -242,6 +243,7 @@ class MainMenu(ctk.CTk):
             ("Ver Reservas", self.open_view_reservations, self.icon_view),
             ("Ver Estanterías", self.open_view_shelves, self.icon_view),
             ("Crear Préstamo", self.open_create_loan, self.icon_loan),
+            ("📚 Historial LIFO", self.open_loan_history, self.icon_loan),
             ("Asignar Libros", self.open_assign_books, self.icon_book),
             ("Gestionar Estanterías", self.open_shelf_manager, self.icon_view),
             ("Crear Reserva", self.open_create_reservation, self.icon_loan),
@@ -356,6 +358,9 @@ class MainMenu(ctk.CTk):
     def open_create_loan(self):
         # Use the generic toplevel opener so errors are handled uniformly
         self._open_toplevel(LoanForm)
+    def open_loan_history(self):
+        # Open the loan history viewer (Stack LIFO per user)
+        self._open_toplevel(LoanHistory)
     def open_shelf_manager(self):
         # Open the shelf management form (create mode)
         self._open_toplevel(ShelfForm, mode="create")

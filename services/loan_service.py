@@ -5,6 +5,7 @@ from typing import List, Optional
 
 from models.loan import Loan
 from repositories.loan_repository import LoanRepository
+from repositories.loan_history_repository import LoanHistoryRepository
 from utils.structures.stack import Stack
 from utils.validators import LoanValidator, ValidationError
 from utils.logger import LibraryLogger
@@ -25,17 +26,21 @@ class LoanService:
     - Mark loans returned (optionally increment stock back by 1).
     """
 
-    def __init__(self, repository: LoanRepository = None, book_service=None, inventory_service=None):
+    def __init__(self, repository: LoanRepository = None, history_repository: LoanHistoryRepository = None, book_service=None, inventory_service=None):
         self.repository = repository or LoanRepository()
+        self.history_repository = history_repository or LoanHistoryRepository()
         # Lazy imports to avoid circular dependencies
         self._book_service = book_service
         self._inventory_service = inventory_service
 
         self.loans: List[Loan] = []
-        # Stack to store quick-access loan entries (user, isbn, loan_date)
-        self.stack = Stack()
+        # Stacks per user: Dict[user_id, Stack] - built from loans and persisted
+        # This is a VIEW of loan.json organized by user, but saved for optimization
+        self.user_stacks: dict = {}  # Dict[str, Stack]
 
         self._load_loans()
+        self._load_history()  # Try to load from file first
+        self._rebuild_user_stacks()  # Always rebuild to ensure sync with loan.json
     
     @property
     def book_service(self):
@@ -56,25 +61,9 @@ class LoanService:
         return self._inventory_service
 
     def _load_loans(self) -> None:
-        """Load loans from repository and build stack."""
+        """Load loans from repository."""
         try:
             self.loans = self.repository.load_all()
-            # Rebuild stack from loaded loans
-            for loan in self.loans:
-                try:
-                    loan_date = loan.get_loan_date()
-                    try:
-                        loan_date_serial = loan_date.isoformat()
-                    except Exception:
-                        loan_date_serial = loan_date
-                    self.stack.push({
-                        'user_id': loan.get_user_id(),
-                        'isbn': loan.get_isbn(),
-                        'loan_date': loan_date_serial,
-                    })
-                except Exception:
-                    # if any issue pushing to stack, continue without failing
-                    pass
         except Exception:
             # Start with empty list if load fails
             self.loans = []
@@ -82,6 +71,100 @@ class LoanService:
     def _save_loans(self) -> None:
         """Persist loans using repository."""
         self.repository.save_all(self.loans)
+    
+    def _load_history(self) -> None:
+        """Load user stacks from history repository (optimization).
+        
+        This loads the persisted history for faster startup.
+        Note: _rebuild_user_stacks() is always called after to ensure sync.
+        """
+        try:
+            user_stacks_data = self.history_repository.load_all_user_stacks()
+            # Convert dict of lists to dict of Stack objects
+            self.user_stacks = {}
+            for user_id, stack_items in user_stacks_data.items():
+                stack = Stack()
+                for item in stack_items:
+                    stack.push(item)
+                self.user_stacks[user_id] = stack
+            logger.debug(f"Historial precargado: {len(self.user_stacks)} usuarios")
+        except Exception as e:
+            logger.warning(f"No se pudo precargar historial: {e}")
+            self.user_stacks = {}
+    
+    def _save_history(self) -> None:
+        """Persist user stacks to history repository.
+        
+        This saves the organized view for optimization and backup.
+        """
+        try:
+            # Convert dict of Stack objects to dict of lists
+            user_stacks_data = {}
+            for user_id, stack in self.user_stacks.items():
+                # Save stack items (bottom to top order)
+                user_stacks_data[user_id] = stack.items
+            self.history_repository.save_all_user_stacks(user_stacks_data)
+            logger.debug(f"Historial persistido: {len(self.user_stacks)} usuarios")
+        except Exception as e:
+            logger.error(f"Error guardando historial: {e}")
+    
+    def _rebuild_user_stacks(self) -> None:
+        """Rebuild user stacks dynamically from loans list.
+        
+        This builds a LIFO stack for each user from their loans in loan.json.
+        The stack is a VIEW - not persisted separately to avoid data duplication.
+        Each stack contains loan metadata ordered chronologically (oldest first in list,
+        newest at top of stack).
+        """
+        self.user_stacks = {}
+        
+        # Sort loans by date to maintain chronological order
+        sorted_loans = sorted(self.loans, key=lambda l: l.get_loan_date())
+        
+        for loan in sorted_loans:
+            user_id = loan.get_user_id()
+            
+            # Get or create stack for this user
+            if user_id not in self.user_stacks:
+                self.user_stacks[user_id] = Stack()
+            
+            # Build stack entry with all loan info including returned status
+            try:
+                loan_date = loan.get_loan_date()
+                try:
+                    loan_date_str = loan_date.isoformat()
+                except Exception:
+                    loan_date_str = str(loan_date)
+                
+                stack_entry = {
+                    'user_id': user_id,
+                    'isbn': loan.get_isbn(),
+                    'loan_date': loan_date_str,
+                    'loan_id': loan.get_loan_id(),
+                    'returned': loan.is_returned()  # Include returned status
+                }
+                
+                self.user_stacks[user_id].push(stack_entry)
+            except Exception as e:
+                logger.warning(f"Error agregando préstamo {loan.get_loan_id()} al stack: {e}")
+        
+        logger.debug(f"Stacks reconstruidos para {len(self.user_stacks)} usuarios")
+        
+        # Persist the rebuilt stacks
+        self._save_history()
+    
+    def _get_user_stack(self, user_id: str) -> Stack:
+        """Get or create stack for a specific user.
+        
+        Args:
+            user_id: ID del usuario
+            
+        Returns:
+            Stack del usuario (crea uno nuevo si no existe)
+        """
+        if user_id not in self.user_stacks:
+            self.user_stacks[user_id] = Stack()
+        return self.user_stacks[user_id]
 
     # -------------------- CRUD / Actions --------------------
     def create_loan(self, loan_id: Optional[str], user_id: str, isbn: str) -> Loan:
@@ -179,18 +262,9 @@ class LoanService:
         self.loans.append(loan)
         logger.info(f"Préstamo creado: id={loan_id}, user={user_id}, isbn={isbn}, book={book_id}")
         
-        # Push minimal loan info onto the stack (user, isbn, loan_date)
-        try:
-            ld = loan.get_loan_date()
-            try:
-                ld_serial = ld.isoformat()
-            except Exception:
-                ld_serial = ld
-            self.stack.push({'user_id': user_id, 'isbn': isbn, 'loan_date': ld_serial})
-        except Exception:
-            # non-fatal: proceed even if stack push fails
-            pass
+        # Save loans and rebuild stacks (rebuild also saves history)
         self._save_loans()
+        self._rebuild_user_stacks()  # Rebuilds and persists history
         return loan
 
     def mark_returned(self, loan_id: str) -> None:
@@ -274,6 +348,7 @@ class LoanService:
             logger.error(f"Error checking reservations for returned book: {e}")
         
         self._save_loans()
+        self._rebuild_user_stacks()  # Rebuild stacks with updated returned status
 
     def get_all_loans(self) -> List[Loan]:
         return list(self.loans)
@@ -302,6 +377,7 @@ class LoanService:
         # remove from list and persist
         self.loans = [l for l in self.loans if l.get_loan_id() != loan_id]
         self._save_loans()
+        self._rebuild_user_stacks()  # Rebuild stacks after deletion
 
     def update_loan(self, loan_id: str, user_id: Optional[str] = None, isbn: Optional[str] = None, returned: Optional[bool] = None, loan_date=None) -> Loan:
         """Update loan fields. Supported updates: user_id, isbn (best-effort), returned flag.
@@ -404,7 +480,69 @@ class LoanService:
 
         # persist changes
         self._save_loans()
+        self._rebuild_user_stacks()  # Rebuild stacks with updated data
         return loan
+
+
+    # -------------------- Loan History (Stack per User) --------------------
+    
+    def get_user_loan_history(self, user_id: str) -> List[dict]:
+        """Get complete loan history for a user in LIFO order (most recent first).
+        
+        Args:
+            user_id: ID del usuario
+            
+        Returns:
+            List[dict] with loan history entries (top to bottom of stack)
+            Each dict contains: user_id, isbn, loan_date, loan_id
+        """
+        if user_id not in self.user_stacks:
+            return []
+        
+        stack = self.user_stacks[user_id]
+        # Return copy of items (bottom to top in list, but we'll reverse for LIFO display)
+        history = list(stack.items)
+        history.reverse()  # Most recent first (LIFO order)
+        return history
+    
+    def get_user_recent_loans(self, user_id: str, n: int = 5) -> List[dict]:
+        """Get the N most recent loans for a user (top N items from stack).
+        
+        Args:
+            user_id: ID del usuario
+            n: Número de préstamos recientes a retornar (default: 5)
+            
+        Returns:
+            List[dict] with up to N most recent loan history entries
+        """
+        history = self.get_user_loan_history(user_id)
+        return history[:n]
+    
+    def get_user_stack_size(self, user_id: str) -> int:
+        """Get the size of a user's loan history stack.
+        
+        Args:
+            user_id: ID del usuario
+            
+        Returns:
+            int: número de préstamos en el historial del usuario
+        """
+        if user_id not in self.user_stacks:
+            return 0
+        return self.user_stacks[user_id].size()
+    
+    def peek_user_last_loan(self, user_id: str) -> Optional[dict]:
+        """Get the most recent loan for a user without removing it from stack.
+        
+        Args:
+            user_id: ID del usuario
+            
+        Returns:
+            dict with last loan info or None if stack is empty
+        """
+        if user_id not in self.user_stacks:
+            return None
+        return self.user_stacks[user_id].peek()
 
 
 __all__ = ["LoanService"]
