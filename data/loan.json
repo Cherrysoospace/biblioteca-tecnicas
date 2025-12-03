@@ -23,7 +23,7 @@
   {
     "loan_id": "L005",
     "user_id": "U004",
-    "isbn": "9780743273565",
+    "isbn": "2",
     "loan_date": "2025-12-03",
     "returned": false
   }
