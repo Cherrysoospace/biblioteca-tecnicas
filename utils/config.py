@@ -52,10 +52,10 @@ class FilePaths:
     # Rutas de archivos de inventario
     INVENTORY_GENERAL = os.path.join(DATA_DIR, 'inventory_general.json')
     INVENTORY_SORTED = os.path.join(DATA_DIR, 'inventory_sorted.json')
+    INVENTORY_VALUE_REPORT = os.path.join(DATA_DIR, 'inventory_value.json')
     
     # Rutas de reportes
     REPORTS_DIR = os.path.join(BASE_DIR, 'reports')
-    INVENTORY_VALUE_REPORT = os.path.join(REPORTS_DIR, 'inventory_value.json')
     
     @staticmethod
     def get_custom_path(filename: str, subdir: Optional[str] = None) -> str:

@@ -123,3 +123,318 @@ ZeroDivisionError: division by zero
 2025-12-02 12:18:11 [INFO    ] utils.algorithms.AlgoritmosOrdenamiento:ordenar_y_generar_reporte:578 - Ordenamiento completado: 33 libros, precio total: $902,054
 2025-12-02 12:18:11 [INFO    ] services.book_service:generate_and_export_price_report:371 - Reporte de precios generado: 33 libros, precio total: $902,054, promedio: $27,334.97
 2025-12-02 12:18:11 [INFO    ] services.book_service:generate_and_export_price_report:381 - Reporte exportado a: C:\Users\Asus\Desktop\proyecto-tecnicas\library\reports\inventory_value.json
+2025-12-02 12:25:47 [INFO    ] utils.logger:setup:99 - ================================================================================
+2025-12-02 12:25:47 [INFO    ] utils.logger:setup:100 - Sistema de logging inicializado
+2025-12-02 12:25:47 [INFO    ] utils.logger:setup:101 - Archivo de log: C:\Users\Asus\Desktop\proyecto-tecnicas\library\logs\library_20251202.log
+2025-12-02 12:25:47 [INFO    ] utils.logger:setup:102 - Nivel de log: INFO
+2025-12-02 12:25:47 [INFO    ] utils.logger:setup:103 - ================================================================================
+2025-12-02 12:25:47 [INFO    ] ui.main_menu:__init__:45 - Escalado UI configurado: 1.0x (pantalla 1280px)
+2025-12-02 12:25:58 [INFO    ] ui.main_menu:_open_toplevel:295 - Abriendo ventana: UserForm
+2025-12-02 12:26:08 [INFO    ] services.user_service:add_user:112 - Usuario agregado: id=U012, nombre=Soy la
+2025-12-02 12:26:08 [INFO    ] services.user_service:create_user:160 - Usuario creado: id=U012, nombre=Soy la
+2025-12-02 15:18:53 [INFO    ] utils.logger:setup:99 - ================================================================================
+2025-12-02 15:18:53 [INFO    ] utils.logger:setup:100 - Sistema de logging inicializado
+2025-12-02 15:18:53 [INFO    ] utils.logger:setup:101 - Archivo de log: C:\Users\Asus\Desktop\proyecto-tecnicas\library\logs\library_20251202.log
+2025-12-02 15:18:53 [INFO    ] utils.logger:setup:102 - Nivel de log: INFO
+2025-12-02 15:18:53 [INFO    ] utils.logger:setup:103 - ================================================================================
+2025-12-02 15:18:53 [INFO    ] services.report_service:generate_inventory_value_report:138 - Iniciando generación de reporte de inventario por precio...
+2025-12-02 15:18:53 [INFO    ] services.report_service:generate_inventory_value_report:154 - Inventario expandido: 31 grupos → 33 copias físicas
+2025-12-02 15:18:53 [INFO    ] utils.algorithms.AlgoritmosOrdenamiento:ordenar_y_generar_reporte:555 - Iniciando ordenamiento de 33 libros por precio
+2025-12-02 15:18:53 [INFO    ] utils.algorithms.AlgoritmosOrdenamiento:generar_reporte_global:488 - Generando reporte global de 33 libros ordenados por precio
+2025-12-02 15:18:53 [INFO    ] utils.algorithms.AlgoritmosOrdenamiento:generar_reporte_global:514 - Reporte global generado exitosamente con 33 entradas
+2025-12-02 15:18:53 [INFO    ] utils.algorithms.AlgoritmosOrdenamiento:ordenar_y_generar_reporte:578 - Ordenamiento completado: 33 libros, precio total: $902,054
+2025-12-02 15:18:53 [INFO    ] services.report_service:generate_inventory_value_report:188 - Reporte generado: 33 libros, precio total: $902,054, promedio: $27,334.97, rango: $1,000 - $120,000
+2025-12-02 15:18:53 [INFO    ] services.report_service:generate_inventory_value_report:199 - Reporte exportado a: C:\Users\Asus\Desktop\proyecto-tecnicas\library\data\inventory_value.json
+2025-12-02 15:20:58 [INFO    ] utils.logger:setup:99 - ================================================================================
+2025-12-02 15:20:58 [INFO    ] utils.logger:setup:100 - Sistema de logging inicializado
+2025-12-02 15:20:58 [INFO    ] utils.logger:setup:101 - Archivo de log: C:\Users\Asus\Desktop\proyecto-tecnicas\library\logs\library_20251202.log
+2025-12-02 15:20:58 [INFO    ] utils.logger:setup:102 - Nivel de log: INFO
+2025-12-02 15:20:58 [INFO    ] utils.logger:setup:103 - ================================================================================
+2025-12-02 15:21:00 [INFO    ] ui.main_menu:__init__:45 - Escalado UI configurado: 1.0x (pantalla 1280px)
+2025-12-02 15:21:26 [INFO    ] ui.main_menu:_open_toplevel:295 - Abriendo ventana: BookForm
+2025-12-02 15:22:21 [INFO    ] utils.validators:validate_book_data:317 - Datos de libro validados: ISBN=1000000000000, Título=puerrtaaa
+2025-12-02 15:22:21 [INFO    ] services.book_service:add_book:118 - Libro agregado: id=B035, ISBN=1000000000000, título=puerrtaaa
+2025-12-02 15:31:58 [INFO    ] utils.logger:setup:99 - ================================================================================
+2025-12-02 15:31:58 [INFO    ] utils.logger:setup:100 - Sistema de logging inicializado
+2025-12-02 15:31:58 [INFO    ] utils.logger:setup:101 - Archivo de log: C:\Users\Asus\Desktop\proyecto-tecnicas\library\logs\library_20251202.log
+2025-12-02 15:31:58 [INFO    ] utils.logger:setup:102 - Nivel de log: INFO
+2025-12-02 15:31:58 [INFO    ] utils.logger:setup:103 - ================================================================================
+2025-12-02 15:31:58 [INFO    ] services.report_service:generate_inventory_value_report:138 - Iniciando generación de reporte de inventario por precio...
+2025-12-02 15:31:58 [INFO    ] services.report_service:generate_inventory_value_report:154 - Inventario expandido: 32 grupos → 34 copias físicas
+2025-12-02 15:31:58 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:207 - Iniciando ordenamiento de 34 libros por precio
+2025-12-02 15:31:58 [INFO    ] utils.report_helpers:generar_reporte_global:102 - Generando reporte global de 34 libros ordenados por precio
+2025-12-02 15:31:58 [INFO    ] utils.report_helpers:generar_reporte_global:128 - Reporte global generado exitosamente con 34 entradas
+2025-12-02 15:31:58 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:230 - Ordenamiento completado: 34 libros, precio total: $1,052,054
+2025-12-02 15:31:58 [INFO    ] services.report_service:generate_inventory_value_report:188 - Reporte generado: 34 libros, precio total: $1,052,054, promedio: $30,942.76, rango: $1,000 - $150,000
+2025-12-02 15:31:58 [INFO    ] services.report_service:generate_inventory_value_report:199 - Reporte exportado a: C:\Users\Asus\Desktop\proyecto-tecnicas\library\data\inventory_value.json
+2025-12-02 15:31:59 [INFO    ] utils.validators:validate_book_data:317 - Datos de libro validados: ISBN=978-TEST-AUTO, Título=Libro Test Auto-Actualización
+2025-12-02 15:31:59 [INFO    ] services.book_service:add_book:118 - Libro agregado: id=B036, ISBN=978-TEST-AUTO, título=Libro Test Auto-Actualización
+2025-12-02 15:31:59 [INFO    ] services.report_service:generate_inventory_value_report:138 - Iniciando generación de reporte de inventario por precio...
+2025-12-02 15:31:59 [INFO    ] services.report_service:generate_inventory_value_report:154 - Inventario expandido: 32 grupos → 34 copias físicas
+2025-12-02 15:31:59 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:207 - Iniciando ordenamiento de 34 libros por precio
+2025-12-02 15:31:59 [INFO    ] utils.report_helpers:generar_reporte_global:102 - Generando reporte global de 34 libros ordenados por precio
+2025-12-02 15:31:59 [INFO    ] utils.report_helpers:generar_reporte_global:128 - Reporte global generado exitosamente con 34 entradas
+2025-12-02 15:31:59 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:230 - Ordenamiento completado: 34 libros, precio total: $1,052,054
+2025-12-02 15:31:59 [INFO    ] services.report_service:generate_inventory_value_report:188 - Reporte generado: 34 libros, precio total: $1,052,054, promedio: $30,942.76, rango: $1,000 - $150,000
+2025-12-02 15:31:59 [INFO    ] services.report_service:generate_inventory_value_report:199 - Reporte exportado a: C:\Users\Asus\Desktop\proyecto-tecnicas\library\data\inventory_value.json
+2025-12-02 15:31:59 [INFO    ] controllers.book_controller:create_book:59 - Reporte global actualizado después de crear libro B036
+2025-12-02 15:32:38 [INFO    ] utils.logger:setup:99 - ================================================================================
+2025-12-02 15:32:38 [INFO    ] utils.logger:setup:100 - Sistema de logging inicializado
+2025-12-02 15:32:38 [INFO    ] utils.logger:setup:101 - Archivo de log: C:\Users\Asus\Desktop\proyecto-tecnicas\library\logs\library_20251202.log
+2025-12-02 15:32:38 [INFO    ] utils.logger:setup:102 - Nivel de log: INFO
+2025-12-02 15:32:38 [INFO    ] utils.logger:setup:103 - ================================================================================
+2025-12-02 15:32:38 [ERROR   ] services.book_service:add_book:110 - Validación fallida al agregar libro: ISBN debe tener máximo 13 dígitos (encontrados: 16)
+2025-12-02 15:32:54 [INFO    ] utils.logger:setup:99 - ================================================================================
+2025-12-02 15:32:54 [INFO    ] utils.logger:setup:100 - Sistema de logging inicializado
+2025-12-02 15:32:54 [INFO    ] utils.logger:setup:101 - Archivo de log: C:\Users\Asus\Desktop\proyecto-tecnicas\library\logs\library_20251202.log
+2025-12-02 15:32:54 [INFO    ] utils.logger:setup:102 - Nivel de log: INFO
+2025-12-02 15:32:54 [INFO    ] utils.logger:setup:103 - ================================================================================
+2025-12-02 15:32:54 [INFO    ] utils.validators:validate_book_data:317 - Datos de libro validados: ISBN=97874446, Título=Test Auto-Update 74446
+2025-12-02 15:32:54 [INFO    ] services.book_service:add_book:118 - Libro agregado: id=TEST74446, ISBN=97874446, título=Test Auto-Update 74446
+2025-12-02 15:32:54 [INFO    ] services.report_service:generate_inventory_value_report:138 - Iniciando generación de reporte de inventario por precio...
+2025-12-02 15:32:54 [INFO    ] services.report_service:generate_inventory_value_report:154 - Inventario expandido: 33 grupos → 35 copias físicas
+2025-12-02 15:32:54 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:207 - Iniciando ordenamiento de 35 libros por precio
+2025-12-02 15:32:54 [INFO    ] utils.report_helpers:generar_reporte_global:102 - Generando reporte global de 35 libros ordenados por precio
+2025-12-02 15:32:54 [INFO    ] utils.report_helpers:generar_reporte_global:128 - Reporte global generado exitosamente con 35 entradas
+2025-12-02 15:32:54 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:230 - Ordenamiento completado: 35 libros, precio total: $1,067,054
+2025-12-02 15:32:54 [INFO    ] services.report_service:generate_inventory_value_report:188 - Reporte generado: 35 libros, precio total: $1,067,054, promedio: $30,487.26, rango: $1,000 - $150,000
+2025-12-02 15:32:54 [INFO    ] services.report_service:generate_inventory_value_report:199 - Reporte exportado a: C:\Users\Asus\Desktop\proyecto-tecnicas\library\data\inventory_value.json
+2025-12-02 15:32:54 [INFO    ] controllers.book_controller:create_book:59 - Reporte global actualizado después de crear libro TEST74446
+2025-12-02 15:32:54 [INFO    ] services.report_service:generate_inventory_value_report:138 - Iniciando generación de reporte de inventario por precio...
+2025-12-02 15:32:54 [INFO    ] services.report_service:generate_inventory_value_report:154 - Inventario expandido: 33 grupos → 35 copias físicas
+2025-12-02 15:32:54 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:207 - Iniciando ordenamiento de 35 libros por precio
+2025-12-02 15:32:54 [INFO    ] utils.report_helpers:generar_reporte_global:102 - Generando reporte global de 35 libros ordenados por precio
+2025-12-02 15:32:54 [INFO    ] utils.report_helpers:generar_reporte_global:128 - Reporte global generado exitosamente con 35 entradas
+2025-12-02 15:32:54 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:230 - Ordenamiento completado: 35 libros, precio total: $1,067,054
+2025-12-02 15:32:54 [INFO    ] services.report_service:generate_inventory_value_report:188 - Reporte generado: 35 libros, precio total: $1,067,054, promedio: $30,487.26, rango: $1,000 - $150,000
+2025-12-02 15:32:54 [INFO    ] services.report_service:generate_inventory_value_report:199 - Reporte exportado a: C:\Users\Asus\Desktop\proyecto-tecnicas\library\data\inventory_value.json
+2025-12-02 15:32:54 [INFO    ] controllers.book_controller:update_book:69 - Reporte global actualizado después de modificar libro TEST74446
+2025-12-02 15:32:54 [INFO    ] services.report_service:generate_inventory_value_report:138 - Iniciando generación de reporte de inventario por precio...
+2025-12-02 15:32:54 [INFO    ] services.report_service:generate_inventory_value_report:154 - Inventario expandido: 33 grupos → 35 copias físicas
+2025-12-02 15:32:54 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:207 - Iniciando ordenamiento de 35 libros por precio
+2025-12-02 15:32:54 [INFO    ] utils.report_helpers:generar_reporte_global:102 - Generando reporte global de 35 libros ordenados por precio
+2025-12-02 15:32:54 [INFO    ] utils.report_helpers:generar_reporte_global:128 - Reporte global generado exitosamente con 35 entradas
+2025-12-02 15:32:54 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:230 - Ordenamiento completado: 35 libros, precio total: $1,067,054
+2025-12-02 15:32:54 [INFO    ] services.report_service:generate_inventory_value_report:188 - Reporte generado: 35 libros, precio total: $1,067,054, promedio: $30,487.26, rango: $1,000 - $150,000
+2025-12-02 15:32:54 [INFO    ] services.report_service:generate_inventory_value_report:199 - Reporte exportado a: C:\Users\Asus\Desktop\proyecto-tecnicas\library\data\inventory_value.json
+2025-12-02 15:32:54 [INFO    ] controllers.book_controller:delete_book:83 - Reporte global actualizado después de eliminar libro TEST74446
+2025-12-02 15:37:21 [INFO    ] utils.logger:setup:99 - ================================================================================
+2025-12-02 15:37:21 [INFO    ] utils.logger:setup:100 - Sistema de logging inicializado
+2025-12-02 15:37:21 [INFO    ] utils.logger:setup:101 - Archivo de log: C:\Users\Asus\Desktop\proyecto-tecnicas\library\logs\library_20251202.log
+2025-12-02 15:37:21 [INFO    ] utils.logger:setup:102 - Nivel de log: INFO
+2025-12-02 15:37:21 [INFO    ] utils.logger:setup:103 - ================================================================================
+2025-12-02 15:37:21 [INFO    ] services.report_service:generate_inventory_value_report:138 - Iniciando generación de reporte de inventario por precio...
+2025-12-02 15:37:21 [INFO    ] services.report_service:generate_inventory_value_report:154 - Inventario expandido: 33 grupos → 35 copias físicas
+2025-12-02 15:37:21 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:207 - Iniciando ordenamiento de 35 libros por precio
+2025-12-02 15:37:21 [INFO    ] utils.report_helpers:generar_reporte_global:102 - Generando reporte global de 35 libros ordenados por precio
+2025-12-02 15:37:21 [INFO    ] utils.report_helpers:generar_reporte_global:128 - Reporte global generado exitosamente con 35 entradas
+2025-12-02 15:37:21 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:230 - Ordenamiento completado: 35 libros, precio total: $1,067,054
+2025-12-02 15:37:21 [INFO    ] services.report_service:generate_inventory_value_report:188 - Reporte generado: 35 libros, precio total: $1,067,054, promedio: $30,487.26, rango: $1,000 - $150,000
+2025-12-02 15:37:21 [INFO    ] services.report_service:generate_inventory_value_report:199 - Reporte exportado a: C:\Users\Asus\Desktop\proyecto-tecnicas\library\data\inventory_value.json
+2025-12-02 15:37:21 [INFO    ] controllers.book_controller:delete_book:83 - Reporte global actualizado después de eliminar libro B036
+2025-12-02 15:37:39 [INFO    ] utils.logger:setup:99 - ================================================================================
+2025-12-02 15:37:39 [INFO    ] utils.logger:setup:100 - Sistema de logging inicializado
+2025-12-02 15:37:39 [INFO    ] utils.logger:setup:101 - Archivo de log: C:\Users\Asus\Desktop\proyecto-tecnicas\library\logs\library_20251202.log
+2025-12-02 15:37:39 [INFO    ] utils.logger:setup:102 - Nivel de log: INFO
+2025-12-02 15:37:39 [INFO    ] utils.logger:setup:103 - ================================================================================
+2025-12-02 15:37:39 [INFO    ] utils.validators:validate_book_data:317 - Datos de libro validados: ISBN=97859827, Título=Test Auto-Update 59827
+2025-12-02 15:37:39 [INFO    ] services.book_service:add_book:118 - Libro agregado: id=TEST59827, ISBN=97859827, título=Test Auto-Update 59827
+2025-12-02 15:37:39 [INFO    ] services.report_service:generate_inventory_value_report:138 - Iniciando generación de reporte de inventario por precio...
+2025-12-02 15:37:39 [INFO    ] services.report_service:generate_inventory_value_report:154 - Inventario expandido: 32 grupos → 34 copias físicas
+2025-12-02 15:37:39 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:207 - Iniciando ordenamiento de 34 libros por precio
+2025-12-02 15:37:39 [INFO    ] utils.report_helpers:generar_reporte_global:102 - Generando reporte global de 34 libros ordenados por precio
+2025-12-02 15:37:39 [INFO    ] utils.report_helpers:generar_reporte_global:128 - Reporte global generado exitosamente con 34 entradas
+2025-12-02 15:37:39 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:230 - Ordenamiento completado: 34 libros, precio total: $1,052,054
+2025-12-02 15:37:39 [INFO    ] services.report_service:generate_inventory_value_report:188 - Reporte generado: 34 libros, precio total: $1,052,054, promedio: $30,942.76, rango: $1,000 - $150,000
+2025-12-02 15:37:39 [INFO    ] services.report_service:generate_inventory_value_report:199 - Reporte exportado a: C:\Users\Asus\Desktop\proyecto-tecnicas\library\data\inventory_value.json
+2025-12-02 15:37:39 [INFO    ] controllers.book_controller:create_book:59 - Reporte global actualizado después de crear libro TEST59827
+2025-12-02 15:37:39 [INFO    ] services.report_service:generate_inventory_value_report:138 - Iniciando generación de reporte de inventario por precio...
+2025-12-02 15:37:39 [INFO    ] services.report_service:generate_inventory_value_report:154 - Inventario expandido: 32 grupos → 34 copias físicas
+2025-12-02 15:37:39 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:207 - Iniciando ordenamiento de 34 libros por precio
+2025-12-02 15:37:39 [INFO    ] utils.report_helpers:generar_reporte_global:102 - Generando reporte global de 34 libros ordenados por precio
+2025-12-02 15:37:39 [INFO    ] utils.report_helpers:generar_reporte_global:128 - Reporte global generado exitosamente con 34 entradas
+2025-12-02 15:37:39 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:230 - Ordenamiento completado: 34 libros, precio total: $1,052,054
+2025-12-02 15:37:39 [INFO    ] services.report_service:generate_inventory_value_report:188 - Reporte generado: 34 libros, precio total: $1,052,054, promedio: $30,942.76, rango: $1,000 - $150,000
+2025-12-02 15:37:39 [INFO    ] services.report_service:generate_inventory_value_report:199 - Reporte exportado a: C:\Users\Asus\Desktop\proyecto-tecnicas\library\data\inventory_value.json
+2025-12-02 15:37:39 [INFO    ] controllers.book_controller:update_book:69 - Reporte global actualizado después de modificar libro TEST59827
+2025-12-02 15:37:39 [INFO    ] services.report_service:generate_inventory_value_report:138 - Iniciando generación de reporte de inventario por precio...
+2025-12-02 15:37:39 [INFO    ] services.report_service:generate_inventory_value_report:154 - Inventario expandido: 32 grupos → 34 copias físicas
+2025-12-02 15:37:39 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:207 - Iniciando ordenamiento de 34 libros por precio
+2025-12-02 15:37:39 [INFO    ] utils.report_helpers:generar_reporte_global:102 - Generando reporte global de 34 libros ordenados por precio
+2025-12-02 15:37:39 [INFO    ] utils.report_helpers:generar_reporte_global:128 - Reporte global generado exitosamente con 34 entradas
+2025-12-02 15:37:39 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:230 - Ordenamiento completado: 34 libros, precio total: $1,052,054
+2025-12-02 15:37:39 [INFO    ] services.report_service:generate_inventory_value_report:188 - Reporte generado: 34 libros, precio total: $1,052,054, promedio: $30,942.76, rango: $1,000 - $150,000
+2025-12-02 15:37:40 [INFO    ] services.report_service:generate_inventory_value_report:199 - Reporte exportado a: C:\Users\Asus\Desktop\proyecto-tecnicas\library\data\inventory_value.json
+2025-12-02 15:37:40 [INFO    ] controllers.book_controller:delete_book:83 - Reporte global actualizado después de eliminar libro TEST59827
+2025-12-02 15:37:57 [INFO    ] utils.logger:setup:99 - ================================================================================
+2025-12-02 15:37:57 [INFO    ] utils.logger:setup:100 - Sistema de logging inicializado
+2025-12-02 15:37:57 [INFO    ] utils.logger:setup:101 - Archivo de log: C:\Users\Asus\Desktop\proyecto-tecnicas\library\logs\library_20251202.log
+2025-12-02 15:37:57 [INFO    ] utils.logger:setup:102 - Nivel de log: INFO
+2025-12-02 15:37:57 [INFO    ] utils.logger:setup:103 - ================================================================================
+2025-12-02 15:37:58 [INFO    ] services.report_service:generate_inventory_value_report:138 - Iniciando generación de reporte de inventario por precio...
+2025-12-02 15:37:58 [INFO    ] services.report_service:generate_inventory_value_report:154 - Inventario expandido: 32 grupos → 34 copias físicas
+2025-12-02 15:37:58 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:207 - Iniciando ordenamiento de 34 libros por precio
+2025-12-02 15:37:58 [INFO    ] utils.report_helpers:generar_reporte_global:102 - Generando reporte global de 34 libros ordenados por precio
+2025-12-02 15:37:58 [INFO    ] utils.report_helpers:generar_reporte_global:128 - Reporte global generado exitosamente con 34 entradas
+2025-12-02 15:37:58 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:230 - Ordenamiento completado: 34 libros, precio total: $1,052,054
+2025-12-02 15:37:58 [INFO    ] services.report_service:generate_inventory_value_report:188 - Reporte generado: 34 libros, precio total: $1,052,054, promedio: $30,942.76, rango: $1,000 - $150,000
+2025-12-02 15:37:58 [INFO    ] services.report_service:generate_inventory_value_report:199 - Reporte exportado a: C:\Users\Asus\Desktop\proyecto-tecnicas\library\data\inventory_value.json
+2025-12-02 15:37:58 [INFO    ] utils.validators:validate_book_data:317 - Datos de libro validados: ISBN=97878049, Título=Test Auto-Update 78049
+2025-12-02 15:37:58 [INFO    ] services.book_service:add_book:118 - Libro agregado: id=TEST78049, ISBN=97878049, título=Test Auto-Update 78049
+2025-12-02 15:37:58 [INFO    ] services.report_service:generate_inventory_value_report:138 - Iniciando generación de reporte de inventario por precio...
+2025-12-02 15:37:58 [INFO    ] services.report_service:generate_inventory_value_report:154 - Inventario expandido: 32 grupos → 34 copias físicas
+2025-12-02 15:37:58 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:207 - Iniciando ordenamiento de 34 libros por precio
+2025-12-02 15:37:58 [INFO    ] utils.report_helpers:generar_reporte_global:102 - Generando reporte global de 34 libros ordenados por precio
+2025-12-02 15:37:58 [INFO    ] utils.report_helpers:generar_reporte_global:128 - Reporte global generado exitosamente con 34 entradas
+2025-12-02 15:37:58 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:230 - Ordenamiento completado: 34 libros, precio total: $1,052,054
+2025-12-02 15:37:58 [INFO    ] services.report_service:generate_inventory_value_report:188 - Reporte generado: 34 libros, precio total: $1,052,054, promedio: $30,942.76, rango: $1,000 - $150,000
+2025-12-02 15:37:58 [INFO    ] services.report_service:generate_inventory_value_report:199 - Reporte exportado a: C:\Users\Asus\Desktop\proyecto-tecnicas\library\data\inventory_value.json
+2025-12-02 15:37:58 [INFO    ] controllers.book_controller:create_book:59 - Reporte global actualizado después de crear libro TEST78049
+2025-12-02 15:37:58 [INFO    ] services.report_service:generate_inventory_value_report:138 - Iniciando generación de reporte de inventario por precio...
+2025-12-02 15:37:58 [INFO    ] services.report_service:generate_inventory_value_report:154 - Inventario expandido: 32 grupos → 34 copias físicas
+2025-12-02 15:37:58 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:207 - Iniciando ordenamiento de 34 libros por precio
+2025-12-02 15:37:58 [INFO    ] utils.report_helpers:generar_reporte_global:102 - Generando reporte global de 34 libros ordenados por precio
+2025-12-02 15:37:58 [INFO    ] utils.report_helpers:generar_reporte_global:128 - Reporte global generado exitosamente con 34 entradas
+2025-12-02 15:37:58 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:230 - Ordenamiento completado: 34 libros, precio total: $1,052,054
+2025-12-02 15:37:58 [INFO    ] services.report_service:generate_inventory_value_report:188 - Reporte generado: 34 libros, precio total: $1,052,054, promedio: $30,942.76, rango: $1,000 - $150,000
+2025-12-02 15:37:58 [INFO    ] services.report_service:generate_inventory_value_report:199 - Reporte exportado a: C:\Users\Asus\Desktop\proyecto-tecnicas\library\data\inventory_value.json
+2025-12-02 15:37:58 [INFO    ] controllers.book_controller:update_book:69 - Reporte global actualizado después de modificar libro TEST78049
+2025-12-02 15:37:58 [INFO    ] services.report_service:generate_inventory_value_report:138 - Iniciando generación de reporte de inventario por precio...
+2025-12-02 15:37:58 [INFO    ] services.report_service:generate_inventory_value_report:154 - Inventario expandido: 32 grupos → 34 copias físicas
+2025-12-02 15:37:58 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:207 - Iniciando ordenamiento de 34 libros por precio
+2025-12-02 15:37:58 [INFO    ] utils.report_helpers:generar_reporte_global:102 - Generando reporte global de 34 libros ordenados por precio
+2025-12-02 15:37:58 [INFO    ] utils.report_helpers:generar_reporte_global:128 - Reporte global generado exitosamente con 34 entradas
+2025-12-02 15:37:58 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:230 - Ordenamiento completado: 34 libros, precio total: $1,052,054
+2025-12-02 15:37:58 [INFO    ] services.report_service:generate_inventory_value_report:188 - Reporte generado: 34 libros, precio total: $1,052,054, promedio: $30,942.76, rango: $1,000 - $150,000
+2025-12-02 15:37:58 [INFO    ] services.report_service:generate_inventory_value_report:199 - Reporte exportado a: C:\Users\Asus\Desktop\proyecto-tecnicas\library\data\inventory_value.json
+2025-12-02 15:37:58 [INFO    ] controllers.book_controller:delete_book:83 - Reporte global actualizado después de eliminar libro TEST78049
+2025-12-02 20:32:24 [INFO    ] utils.logger:setup:99 - ================================================================================
+2025-12-02 20:32:24 [INFO    ] utils.logger:setup:100 - Sistema de logging inicializado
+2025-12-02 20:32:24 [INFO    ] utils.logger:setup:101 - Archivo de log: C:\Users\Asus\Desktop\proyecto-tecnicas\library\logs\library_20251202.log
+2025-12-02 20:32:24 [INFO    ] utils.logger:setup:102 - Nivel de log: INFO
+2025-12-02 20:32:24 [INFO    ] utils.logger:setup:103 - ================================================================================
+2025-12-02 20:32:24 [INFO    ] services.report_service:generate_inventory_value_report:138 - Iniciando generación de reporte de inventario por precio...
+2025-12-02 20:32:24 [INFO    ] services.report_service:generate_inventory_value_report:154 - Inventario expandido: 32 grupos → 34 copias físicas
+2025-12-02 20:32:24 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:207 - Iniciando ordenamiento de 34 libros por precio
+2025-12-02 20:32:24 [INFO    ] utils.report_helpers:generar_reporte_global:102 - Generando reporte global de 34 libros ordenados por precio
+2025-12-02 20:32:24 [INFO    ] utils.report_helpers:generar_reporte_global:128 - Reporte global generado exitosamente con 34 entradas
+2025-12-02 20:32:24 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:230 - Ordenamiento completado: 34 libros, precio total: $1,052,054
+2025-12-02 20:32:24 [INFO    ] services.report_service:generate_inventory_value_report:188 - Reporte generado: 34 libros, precio total: $1,052,054, promedio: $30,942.76, rango: $1,000 - $150,000
+2025-12-02 20:32:24 [INFO    ] services.report_service:generate_inventory_value_report:199 - Reporte exportado a: C:\Users\Asus\Desktop\proyecto-tecnicas\library\data\inventory_value.json
+2025-12-02 20:38:51 [INFO    ] utils.logger:setup:99 - ================================================================================
+2025-12-02 20:38:51 [INFO    ] utils.logger:setup:100 - Sistema de logging inicializado
+2025-12-02 20:38:51 [INFO    ] utils.logger:setup:101 - Archivo de log: C:\Users\Asus\Desktop\proyecto-tecnicas\library\logs\library_20251202.log
+2025-12-02 20:38:51 [INFO    ] utils.logger:setup:102 - Nivel de log: INFO
+2025-12-02 20:38:51 [INFO    ] utils.logger:setup:103 - ================================================================================
+2025-12-02 20:42:05 [INFO    ] utils.logger:setup:99 - ================================================================================
+2025-12-02 20:42:05 [INFO    ] utils.logger:setup:100 - Sistema de logging inicializado
+2025-12-02 20:42:05 [INFO    ] utils.logger:setup:101 - Archivo de log: C:\Users\Asus\Desktop\proyecto-tecnicas\library\logs\library_20251202.log
+2025-12-02 20:42:05 [INFO    ] utils.logger:setup:102 - Nivel de log: INFO
+2025-12-02 20:42:05 [INFO    ] utils.logger:setup:103 - ================================================================================
+2025-12-02 20:42:05 [INFO    ] services.report_service:generate_inventory_value_report:138 - Iniciando generación de reporte de inventario por precio...
+2025-12-02 20:42:05 [INFO    ] services.report_service:generate_inventory_value_report:160 - Inventario expandido: 32 grupos → 34 copias físicas
+2025-12-02 20:42:05 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:207 - Iniciando ordenamiento de 34 libros por precio
+2025-12-02 20:42:05 [INFO    ] utils.report_helpers:generar_reporte_global:102 - Generando reporte global de 34 libros ordenados por precio
+2025-12-02 20:42:05 [INFO    ] utils.report_helpers:generar_reporte_global:128 - Reporte global generado exitosamente con 34 entradas
+2025-12-02 20:42:05 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:230 - Ordenamiento completado: 34 libros, precio total: $1,052,054
+2025-12-02 20:42:05 [INFO    ] services.report_service:generate_inventory_value_report:194 - Reporte generado: 34 libros, precio total: $1,052,054, promedio: $30,942.76, rango: $1,000 - $150,000
+2025-12-02 20:42:05 [INFO    ] services.report_service:generate_inventory_value_report:205 - Reporte exportado a: C:\Users\Asus\Desktop\proyecto-tecnicas\library\data\inventory_value.json
+2025-12-02 20:43:43 [INFO    ] utils.logger:setup:99 - ================================================================================
+2025-12-02 20:43:43 [INFO    ] utils.logger:setup:100 - Sistema de logging inicializado
+2025-12-02 20:43:43 [INFO    ] utils.logger:setup:101 - Archivo de log: C:\Users\Asus\Desktop\proyecto-tecnicas\library\logs\library_20251202.log
+2025-12-02 20:43:43 [INFO    ] utils.logger:setup:102 - Nivel de log: INFO
+2025-12-02 20:43:43 [INFO    ] utils.logger:setup:103 - ================================================================================
+2025-12-02 20:43:43 [INFO    ] services.report_service:generate_inventory_value_report:138 - Iniciando generación de reporte de inventario por precio...
+2025-12-02 20:43:43 [INFO    ] services.report_service:generate_inventory_value_report:160 - Inventario expandido: 32 grupos → 34 copias físicas
+2025-12-02 20:43:43 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:207 - Iniciando ordenamiento de 34 libros por precio
+2025-12-02 20:43:43 [INFO    ] utils.report_helpers:generar_reporte_global:102 - Generando reporte global de 34 libros ordenados por precio
+2025-12-02 20:43:43 [INFO    ] utils.report_helpers:generar_reporte_global:128 - Reporte global generado exitosamente con 34 entradas
+2025-12-02 20:43:43 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:230 - Ordenamiento completado: 34 libros, precio total: $1,052,054
+2025-12-02 20:43:43 [INFO    ] services.report_service:generate_inventory_value_report:194 - Reporte generado: 34 libros, precio total: $1,052,054, promedio: $30,942.76, rango: $1,000 - $150,000
+2025-12-02 20:43:43 [INFO    ] services.report_service:generate_inventory_value_report:205 - Reporte exportado a: C:\Users\Asus\Desktop\proyecto-tecnicas\library\data\inventory_value.json
+2025-12-02 20:43:43 [INFO    ] utils.validators:validate_book_data:317 - Datos de libro validados: ISBN=TEST999999, Título=Libro de Prueba Final
+2025-12-02 20:43:43 [INFO    ] services.book_service:add_book:118 - Libro agregado: id=B036, ISBN=TEST999999, título=Libro de Prueba Final
+2025-12-02 20:43:43 [INFO    ] services.report_service:generate_inventory_value_report:138 - Iniciando generación de reporte de inventario por precio...
+2025-12-02 20:43:43 [INFO    ] services.report_service:generate_inventory_value_report:160 - Inventario expandido: 33 grupos → 35 copias físicas
+2025-12-02 20:43:43 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:207 - Iniciando ordenamiento de 35 libros por precio
+2025-12-02 20:43:43 [INFO    ] utils.report_helpers:generar_reporte_global:102 - Generando reporte global de 35 libros ordenados por precio
+2025-12-02 20:43:43 [INFO    ] utils.report_helpers:generar_reporte_global:128 - Reporte global generado exitosamente con 35 entradas
+2025-12-02 20:43:43 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:230 - Ordenamiento completado: 35 libros, precio total: $1,127,054
+2025-12-02 20:43:43 [INFO    ] services.report_service:generate_inventory_value_report:194 - Reporte generado: 35 libros, precio total: $1,127,054, promedio: $32,201.54, rango: $1,000 - $150,000
+2025-12-02 20:43:43 [INFO    ] services.report_service:generate_inventory_value_report:205 - Reporte exportado a: C:\Users\Asus\Desktop\proyecto-tecnicas\library\data\inventory_value.json
+2025-12-02 20:43:43 [INFO    ] controllers.book_controller:create_book:59 - Reporte global actualizado después de crear libro B036
+2025-12-02 20:43:43 [INFO    ] services.report_service:generate_inventory_value_report:138 - Iniciando generación de reporte de inventario por precio...
+2025-12-02 20:43:43 [INFO    ] services.report_service:generate_inventory_value_report:160 - Inventario expandido: 33 grupos → 35 copias físicas
+2025-12-02 20:43:43 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:207 - Iniciando ordenamiento de 35 libros por precio
+2025-12-02 20:43:43 [INFO    ] utils.report_helpers:generar_reporte_global:102 - Generando reporte global de 35 libros ordenados por precio
+2025-12-02 20:43:43 [INFO    ] utils.report_helpers:generar_reporte_global:128 - Reporte global generado exitosamente con 35 entradas
+2025-12-02 20:43:43 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:230 - Ordenamiento completado: 35 libros, precio total: $1,127,054
+2025-12-02 20:43:43 [INFO    ] services.report_service:generate_inventory_value_report:194 - Reporte generado: 35 libros, precio total: $1,127,054, promedio: $32,201.54, rango: $1,000 - $150,000
+2025-12-02 20:43:43 [INFO    ] services.report_service:generate_inventory_value_report:205 - Reporte exportado a: C:\Users\Asus\Desktop\proyecto-tecnicas\library\data\inventory_value.json
+2025-12-02 20:46:07 [INFO    ] utils.logger:setup:99 - ================================================================================
+2025-12-02 20:46:07 [INFO    ] utils.logger:setup:100 - Sistema de logging inicializado
+2025-12-02 20:46:07 [INFO    ] utils.logger:setup:101 - Archivo de log: C:\Users\Asus\Desktop\proyecto-tecnicas\library\logs\library_20251202.log
+2025-12-02 20:46:07 [INFO    ] utils.logger:setup:102 - Nivel de log: INFO
+2025-12-02 20:46:07 [INFO    ] utils.logger:setup:103 - ================================================================================
+2025-12-02 20:46:08 [INFO    ] services.report_service:generate_inventory_value_report:138 - Iniciando generación de reporte de inventario por precio...
+2025-12-02 20:46:08 [INFO    ] services.report_service:generate_inventory_value_report:160 - Inventario expandido: 33 grupos → 35 copias físicas
+2025-12-02 20:46:08 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:207 - Iniciando ordenamiento de 35 libros por precio
+2025-12-02 20:46:08 [INFO    ] utils.report_helpers:generar_reporte_global:102 - Generando reporte global de 35 libros ordenados por precio
+2025-12-02 20:46:08 [INFO    ] utils.report_helpers:generar_reporte_global:128 - Reporte global generado exitosamente con 35 entradas
+2025-12-02 20:46:08 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:230 - Ordenamiento completado: 35 libros, precio total: $1,127,054
+2025-12-02 20:46:08 [INFO    ] services.report_service:generate_inventory_value_report:194 - Reporte generado: 35 libros, precio total: $1,127,054, promedio: $32,201.54, rango: $1,000 - $150,000
+2025-12-02 20:46:08 [INFO    ] services.report_service:generate_inventory_value_report:205 - Reporte exportado a: C:\Users\Asus\Desktop\proyecto-tecnicas\library\data\inventory_value.json
+2025-12-02 20:46:08 [INFO    ] utils.validators:validate_book_data:317 - Datos de libro validados: ISBN=TEST999999, Título=Libro de Prueba Final
+2025-12-02 20:46:08 [INFO    ] services.book_service:add_book:118 - Libro agregado: id=B037, ISBN=TEST999999, título=Libro de Prueba Final
+2025-12-02 20:46:08 [INFO    ] services.report_service:generate_inventory_value_report:138 - Iniciando generación de reporte de inventario por precio...
+2025-12-02 20:46:08 [INFO    ] services.report_service:generate_inventory_value_report:160 - Inventario expandido: 33 grupos → 36 copias físicas
+2025-12-02 20:46:08 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:207 - Iniciando ordenamiento de 36 libros por precio
+2025-12-02 20:46:08 [INFO    ] utils.report_helpers:generar_reporte_global:102 - Generando reporte global de 36 libros ordenados por precio
+2025-12-02 20:46:08 [INFO    ] utils.report_helpers:generar_reporte_global:128 - Reporte global generado exitosamente con 36 entradas
+2025-12-02 20:46:08 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:230 - Ordenamiento completado: 36 libros, precio total: $1,202,054
+2025-12-02 20:46:08 [INFO    ] services.report_service:generate_inventory_value_report:194 - Reporte generado: 36 libros, precio total: $1,202,054, promedio: $33,390.39, rango: $1,000 - $150,000
+2025-12-02 20:46:08 [INFO    ] services.report_service:generate_inventory_value_report:205 - Reporte exportado a: C:\Users\Asus\Desktop\proyecto-tecnicas\library\data\inventory_value.json
+2025-12-02 20:46:08 [INFO    ] controllers.book_controller:create_book:59 - Reporte global actualizado después de crear libro B037
+2025-12-02 20:46:08 [INFO    ] services.report_service:generate_inventory_value_report:138 - Iniciando generación de reporte de inventario por precio...
+2025-12-02 20:46:08 [INFO    ] services.report_service:generate_inventory_value_report:160 - Inventario expandido: 33 grupos → 36 copias físicas
+2025-12-02 20:46:08 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:207 - Iniciando ordenamiento de 36 libros por precio
+2025-12-02 20:46:08 [INFO    ] utils.report_helpers:generar_reporte_global:102 - Generando reporte global de 36 libros ordenados por precio
+2025-12-02 20:46:08 [INFO    ] utils.report_helpers:generar_reporte_global:128 - Reporte global generado exitosamente con 36 entradas
+2025-12-02 20:46:08 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:230 - Ordenamiento completado: 36 libros, precio total: $1,202,054
+2025-12-02 20:46:08 [INFO    ] services.report_service:generate_inventory_value_report:194 - Reporte generado: 36 libros, precio total: $1,202,054, promedio: $33,390.39, rango: $1,000 - $150,000
+2025-12-02 20:46:08 [INFO    ] services.report_service:generate_inventory_value_report:205 - Reporte exportado a: C:\Users\Asus\Desktop\proyecto-tecnicas\library\data\inventory_value.json
+2025-12-02 20:46:08 [INFO    ] services.report_service:generate_inventory_value_report:138 - Iniciando generación de reporte de inventario por precio...
+2025-12-02 20:46:08 [INFO    ] services.report_service:generate_inventory_value_report:160 - Inventario expandido: 33 grupos → 35 copias físicas
+2025-12-02 20:46:08 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:207 - Iniciando ordenamiento de 35 libros por precio
+2025-12-02 20:46:08 [INFO    ] utils.report_helpers:generar_reporte_global:102 - Generando reporte global de 35 libros ordenados por precio
+2025-12-02 20:46:08 [INFO    ] utils.report_helpers:generar_reporte_global:128 - Reporte global generado exitosamente con 35 entradas
+2025-12-02 20:46:08 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:230 - Ordenamiento completado: 35 libros, precio total: $1,127,054
+2025-12-02 20:46:08 [INFO    ] services.report_service:generate_inventory_value_report:194 - Reporte generado: 35 libros, precio total: $1,127,054, promedio: $32,201.54, rango: $1,000 - $150,000
+2025-12-02 20:46:08 [INFO    ] services.report_service:generate_inventory_value_report:205 - Reporte exportado a: C:\Users\Asus\Desktop\proyecto-tecnicas\library\data\inventory_value.json
+2025-12-02 20:46:08 [INFO    ] controllers.book_controller:delete_book:85 - Reporte global actualizado después de eliminar libro B037
+2025-12-02 20:46:08 [INFO    ] services.report_service:generate_inventory_value_report:138 - Iniciando generación de reporte de inventario por precio...
+2025-12-02 20:46:08 [INFO    ] services.report_service:generate_inventory_value_report:160 - Inventario expandido: 33 grupos → 35 copias físicas
+2025-12-02 20:46:08 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:207 - Iniciando ordenamiento de 35 libros por precio
+2025-12-02 20:46:08 [INFO    ] utils.report_helpers:generar_reporte_global:102 - Generando reporte global de 35 libros ordenados por precio
+2025-12-02 20:46:08 [INFO    ] utils.report_helpers:generar_reporte_global:128 - Reporte global generado exitosamente con 35 entradas
+2025-12-02 20:46:08 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:230 - Ordenamiento completado: 35 libros, precio total: $1,127,054
+2025-12-02 20:46:08 [INFO    ] services.report_service:generate_inventory_value_report:194 - Reporte generado: 35 libros, precio total: $1,127,054, promedio: $32,201.54, rango: $1,000 - $150,000
+2025-12-02 20:46:08 [INFO    ] services.report_service:generate_inventory_value_report:205 - Reporte exportado a: C:\Users\Asus\Desktop\proyecto-tecnicas\library\data\inventory_value.json
+2025-12-02 20:48:52 [INFO    ] utils.logger:setup:99 - ================================================================================
+2025-12-02 20:48:52 [INFO    ] utils.logger:setup:100 - Sistema de logging inicializado
+2025-12-02 20:48:52 [INFO    ] utils.logger:setup:101 - Archivo de log: C:\Users\Asus\Desktop\proyecto-tecnicas\library\logs\library_20251202.log
+2025-12-02 20:48:52 [INFO    ] utils.logger:setup:102 - Nivel de log: INFO
+2025-12-02 20:48:52 [INFO    ] utils.logger:setup:103 - ================================================================================
+2025-12-02 20:48:54 [INFO    ] ui.main_menu:__init__:45 - Escalado UI configurado: 1.0x (pantalla 1280px)
+2025-12-02 20:49:02 [INFO    ] ui.main_menu:_open_toplevel:295 - Abriendo ventana: BookForm
+2025-12-02 20:49:35 [INFO    ] utils.validators:validate_book_data:317 - Datos de libro validados: ISBN=978000, Título=Holi
+2025-12-02 20:49:35 [INFO    ] services.book_service:add_book:118 - Libro agregado: id=B037, ISBN=978000, título=Holi
+2025-12-02 20:49:35 [INFO    ] services.report_service:generate_inventory_value_report:138 - Iniciando generación de reporte de inventario por precio...
+2025-12-02 20:49:35 [INFO    ] services.report_service:generate_inventory_value_report:160 - Inventario expandido: 34 grupos → 36 copias físicas
+2025-12-02 20:49:35 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:207 - Iniciando ordenamiento de 36 libros por precio
+2025-12-02 20:49:35 [INFO    ] utils.report_helpers:generar_reporte_global:102 - Generando reporte global de 36 libros ordenados por precio
+2025-12-02 20:49:35 [INFO    ] utils.report_helpers:generar_reporte_global:128 - Reporte global generado exitosamente con 36 entradas
+2025-12-02 20:49:35 [INFO    ] utils.report_helpers:ordenar_y_generar_reporte:230 - Ordenamiento completado: 36 libros, precio total: $1,302,054
+2025-12-02 20:49:35 [INFO    ] services.report_service:generate_inventory_value_report:194 - Reporte generado: 36 libros, precio total: $1,302,054, promedio: $36,168.17, rango: $1,000 - $175,000
+2025-12-02 20:49:35 [INFO    ] services.report_service:generate_inventory_value_report:205 - Reporte exportado a: C:\Users\Asus\Desktop\proyecto-tecnicas\library\data\inventory_value.json
+2025-12-02 20:49:35 [INFO    ] controllers.book_controller:create_book:59 - Reporte global actualizado después de crear libro B037

@@ -1,10 +1,16 @@
 from services.book_service import BookService
 from services.inventory_service import InventoryService
+from services.report_service import ReportService
 from models.Books import Book
+from utils.logger import LibraryLogger
+
+# Configurar logger
+logger = LibraryLogger.get_logger(__name__)
 
 class BookController:
     def __init__(self):
         self.service = BookService()
+        self.report_service = ReportService()
 
     def create_book(self, data):
         # If caller did not provide an id (or provided an empty one), generate
@@ -46,10 +52,40 @@ class BookController:
             # Do not block book creation if inventory update fails; surface
             # errors elsewhere or log if desired.
             pass
+        
+        # Actualizar reporte global después de crear el libro
+        try:
+            self.report_service.generate_inventory_value_report()
+            logger.info(f"Reporte global actualizado después de crear libro {book.get_id()}")
+        except Exception as e:
+            logger.warning(f"No se pudo actualizar el reporte global: {e}")
+        
+        return book.get_id()
 
     def update_book(self, book_id, data):
         self.service.update_book(book_id, data)
+        
+        # Actualizar reporte global después de modificar el libro
+        try:
+            self.report_service.generate_inventory_value_report()
+            logger.info(f"Reporte global actualizado después de modificar libro {book_id}")
+        except Exception as e:
+            logger.warning(f"No se pudo actualizar el reporte global: {e}")
 
+    def delete_book(self, book_id):
+        """Eliminar un libro del catálogo.
+        
+        Actualiza automáticamente el reporte global después de la eliminación.
+        """
+        self.service.delete_book(book_id)
+        
+        # Actualizar reporte global después de eliminar el libro
+        try:
+            self.report_service.generate_inventory_value_report()
+            logger.info(f"Reporte global actualizado después de eliminar libro {book_id}")
+        except Exception as e:
+            logger.warning(f"No se pudo actualizar el reporte global: {e}")
+    
     def get_book(self, book_id):
         return self.service.find_by_id(book_id)
 

@@ -175,6 +175,34 @@
     "stock": 1,
     "items": [
       {
+        "id": "B037",
+        "ISBNCode": "978000",
+        "title": "Holi",
+        "author": "no quiero vivir",
+        "weight": 0.3,
+        "price": 175000,
+        "isBorrowed": false
+      }
+    ]
+  },
+  {
+    "stock": 1,
+    "items": [
+      {
+        "id": "B035",
+        "ISBNCode": "1000000000000",
+        "title": "puerrtaaa",
+        "author": "holiiii",
+        "weight": 0.7,
+        "price": 150000,
+        "isBorrowed": false
+      }
+    ]
+  },
+  {
+    "stock": 1,
+    "items": [
+      {
         "id": "B015",
         "ISBNCode": "9780060850524",
         "title": "Life of Pi",
@@ -447,6 +475,20 @@
         "author": "Stephen King",
         "weight": 1.3,
         "price": 45000,
+        "isBorrowed": false
+      }
+    ]
+  },
+  {
+    "stock": 1,
+    "items": [
+      {
+        "id": "B036",
+        "ISBNCode": "TEST999999",
+        "title": "Libro de Prueba Final",
+        "author": "Test Author",
+        "weight": 0.5,
+        "price": 75000,
         "isBorrowed": false
       }
     ]
