@@ -9,7 +9,7 @@ def contar_libros_en_reporte():
     """Cuenta los libros en el reporte actual"""
     rs = ReportService()
     reporte = rs.generate_inventory_value_report()
-    return reporte['total_libros']
+    return reporte['total_books']  # Actualizado a 'total_books' (inglés)
 
 print("\n=== TEST: AUTO-ACTUALIZACIÓN DE REPORTE ===\n")
 
