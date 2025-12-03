@@ -1,9 +1,9 @@
 {
-  "total_libros": 33,
-  "precio_total": 902054,
-  "precio_promedio": 27334.969696969696,
+  "total_libros": 36,
+  "precio_total": 1302054,
+  "precio_promedio": 36168.166666666664,
   "precio_minimo": 1000,
-  "precio_maximo": 120000,
+  "precio_maximo": 175000,
   "libros": [
     {
       "id": "B031",
@@ -294,12 +294,39 @@
       "prestado": false
     },
     {
+      "id": "B036",
+      "isbn": "TEST999999",
+      "titulo": "Libro de Prueba Final",
+      "autor": "Test Author",
+      "peso": 0.5,
+      "precio": 75000,
+      "prestado": false
+    },
+    {
       "id": "B034",
       "isbn": "2789",
       "titulo": "prueba de merge",
       "autor": "Soy colosal",
       "peso": 0.7,
       "precio": 120000,
+      "prestado": false
+    },
+    {
+      "id": "B035",
+      "isbn": "1000000000000",
+      "titulo": "puerrtaaa",
+      "autor": "holiiii",
+      "peso": 0.7,
+      "precio": 150000,
+      "prestado": false
+    },
+    {
+      "id": "B037",
+      "isbn": "978000",
+      "titulo": "Holi",
+      "autor": "no quiero vivir",
+      "peso": 0.3,
+      "precio": 175000,
       "prestado": false
     }
   ]

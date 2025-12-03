@@ -450,20 +450,6 @@ class InventoryService:
             return result
         return [result]
 
-    def generate_price_report(self) -> List[Inventory]:
-        """Generate a report (list of Inventory) ordered by book price using merge sort.
-
-        Returns:
-        - List[Inventory] sorted by book.price ascending.
-
-        Raises:
-        - ImportError: if `merge_sort_inventory_by_price` not available.
-        """
-        if merge_sort_inventory_by_price is None:
-            raise ImportError("Required algorithm `merge_sort_inventory_by_price` not found in utils.algoritmos/merge_sort")
-
-        return merge_sort_inventory_by_price(self.inventory_general)
-
 
 # Example usage:
 # service = InventoryService()
