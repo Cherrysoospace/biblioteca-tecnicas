@@ -8,6 +8,7 @@ from repositories.loan_repository import LoanRepository
 from utils.structures.stack import Stack
 from utils.validators import LoanValidator, ValidationError
 from utils.logger import LibraryLogger
+from utils.algorithms.AlgoritmosBusqueda import busqueda_binaria
 
 # Configurar logger
 logger = LibraryLogger.get_logger(__name__)
@@ -197,6 +198,10 @@ class LoanService:
 
         If the loan is already marked returned, this is a no-op.
         Raises ValueError if loan_id not found.
+        
+        CRITICAL FEATURE: Uses búsqueda binaria to check if returned book
+        has pending reservations in the queue. If found, auto-assigns to
+        the next pending reservation by priority.
         """
         loan = next((l for l in self.loans if l.get_loan_id() == loan_id), None)
         if loan is None:
@@ -219,6 +224,55 @@ class LoanService:
             pass
 
         loan.mark_returned()
+        
+        # CRITICAL: Check reservation queue using búsqueda binaria (required by project spec)
+        try:
+            # Get sorted inventory to use binary search
+            if self.inventory_service:
+                inventories = self.inventory_service.inventory_general
+                # Sort by ISBN for binary search
+                inventario_ordenado = sorted(inventories, key=lambda inv: inv.get_isbn())
+                
+                # Use búsqueda binaria to verify book exists in inventory
+                isbn_returned = loan.get_isbn()
+                index = busqueda_binaria(inventario_ordenado, isbn_returned)
+                
+                # If book found in inventory, check for pending reservations
+                if index != -1:
+                    # Lazy import to avoid circular dependency
+                    from services.reservation_service import ReservationService
+                    reservation_service = ReservationService()
+                    
+                    # Check if there are pending reservations for this ISBN
+                    pending_reservations = reservation_service.find_by_isbn(isbn_returned, only_pending=True)
+                    
+                    if pending_reservations:
+                        # Auto-assign to the next in queue (earliest pending)
+                        assigned_reservation = reservation_service.assign_next_for_isbn(isbn_returned)
+                        if assigned_reservation:
+                            logger.info(f"Book '{isbn_returned}' auto-assigned to reservation "
+                                      f"'{assigned_reservation.get_reservation_id()}' for user "
+                                      f"'{assigned_reservation.get_user_id()}'")
+                            
+                            # CRITICAL: Create automatic loan for the user with assigned reservation
+                            # This ensures the book goes directly from returned user to reserved user
+                            # without the reserved user having to manually create a loan
+                            try:
+                                new_loan = self.create_loan(
+                                    loan_id=None,
+                                    user_id=assigned_reservation.get_user_id(),
+                                    isbn=isbn_returned
+                                )
+                                logger.info(f"Auto-created loan '{new_loan.get_loan_id()}' for user "
+                                          f"'{assigned_reservation.get_user_id()}' from reservation "
+                                          f"'{assigned_reservation.get_reservation_id()}'")
+                            except Exception as loan_err:
+                                logger.error(f"Failed to create automatic loan for reservation: {loan_err}")
+                                # Note: Reservation is still assigned even if loan creation fails
+        except Exception as e:
+            # Log error but don't fail the return operation
+            logger.error(f"Error checking reservations for returned book: {e}")
+        
         self._save_loans()
 
     def get_all_loans(self) -> List[Loan]:
