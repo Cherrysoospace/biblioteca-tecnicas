@@ -1,6 +1,6 @@
 [
   {
-    "stock": 1,
+    "stock": 0,
     "items": [
       {
         "id": "B001",
@@ -9,12 +9,12 @@
         "author": "Homer",
         "weight": 1.1,
         "price": 30000,
-        "isBorrowed": false
+        "isBorrowed": true
       }
     ]
   },
   {
-    "stock": 1,
+    "stock": 0,
     "items": [
       {
         "id": "B002",
@@ -23,7 +23,7 @@
         "author": "Jane Austen",
         "weight": 0.9,
         "price": 25000,
-        "isBorrowed": false
+        "isBorrowed": true
       }
     ]
   },
@@ -280,7 +280,7 @@
     ]
   },
   {
-    "stock": 1,
+    "stock": 0,
     "items": [
       {
         "id": "B021",
@@ -289,7 +289,7 @@
         "author": "YO",
         "weight": 0.9,
         "price": 20000,
-        "isBorrowed": false
+        "isBorrowed": true
       }
     ]
   },

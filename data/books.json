@@ -6,7 +6,7 @@
     "author": "Homer",
     "weight": 1.1,
     "price": 30000,
-    "isBorrowed": false
+    "isBorrowed": true
   },
   {
     "id": "B002",
@@ -15,7 +15,7 @@
     "author": "Jane Austen",
     "weight": 0.9,
     "price": 25000,
-    "isBorrowed": false
+    "isBorrowed": true
   },
   {
     "id": "B003",
@@ -186,7 +186,7 @@
     "author": "YO",
     "weight": 0.9,
     "price": 20000,
-    "isBorrowed": false
+    "isBorrowed": true
   },
   {
     "id": "B023",
