@@ -153,6 +153,18 @@ class ShelfController:
 		"""Return books currently placed on the shelf (shallow copy)."""
 		return self.service.get_books(shelf_id)
 
+	def is_book_assigned(self, book_id: str) -> bool:
+		"""Delegates to service implementation to check assignment.
+
+		Keeps controller thin: the actual inspection logic lives in
+		the ShelfService.
+		"""
+		try:
+			return self.service.is_book_assigned(book_id)
+		except Exception:
+			# conservative default
+			return True
+
 	def clear_shelf(self, shelf_id: str) -> List[Book]:
 		"""Remove all books from a shelf and return the removed list."""
 		removed = self.service.clear_shelf(shelf_id)
@@ -179,3 +191,28 @@ class ShelfController:
 	def load_shelves(self, path: str) -> None:
 		"""Load shelves from a JSON file, replacing current in-memory set."""
 		self.service.load_from_file(path)
+
+	def delete_shelf(self, id: str) -> bool:
+		"""Delete a shelf by id.
+
+		Removes the shelf from the in-memory list and persists the change to
+		the default shelves file. Returns True on success, False if the
+		shelf was not found.
+		"""
+		shelves = self.service._shelves
+		for s in list(shelves):
+			if getattr(s, '_Shelf__id', None) == id:
+				try:
+					shelves.remove(s)
+					# persist best-effort
+					try:
+						path = FilePaths.SHELVES
+						self.service.save_to_file(path)
+					except Exception:
+						pass
+					return True
+				except Exception:
+					# If removal itself fails, continue and report not found below
+					pass
+		# not found
+		return False

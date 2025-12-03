@@ -206,6 +206,29 @@ class ShelfService:
 			return []
 		return list(getattr(shelf, '_Shelf__books'))
 
+	def is_book_assigned(self, book_id: str) -> bool:
+		"""Return True if a book with given id is present in any registered shelf.
+
+		This searches each shelf's internal books list and compares using the
+		Book.get_id() method when available; falls back to the mangled
+		attribute `_Book__id` when necessary.
+		"""
+		try:
+			for s in self._shelves:
+				books = getattr(s, '_Shelf__books', [])
+				for b in books:
+					try:
+						bid = b.get_id()
+					except Exception:
+						bid = getattr(b, '_Book__id', None)
+					if bid == book_id:
+						return True
+			return False
+		except Exception:
+			# Be conservative: if inspection fails, report assigned to avoid
+			# showing a book that might already be placed on a shelf.
+			return True
+
 	def clear_shelf(self, shelf_id) -> List[Book]:
 		"""Remove all books from a shelf and return the removed list.
 

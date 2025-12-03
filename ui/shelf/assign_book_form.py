@@ -184,6 +184,21 @@ class AssignBookForm(ctk.CTkToplevel):
         # insert books from controller (Book objects)
         for i, b in enumerate(books):
             try:
+                bid = b.get_id()
+            except Exception:
+                try:
+                    bid = getattr(b, '_Book__id', None)
+                except Exception:
+                    bid = None
+            # skip books that are already assigned to any shelf
+            try:
+                if bid and self.shelf_controller.is_book_assigned(bid):
+                    continue
+            except Exception:
+                # conservative: if check fails, skip the book
+                continue
+
+            try:
                 row = (
                     b.get_id(),
                     b.get_ISBNCode(),
