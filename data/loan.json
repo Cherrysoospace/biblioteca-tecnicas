@@ -8,15 +8,22 @@
   },
   {
     "loan_id": "L003",
-    "user_id": "1",
+    "user_id": "U001",
     "isbn": "123",
     "loan_date": "2025-12-03",
-    "returned": false
+    "returned": true
   },
   {
     "loan_id": "L004",
     "user_id": "U001",
     "isbn": "9780679783268",
+    "loan_date": "2025-12-03",
+    "returned": false
+  },
+  {
+    "loan_id": "L005",
+    "user_id": "U004",
+    "isbn": "9780743273565",
     "loan_date": "2025-12-03",
     "returned": false
   }

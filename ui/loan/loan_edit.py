@@ -3,6 +3,7 @@ from tkinter import messagebox
 from ui import theme
 from services.user_service import UserService
 from datetime import datetime
+from services.inventory_service import InventoryService
 
 
 class LoanEdit(ctk.CTkToplevel):
@@ -23,7 +24,8 @@ class LoanEdit(ctk.CTkToplevel):
 
         self.title("Editar Préstamo")
         # aumentar tamaño de la ventana para dar más espacio a los campos
-        self.geometry("560x260")
+        # Se incrementa a 820x420 para mejorar la usabilidad al editar préstamos
+        self.geometry("820x420")
         try:
             if parent is not None:
                 self.transient(parent)
@@ -70,6 +72,50 @@ class LoanEdit(ctk.CTkToplevel):
         else:
             self.user_selector = ctk.CTkLabel(frame, text="No hay usuarios disponibles")
         self.user_selector.pack(fill="x", pady=(0, 8))
+
+        # --- Book selector: allow changing book on loan (only available ISBNs)
+        self._book_map = {}
+        book_label = ctk.CTkLabel(frame, text="Libro (ISBN):")
+        book_label.pack(anchor="w", pady=(6, 2))
+
+        books = []
+        try:
+            invs = InventoryService()
+            zero = []
+            for isbn, title, bid in invs.get_isbns_with_available_copies():
+                try:
+                    disp = f"{title} ({isbn}) [{bid}]" if title else f"{isbn} [{bid}]"
+                    books.append(disp)
+                    self._book_map[disp] = isbn
+                except Exception:
+                    continue
+        except Exception:
+            books = []
+
+        if books:
+            try:
+                self.book_selector = ctk.CTkOptionMenu(frame, values=books, width=420)
+            except Exception:
+                self.book_selector = ctk.CTkOptionMenu(frame, values=books)
+            # set current book selection if present
+            try:
+                cur_isbn = self.loan.get_isbn()
+                # find display matching cur_isbn
+                for k, v in self._book_map.items():
+                    if v == cur_isbn:
+                        try:
+                            self.book_selector.set(k)
+                        except Exception:
+                            pass
+                        break
+            except Exception:
+                try:
+                    self.book_selector.set(books[0])
+                except Exception:
+                    pass
+        else:
+            self.book_selector = ctk.CTkLabel(frame, text="No hay libros disponibles")
+        self.book_selector.pack(fill="x", pady=(0, 8))
 
         # Returned checkbox
         self.return_var = ctk.BooleanVar(value=self.loan.is_returned())
@@ -137,8 +183,18 @@ class LoanEdit(ctk.CTkToplevel):
             date_str = None
 
         try:
+            # Determine selected book (if OptionMenu present)
+            isbn = None
+            try:
+                if not isinstance(self.book_selector, ctk.CTkLabel):
+                    sel_book = self.book_selector.get().strip()
+                    if sel_book and not sel_book.startswith("(No books"):
+                        isbn = self._book_map.get(sel_book)
+            except Exception:
+                isbn = None
+
             # pass loan_date as string in ISO format; service will parse
-            res = self.controller.update_loan(self.loan.get_loan_id(), user_id=user_id, returned=returned, loan_date=date_str)
+            res = self.controller.update_loan(self.loan.get_loan_id(), user_id=user_id, isbn=isbn, returned=returned, loan_date=date_str)
             if res.get('success'):
                 messagebox.showinfo("Guardado", "Préstamo actualizado correctamente")
                 self._on_close()

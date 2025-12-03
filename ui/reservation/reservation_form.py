@@ -92,27 +92,16 @@ class ReservationForm(ctk.CTkToplevel):
         self.lbl_isbn = ctk.CTkLabel(form_frame, text="Select Book (stock 0):")
         self.lbl_isbn.pack(anchor="w", pady=(6, 0))
 
+        # Build book selector values using InventoryService helper
         book_values = []
         if self.inventory_service is not None:
             try:
-                invs = self.inventory_service.inventory_general
-                totals = {}
-                samples = {}
-                for inv in invs:
-                    try:
-                        isbn = inv.get_book().get_ISBNCode()
-                        totals[isbn] = totals.get(isbn, 0) + int(inv.get_stock())
-                        if isbn not in samples:
-                            samples[isbn] = (inv.get_book().get_title(), inv.get_book().get_id())
-                    except Exception:
-                        continue
-                for isbn, total in totals.items():
-                    if total == 0:
-                        title = samples.get(isbn, (None, None))[0]
-                        if title:
-                            book_values.append(f"{isbn} - {title}")
-                        else:
-                            book_values.append(isbn)
+                zero_list = self.inventory_service.get_isbns_with_zero_stock()
+                for isbn, title in zero_list:
+                    if title:
+                        book_values.append(f"{isbn} - {title}")
+                    else:
+                        book_values.append(isbn)
             except Exception:
                 book_values = []
 

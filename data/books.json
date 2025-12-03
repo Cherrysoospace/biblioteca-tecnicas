@@ -24,7 +24,7 @@
     "author": "F. Scott Fitzgerald",
     "weight": 0.8,
     "price": 27000,
-    "isBorrowed": false
+    "isBorrowed": true
   },
   {
     "id": "B004",
@@ -186,7 +186,7 @@
     "author": "YO",
     "weight": 0.9,
     "price": 20000,
-    "isBorrowed": true
+    "isBorrowed": false
   },
   {
     "id": "B023",

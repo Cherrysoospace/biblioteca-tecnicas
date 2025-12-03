@@ -82,23 +82,14 @@ class LoanForm(ctk.CTkToplevel):
         self._book_map = {}  # display -> isbn
         books = []
         try:
-            from services.book_service import BookService
-            bsvc = BookService()
-            # Build a map of ISBN -> sample Book that is available (not borrowed)
-            samples = {}
-            for b in bsvc.get_all_books():
+            invs = InventoryService()
+            for isbn, title, bid in invs.get_isbns_with_available_copies():
                 try:
-                    if not b.get_isBorrowed():
-                        isbn = b.get_ISBNCode()
-                        if isbn not in samples:
-                            samples[isbn] = b
+                    disp = f"{title} ({isbn}) [{bid}]" if title else f"{isbn} [{bid}]"
+                    books.append(disp)
+                    self._book_map[disp] = isbn
                 except Exception:
                     continue
-
-            for isbn, b in samples.items():
-                disp = f"{b.get_title()} ({isbn}) [{b.get_id()}]"
-                books.append(disp)
-                self._book_map[disp] = isbn
         except Exception:
             books = []
 

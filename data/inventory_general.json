@@ -28,7 +28,7 @@
     ]
   },
   {
-    "stock": 1,
+    "stock": 0,
     "items": [
       {
         "id": "B003",
@@ -37,7 +37,7 @@
         "author": "F. Scott Fitzgerald",
         "weight": 0.8,
         "price": 27000,
-        "isBorrowed": false
+        "isBorrowed": true
       }
     ]
   },
@@ -280,7 +280,7 @@
     ]
   },
   {
-    "stock": 0,
+    "stock": 1,
     "items": [
       {
         "id": "B021",
@@ -289,7 +289,7 @@
         "author": "YO",
         "weight": 0.9,
         "price": 20000,
-        "isBorrowed": true
+        "isBorrowed": false
       }
     ]
   },

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from .Books import Book
 
 class Inventory:
@@ -32,6 +32,12 @@ class Inventory:
 	def get_items(self) -> List[Book]:
 		"""Return the list of Book items (physical copies)."""
 		return self.__items
+
+	def get_book(self) -> Optional[Book]:
+		"""Return a sample Book from this group (first item) or None if empty."""
+		if self.__items:
+			return self.__items[0]
+		return None
 
 	def get_stock(self) -> int:
 		"""Return the total stock count."""

@@ -1,6 +1,6 @@
 import os 
 import json
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Tuple
 
 from models.Books import Book
 from models.inventory import Inventory
@@ -149,8 +149,10 @@ class InventoryService:
             # Remove from old group
             old_inventory.remove_item(book_id)
             
-            # Remove empty groups
-            self.inventory_general = [inv for inv in self.inventory_general if inv.get_stock() > 0]
+            # Remove empty groups (groups with no items).
+            # Do NOT remove groups that have stock == 0 because they represent
+            # out-of-stock ISBN groups which we keep for reservation/waitlist logic.
+            self.inventory_general = [inv for inv in self.inventory_general if len(inv.get_items()) > 0]
             
             # Add to new group (or create it)
             target_inventory = None
@@ -187,9 +189,10 @@ class InventoryService:
         if not found:
             raise ValueError(f"Book with id '{book_id}' not found in inventory")
         
-        # Remove empty groups
-        self.inventory_general = [inv for inv in self.inventory_general if inv.get_stock() > 0]
-        
+        # Remove empty groups (groups with no items). Keep groups with stock == 0
+        # so reservations / waiting lists can reference them.
+        self.inventory_general = [inv for inv in self.inventory_general if len(inv.get_items()) > 0]
+
         self.synchronize_inventories()
 
     def synchronize_inventories(self) -> None:
@@ -397,6 +400,57 @@ class InventoryService:
 
         matches: List[Inventory] = [inv for inv in self.inventory_general if inv.get_book().get_ISBNCode() == isbn]
         return matches
+
+    def get_isbns_with_zero_stock(self) -> List[Tuple[str, Optional[str]]]:
+        """Return a list of (ISBN, title) tuples for ISBN groups whose total stock sums to 0.
+
+        This consolidates the logic used by UI forms to list waiting-list candidates and
+        centralizes it for reuse.
+        """
+        results: List[Tuple[str, Optional[str]]] = []
+        totals: Dict[str, int] = {}
+        samples: Dict[str, Tuple[Optional[str], Optional[str]]] = {}
+
+        for inv in self.inventory_general:
+            try:
+                book = inv.get_book()
+                if book is None:
+                    continue
+                isbn = book.get_ISBNCode()
+                totals[isbn] = totals.get(isbn, 0) + int(inv.get_stock())
+                if isbn not in samples:
+                    samples[isbn] = (book.get_title(), book.get_id())
+            except Exception:
+                continue
+
+        for isbn, total in totals.items():
+            if total == 0:
+                title = samples.get(isbn, (None, None))[0]
+                results.append((isbn, title))
+
+        return results
+
+    def get_isbns_with_available_copies(self) -> List[Tuple[str, Optional[str], Optional[str]]]:
+        """Return a list of (ISBN, title, sample_book_id) for ISBN groups with available copies (>0).
+
+        This is useful for loan flows where we need an ISBN that currently has at least
+        one available (not borrowed) physical copy.
+        """
+        results: List[Tuple[str, Optional[str], Optional[str]]] = []
+        for inv in self.inventory_general:
+            try:
+                available = inv.get_available_count()
+                if available and available > 0:
+                    book = inv.get_book()
+                    if book is None:
+                        continue
+                    isbn = book.get_ISBNCode()
+                    title = book.get_title()
+                    bid = book.get_id()
+                    results.append((isbn, title, bid))
+            except Exception:
+                continue
+        return results
 
     def find_by_title(self, title: str) -> List[Inventory]:
         """Find inventory items where the book title matches using linear search.

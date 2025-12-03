@@ -5,6 +5,7 @@ from ui import widget_factory as wf
 from controllers.reservation_controller import ReservationController
 from services.user_service import UserService
 from services.book_service import BookService
+from services.inventory_service import InventoryService
 from datetime import datetime
 
 
@@ -70,17 +71,22 @@ class ReservationEditForm(ctk.CTkToplevel):
         # book selector
         self.lbl_book = ctk.CTkLabel(container, text="Libro (ISBN):")
         self.lbl_book.pack(anchor="w", pady=(8, 0))
+        # Use InventoryService to list only ISBN groups whose total stock == 0
         try:
-            self.book_service = BookService()
+            self.inventory_service = InventoryService()
         except Exception:
-            self.book_service = None
+            self.inventory_service = None
 
+        # Use InventoryService helper to build book selector values (stock == 0)
         book_values = []
-        if self.book_service is not None:
+        if self.inventory_service is not None:
             try:
-                books = self.book_service.get_all_books()
-                # show 'ISBN - Title'
-                book_values = [f"{b.get_ISBNCode()} - {b.get_title()}" for b in books]
+                zero_list = self.inventory_service.get_isbns_with_zero_stock()
+                for isbn, title in zero_list:
+                    if title:
+                        book_values.append(f"{isbn} - {title}")
+                    else:
+                        book_values.append(isbn)
             except Exception:
                 book_values = []
 
