@@ -23,6 +23,7 @@ from tkinter import ttk
 from ui.loan.loan_form import LoanForm
 from ui.shelf.shelf_form import ShelfForm
 from ui.shelf.assign_book_form import AssignBookForm
+from ui.shelf.shelf_list import ShelfList
 from ui.reservation.reservation_form import ReservationForm
 from ui.reservation.reservation_list import ReservationList
 
@@ -228,6 +229,7 @@ class MainMenu(ctk.CTk):
             ("Ver Usuarios", self.open_view_users, self.icon_user),
             ("Ver Préstamos", self.open_view_loans, self.icon_loan),
             ("Ver Reservas", self.open_view_reservations, self.icon_view),
+            ("Ver Estanterías", self.open_view_shelves, self.icon_view),
             ("Crear Préstamo", self.open_create_loan, self.icon_loan),
             ("Asignar Libros", self.open_assign_books, self.icon_book),
             ("Gestionar Estanterías", self.open_shelf_manager, self.icon_view),
@@ -288,6 +290,10 @@ class MainMenu(ctk.CTk):
     def open_view_reservations(self):
         # Open the reservations list viewer
         self._open_toplevel(ReservationList)
+
+    def open_view_shelves(self):
+        # Open the shelves list viewer
+        self._open_toplevel(ShelfList)
 
     # ------------------- OPEN WINDOWS -------------------
     def _open_toplevel(self, cls, *args, **kwargs):
