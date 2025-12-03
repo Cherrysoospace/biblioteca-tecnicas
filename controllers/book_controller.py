@@ -92,3 +92,24 @@ class BookController:
     def get_all_books(self):
         """Return list of all Book objects from the service."""
         return self.service.get_all_books()
+
+    def calculate_total_value_by_author(self, author: str):
+        """Calculate total monetary value of all books by a given author.
+        
+        Uses stack-style recursion to compute the sum.
+        
+        Parameters:
+        - author: string with the author name
+        
+        Returns:
+        - total value (float or int)
+        """
+        return self.service.calculate_total_value_by_author(author)
+    
+    def get_all_authors(self):
+        """Get list of all unique authors in the catalog.
+        
+        Returns:
+        - List[str] of author names, sorted alphabetically
+        """
+        return self.service.get_all_authors()

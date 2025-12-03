@@ -282,6 +282,52 @@ class BookService:
         """
         return list(self.books)
 
+    def calculate_total_value_by_author(self, author: str) -> float:
+        """Calculate total monetary value of all books by a given author using stack recursion.
+        
+        This method uses stack-style recursion to compute the sum of prices for all books
+        by the specified author. The recursion mimics the classical factorial example where
+        each call processes one element and pushes the rest onto the call stack.
+        
+        Parameters:
+        - author: string with the author name to match (case-sensitive)
+        
+        Returns:
+        - total value (float or int) of all books by that author
+        
+        Example:
+        >>> service = BookService()
+        >>> total = service.calculate_total_value_by_author("Homer")
+        >>> print(total)
+        30000
+        
+        Complexity: O(n) time and O(n) call-stack depth where n is number of books.
+        """
+        from utils.recursion.stack_recursion import total_value_by_author
+        
+        # Convert Book objects to dict format expected by the recursion function
+        books_data = []
+        for book in self.books:
+            books_data.append({
+                'author': book.get_author(),
+                'price': book.get_price()
+            })
+        
+        return total_value_by_author(books_data, author)
+
+    def get_all_authors(self) -> List[str]:
+        """Get a sorted list of unique authors in the catalog.
+        
+        Returns:
+        - List[str] of unique author names, sorted alphabetically
+        """
+        authors = set()
+        for book in self.books:
+            author = book.get_author()
+            if author:  # Skip empty authors
+                authors.add(author)
+        return sorted(authors)
+
 
 # Example:
 # service = BookService()
