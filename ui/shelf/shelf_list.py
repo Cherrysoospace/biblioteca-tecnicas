@@ -47,9 +47,10 @@ class ShelfList(ctk.CTkToplevel):
 
         # Use grid inside container so we can reserve a fixed row for actions
         # and let the table expand in the middle row.
-        container.grid_rowconfigure(0, weight=0)
-        container.grid_rowconfigure(1, weight=1)
-        container.grid_rowconfigure(2, weight=0)
+        container.grid_rowconfigure(0, weight=0)  # título
+        container.grid_rowconfigure(1, weight=0)  # búsqueda
+        container.grid_rowconfigure(2, weight=1)  # tabla
+        container.grid_rowconfigure(3, weight=0)  # acciones
         container.grid_columnconfigure(0, weight=1)
 
         title_frame = ctk.CTkFrame(container, fg_color=theme.BG_COLOR, corner_radius=0)
@@ -59,7 +60,7 @@ class ShelfList(ctk.CTkToplevel):
 
         # Frame de búsqueda
         search_frame = ctk.CTkFrame(container, fg_color=theme.BG_COLOR, corner_radius=0)
-        search_frame.grid(row=0, column=0, sticky="ew", pady=(40, 8))
+        search_frame.grid(row=1, column=0, sticky="ew", pady=(0, 8))
 
         search_label = ctk.CTkLabel(search_frame, text="Buscar:", 
                                     font=theme.get_font(self, size=11))
@@ -82,7 +83,7 @@ class ShelfList(ctk.CTkToplevel):
         clear_btn.pack(side="left")
 
         table_holder = tk.Frame(container, bg=theme.BG_COLOR)
-        table_holder.grid(row=1, column=0, sticky="nsew", padx=0, pady=(8, 8))
+        table_holder.grid(row=2, column=0, sticky="nsew", padx=0, pady=(8, 8))
 
         cols = ("id", "name", "books", "capacity", "books_count", "total_weight", "remaining")
 
