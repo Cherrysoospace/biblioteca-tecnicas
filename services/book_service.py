@@ -328,6 +328,45 @@ class BookService:
                 authors.add(author)
         return sorted(authors)
 
+    def calculate_average_weight_by_author(self, author: str, debug: bool = False) -> float:
+        """Calculate average weight of all books by a given author using tail recursion.
+        
+        This method uses tail-style (queue) recursion with accumulators to compute
+        the average weight. The recursion demonstrates the accumulator pattern where
+        state is passed through parameters rather than accumulated on the call stack.
+        
+        Parameters:
+        - author: string with the author name to match (case-sensitive)
+        - debug: if True, prints recursion flow to console
+        
+        Returns:
+        - average weight (float) in kg of all books by that author
+        - returns 0.0 if no books found for the author
+        
+        Example:
+        >>> service = BookService()
+        >>> avg = service.calculate_average_weight_by_author("Homer")
+        >>> print(avg)
+        1.1
+        
+        Complexity: O(n) time and O(n) call-stack depth where n is number of books.
+        """
+        from utils.recursion.queue_recursion import avg_weight_by_author
+        
+        # Convert Book objects to dict format expected by the recursion function
+        books_data = []
+        for book in self.books:
+            books_data.append({
+                'id': book.get_id(),
+                'ISBNCode': book.get_ISBNCode(),
+                'title': book.get_title(),
+                'author': book.get_author(),
+                'weight': book.get_weight(),
+                'price': book.get_price()
+            })
+        
+        return avg_weight_by_author(books_data, author, debug=debug)
+
 
 # Example:
 # service = BookService()

@@ -1,127 +1,129 @@
-"""Recursion examples for queue-style (tail) recursion.
+"""
+Queue-style (tail) recursion examples for the course assignment.
 
 This module implements a tail-recursive function to compute the average
-weight of all books by a given author. The implementation accepts a list
-of book-like objects (either instances of the project's `Book` class or
-plain dicts with `author` / `weight` keys) and demonstrates the
-accumulator-style recursion pattern shown in the class example.
+weight of all books by a given author. The implementation uses accumulator
+parameters (index, count, total_weight) to maintain state across recursive
+calls, demonstrating the tail recursion pattern.
 
-The helpers are defined at module level (no nested functions), and the
-implementation intentionally mirrors the accumulator (tail recursion)
-pattern used in class examples. Note: Python does not perform tail
-call optimization; this is an educational implementation.
+Contract (inputs/outputs):
+- inputs: books (list of dict), author (str)
+- output: average weight as float
+- error modes: returns 0.0 for empty lists or if no books by the author are found
+
+Edge cases considered:
+- empty books list
+- no book by the author
+- books with missing weight (handled by treating as 0.0)
+
+Usage example:
+>>> books = [
+...   {"author": "Alice", "weight": 1.2, "price": 10000},
+...   {"author": "Bob", "weight": 2.5, "price": 15000},
+...   {"author": "Alice", "weight": 0.8, "price": 8000},
+... ]
+>>> avg_weight_by_author(books, "Alice")
+1.0
+
+Note: Python does not perform tail call optimization; this is an educational
+implementation demonstrating the accumulator pattern.
 """
 
 
-def _get_author(b):
-	"""Return the author string for a book-like object or dict.
+def avg_weight_by_author(books, author, index=0, count=0, total_weight=0.0, debug=False):
+	"""Compute the average weight of books by `author` using tail recursion.
 
-	Supports objects with `get_author()` and dicts with keys 'author' or
-	'autor'. If author cannot be determined returns empty string.
+	This function uses accumulator parameters (index, count, total_weight) to
+	maintain state across recursive calls. Each call processes one book and
+	passes updated accumulators to the next call, demonstrating the queue-style
+	(tail) recursion pattern.
+
+	Parameters
+	----------
+	books : list of dict
+		A list of book dictionaries. Each book should have at least the keys
+		'author' (str) and 'weight' (int/float). If a book lacks 'weight',
+		it contributes 0.0 to the total.
+	author : str
+		The author name to filter by (case-sensitive exact match).
+	index : int, optional
+		Internal recursion index (default: 0). Not intended for external callers.
+	count : int, optional
+		Accumulator for the number of books by the author found so far (default: 0).
+	total_weight : float, optional
+		Accumulator for the total weight of books by the author (default: 0.0).
+	debug : bool, optional
+		If True, prints the recursion index and accumulator state at each
+		recursive call to demonstrate tail recursion flow.
+
+	Returns
+	-------
+	float
+		The average weight (in kg) of all books by the specified author.
+		Returns 0.0 if no books match the author.
+
+	Complexity
+	----------
+	O(n) time and O(n) call-stack depth where n is len(books).
+	(Note: Python does not optimize tail calls, so stack depth is still O(n))
 	"""
-	if hasattr(b, 'get_author') and callable(getattr(b, 'get_author')):
-		return b.get_author()
-	try:
-		return b.get('author') or b.get('autor') or ""
-	except Exception:
-		return ""
-
-
-def _get_weight(b):
-	"""Return the weight (float) for a book-like object or dict.
-
-	Supports objects with `get_weight()` and dicts with keys 'weight' or
-	'peso'. If weight cannot be determined returns 0.0.
-	"""
-	if hasattr(b, 'get_weight') and callable(getattr(b, 'get_weight')):
-		try:
-			return float(b.get_weight())
-		except Exception:
-			return 0.0
-	try:
-		w = b.get('weight') if isinstance(b, dict) else None
-		if w is None:
-			w = b.get('peso') if isinstance(b, dict) else None
-		return float(w) if w is not None else 0.0
-	except Exception:
-		return 0.0
-
-
-def _helper_avg_weight(books, author, index, count, total_weight, debug):
-	"""Tail-recursive helper to compute average weight.
-
-	Parameters mirror the accumulators used in the assignment: index,
-	count and total_weight. Defined at module level to avoid nested
-	function definitions.
-	"""
+	# Base case: we've processed all books
 	if index >= len(books):
 		if debug:
 			print(f"Base case reached: count={count}, total_weight={total_weight}")
 		return (total_weight / count) if count > 0 else 0.0
 
-	b = books[index]
-	b_author = _get_author(b)
-	b_weight = _get_weight(b)
+	# Get current book
+	book = books[index]
+	book_author = book.get('author', '')
+	book_weight = book.get('weight', 0.0)
 
-	if b_author == author:
+	# Recursive step: update accumulators if author matches
+	if book_author == author:
 		if debug:
-			print(f"Include index={index}: weight={b_weight} -> count={count + 1}, total={total_weight + b_weight}")
-		return _helper_avg_weight(books, author, index + 1, count + 1, total_weight + b_weight, debug)
+			print(f"Include index={index}: weight={book_weight} -> count={count + 1}, total={total_weight + book_weight}")
+		return avg_weight_by_author(books, author, index + 1, count + 1, total_weight + book_weight, debug)
 	else:
 		if debug:
-			print(f"Skip index={index}: author={b_author}")
-		return _helper_avg_weight(books, author, index + 1, count, total_weight, debug)
+			print(f"Skip index={index}: author={book_author}")
+		return avg_weight_by_author(books, author, index + 1, count, total_weight, debug)
 
 
-def avg_weight_by_author(books, author, debug=False):
-	"""Compute the average weight of books by `author` using tail recursion.
+def _demo():
+	"""Simple demo and self-checks for the function."""
+	# Sample books matching the structure used in books.json
+	sample_books = [
+		{"id": "B001", "ISBNCode": "111", "title": "Alpha", "author": "Alice", "weight": 1.2, "price": 10000},
+		{"id": "B002", "ISBNCode": "222", "title": "Beta", "author": "Bob", "weight": 2.5, "price": 15000},
+		{"id": "B003", "ISBNCode": "333", "title": "Gamma", "author": "Alice", "weight": 0.8, "price": 8000},
+		{"id": "B004", "ISBNCode": "444", "title": "Delta", "author": "Carol", "weight": 1.5, "price": 12000},
+		{"id": "B005", "ISBNCode": "555", "title": "Epsilon", "author": "Alice"},  # Missing weight
+	]
 
-	Parameters
-	----------
-	books:
-		A list of book-like objects. Each item may be either:
-		  - an object with `.get_author()` and `.get_weight()` methods (the
-			project's `Book` class), or
-		  - a dict with keys 'author' and 'weight' (or 'peso').
-	author:
-		The author name to filter by (case-sensitive exact match).
-	debug:
-		If True, prints the recursion index and accumulator state at
-		each recursive call to demonstrate tail recursion flow.
-
-	Returns
-	-------
-	float
-		The average weight (in the same units as book.weight). If no books
-		match the author, returns 0.0.
-	"""
-
-	return _helper_avg_weight(books, author, 0, 0, 0.0, debug)
+	print("Demo: tail-recursive average weight by author (debug on)\n")
+	
+	# Expected: Alice -> (1.2 + 0.8 + 0.0) / 3 = 0.6667
+	author_to_check = 'Alice'
+	avg = avg_weight_by_author(sample_books, author_to_check, debug=True)
+	print(f"\nAverage weight for author '{author_to_check}': {avg:.3f}")
+	
+	# Additional tests without debug output
+	print("\n--- Additional Tests (no debug) ---")
+	avg_bob = avg_weight_by_author(sample_books, "Bob")
+	print(f"Average weight for Bob: {avg_bob:.3f}")
+	assert avg_bob == 2.5, "Bob should have average weight 2.5"
+	
+	avg_carol = avg_weight_by_author(sample_books, "Carol")
+	print(f"Average weight for Carol: {avg_carol:.3f}")
+	assert avg_carol == 1.5, "Carol should have average weight 1.5"
+	
+	avg_none = avg_weight_by_author(sample_books, "NonExistent")
+	print(f"Average weight for NonExistent author: {avg_none:.3f}")
+	assert avg_none == 0.0, "Non-existent author should return 0.0"
+	
+	print("\nAll demo checks passed.")
 
 
 if __name__ == '__main__':
-	# Demo: construct a few Book instances if the project's Book class is
-	# available; otherwise use plain dicts. This demonstrates the tail
-	# recursion flow on the console.
-	try:
-		from models.Books import Book
-
-		sample_books = [
-			Book(1, '111', 'Alpha', 'Alice', 1.2, 10000),
-			Book(2, '222', 'Beta', 'Bob', 2.5, 15000),
-			Book(3, '333', 'Gamma', 'Alice', 0.8, 8000),
-			Book(4, '444', 'Delta', 'Carol', 1.5, 12000),
-		]
-	except Exception:
-		sample_books = [
-			{'id': 1, 'ISBN': '111', 'title': 'Alpha', 'author': 'Alice', 'weight': 1.2},
-			{'id': 2, 'ISBN': '222', 'title': 'Beta', 'author': 'Bob', 'weight': 2.5},
-			{'id': 3, 'ISBN': '333', 'title': 'Gamma', 'author': 'Alice', 'weight': 0.8},
-			{'id': 4, 'ISBN': '444', 'title': 'Delta', 'author': 'Carol', 'weight': 1.5},
-		]
-
-	print("Demo: tail-recursive average weight by author (debug on)\\n")
-	author_to_check = 'Alice'
-	avg = avg_weight_by_author(sample_books, author_to_check, debug=True)
-	print(f"\\nAverage weight for author '{author_to_check}': {avg:.3f}")
+	_demo()
 

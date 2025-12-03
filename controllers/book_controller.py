@@ -113,3 +113,17 @@ class BookController:
         - List[str] of author names, sorted alphabetically
         """
         return self.service.get_all_authors()
+
+    def calculate_average_weight_by_author(self, author: str, debug: bool = False):
+        """Calculate average weight of all books by a given author.
+        
+        Uses tail-style (queue) recursion to compute the average.
+        
+        Parameters:
+        - author: string with the author name
+        - debug: if True, prints recursion flow to console
+        
+        Returns:
+        - average weight (float) in kg
+        """
+        return self.service.calculate_average_weight_by_author(author, debug)

@@ -16,6 +16,7 @@ from ui.user.user_form import UserForm
 from ui.book.book_list import BookList
 from ui.book.book_search import BookSearch
 from ui.book.author_value_report import AuthorValueReport
+from ui.book.author_weight_report import AuthorWeightReport
 from ui.user.user_list import UserList
 from ui.loan.loan_list import LoanList
 from tkinter import messagebox
@@ -244,6 +245,7 @@ class MainMenu(ctk.CTk):
             ("Gestionar Estanterías", self.open_shelf_manager, self.icon_view),
             ("Crear Reserva", self.open_create_reservation, self.icon_loan),
             ("📚 Valor por Autor", self.open_author_value_report, self.icon_book),
+            ("⚖️ Peso por Autor", self.open_author_weight_report, self.icon_book),
         ]
 
         # Create an inner frame to host the grid inside the scrollable frame
@@ -361,5 +363,9 @@ class MainMenu(ctk.CTk):
     def open_author_value_report(self):
         # Open the author value report window (stack recursion)
         self._open_toplevel(AuthorValueReport)
+    
+    def open_author_weight_report(self):
+        # Open the author weight report window (tail/queue recursion)
+        self._open_toplevel(AuthorWeightReport)
         
 
