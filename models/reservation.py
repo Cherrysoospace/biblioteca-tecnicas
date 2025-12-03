@@ -50,9 +50,6 @@ class Reservation:
 		# Assigned date (when the reservation was given a book)
 		self.__assigned_date = None
 
-		# Position in the queue (optional, for convenience when serialized)
-		self.__position = None
-
 	def get_reservation_id(self):
 		"""Return the reservation's unique identifier.
 

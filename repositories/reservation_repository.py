@@ -31,13 +31,6 @@ def _reservation_from_dict(data: dict) -> Reservation:
         except Exception:
             pass
     
-    # Restaurar posición si existe
-    if 'position' in data:
-        try:
-            reservation.set_position(data['position'])
-        except Exception:
-            pass
-    
     return reservation
 
 
@@ -49,8 +42,7 @@ def _reservation_to_dict(reservation: Reservation) -> dict:
         'isbn': reservation.get_isbn(),
         'reserved_date': reservation.get_reserved_date().isoformat() if reservation.get_reserved_date() else None,
         'status': reservation.get_status(),
-        'assigned_date': reservation.get_assigned_date().isoformat() if reservation.get_assigned_date() else None,
-        'position': reservation.get_position()
+        'assigned_date': reservation.get_assigned_date().isoformat() if reservation.get_assigned_date() else None
     }
 
 

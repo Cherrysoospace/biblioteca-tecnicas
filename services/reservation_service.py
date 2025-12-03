@@ -96,23 +96,14 @@ class ReservationService:
 		next_res = pending[0]
 		next_res.set_status('assigned')
 		next_res.set_assigned_date(datetime.utcnow())
-		# update positions for queue convenience
-		self._recompute_positions_for_isbn(isbn)
 		self._save_reservations()
 		return next_res
-
-	def _recompute_positions_for_isbn(self, isbn: str) -> None:
-		# set position as 1-based index among pending reservations for the isbn
-		pending = [r for r in self.reservations if r.get_isbn() == isbn and r.get_status() == 'pending']
-		for idx, r in enumerate(pending, start=1):
-			r.set_position(idx)
 
 	def cancel_reservation(self, reservation_id: str) -> None:
 		res = self.find_by_id(reservation_id)
 		if res is None:
 			raise ValueError(f"No reservation found with id '{reservation_id}'")
 		res.set_status('cancelled')
-		self._recompute_positions_for_isbn(res.get_isbn())
 		self._save_reservations()
 
 	def delete_reservation(self, reservation_id: str) -> None:
@@ -120,7 +111,6 @@ class ReservationService:
 		if res is None:
 			raise ValueError(f"No reservation found with id '{reservation_id}'")
 		self.reservations = [r for r in self.reservations if r.get_reservation_id() != reservation_id]
-		self._recompute_positions_for_isbn(res.get_isbn())
 		self._save_reservations()
 
 	def update_reservation(self, reservation_id: str, **kwargs) -> Reservation:
@@ -136,7 +126,6 @@ class ReservationService:
 			res.set_status(kwargs.get('status'))
 		if 'assigned_date' in kwargs:
 			res.set_assigned_date(kwargs.get('assigned_date'))
-		self._recompute_positions_for_isbn(res.get_isbn())
 		self._save_reservations()
 		return res
 

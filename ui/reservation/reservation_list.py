@@ -42,8 +42,8 @@ class ReservationList(ctk.CTkToplevel):
         table_holder = tk.Frame(container, bg=theme.BG_COLOR)
         table_holder.pack(expand=True, fill="both", pady=(8, 8))
 
-        cols = ("reservation_id", "user_id", "user_name", "isbn", "reserved_date", "status", "assigned_date", "position")
-
+        cols = ("reservation_id", "user_id", "user_name", "isbn", "reserved_date", "status", "assigned_date")
+        
         style = ttk.Style()
         try:
             style.theme_use('clam')
@@ -71,12 +71,11 @@ class ReservationList(ctk.CTkToplevel):
             "isbn": "ISBN",
             "reserved_date": "Reserved",
             "status": "Status",
-            "assigned_date": "Assigned",
-            "position": "Pos",
+            "assigned_date": "Assigned"
         }
         for c in cols:
             self.tree.heading(c, text=headings.get(c, c))
-            if c in ("reservation_id", "user_id", "position"):
+            if c in ("reservation_id", "user_id"):
                 self.tree.column(c, width=90, anchor="center")
             elif c in ("status", "reserved_date", "assigned_date"):
                 self.tree.column(c, width=140, anchor="center")
@@ -153,8 +152,7 @@ class ReservationList(ctk.CTkToplevel):
                     assigned = assigned.isoformat() if assigned else ""
                 except Exception:
                     pass
-                pos = r.get_position() or ""
-                row = (rid, uid, uname, isbn, reserved, status, assigned, pos)
+                row = (rid, uid, uname, isbn, reserved, status, assigned)
                 tag = 'even' if i % 2 == 0 else 'odd'
                 self.tree.insert("", "end", values=row, tags=(tag,))
             except Exception:

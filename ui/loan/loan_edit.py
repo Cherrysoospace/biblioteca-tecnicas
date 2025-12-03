@@ -79,11 +79,35 @@ class LoanEdit(ctk.CTkToplevel):
         book_label.pack(anchor="w", pady=(6, 2))
 
         books = []
+        cur_isbn = None
+        try:
+            cur_isbn = self.loan.get_isbn()
+        except Exception:
+            pass
+
         try:
             invs = InventoryService()
-            zero = []
+            # First, add the current book of the loan (even if not available)
+            if cur_isbn:
+                try:
+                    current_inventories = invs.find_by_isbn(cur_isbn)
+                    if current_inventories:
+                        inv = current_inventories[0]
+                        book = inv.get_book()
+                        if book:
+                            title = book.get_title() if hasattr(book, 'get_title') else None
+                            bid = book.get_id() if hasattr(book, 'get_id') else None
+                            disp = f"{title} ({cur_isbn}) [{bid}]" if title else f"{cur_isbn} [{bid}]"
+                            books.append(disp)
+                            self._book_map[disp] = cur_isbn
+                except Exception:
+                    pass
+            
+            # Then add all available books (avoiding duplicates)
             for isbn, title, bid in invs.get_isbns_with_available_copies():
                 try:
+                    if isbn == cur_isbn:
+                        continue  # Skip if already added
                     disp = f"{title} ({isbn}) [{bid}]" if title else f"{isbn} [{bid}]"
                     books.append(disp)
                     self._book_map[disp] = isbn
@@ -97,17 +121,19 @@ class LoanEdit(ctk.CTkToplevel):
                 self.book_selector = ctk.CTkOptionMenu(frame, values=books, width=420)
             except Exception:
                 self.book_selector = ctk.CTkOptionMenu(frame, values=books)
-            # set current book selection if present
+            # set current book selection (should be first in list now)
             try:
-                cur_isbn = self.loan.get_isbn()
-                # find display matching cur_isbn
-                for k, v in self._book_map.items():
-                    if v == cur_isbn:
-                        try:
-                            self.book_selector.set(k)
-                        except Exception:
-                            pass
-                        break
+                if cur_isbn:
+                    # find display matching cur_isbn
+                    for k, v in self._book_map.items():
+                        if v == cur_isbn:
+                            try:
+                                self.book_selector.set(k)
+                            except Exception:
+                                pass
+                            break
+                else:
+                    self.book_selector.set(books[0])
             except Exception:
                 try:
                     self.book_selector.set(books[0])
