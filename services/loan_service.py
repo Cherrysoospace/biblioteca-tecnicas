@@ -228,10 +228,10 @@ class LoanService:
         # CRITICAL: Check reservation queue using búsqueda binaria (required by project spec)
         try:
             # Get sorted inventory to use binary search
+            # Use inventory_sorted which is already sorted by insercion_ordenada algorithm
             if self.inventory_service:
-                inventories = self.inventory_service.inventory_general
-                # Sort by ISBN for binary search
-                inventario_ordenado = sorted(inventories, key=lambda inv: inv.get_isbn())
+                # Use the pre-sorted inventory (sorted with insercion_ordenada algorithm)
+                inventario_ordenado = self.inventory_service.inventory_sorted
                 
                 # Use búsqueda binaria to verify book exists in inventory
                 isbn_returned = loan.get_isbn()
