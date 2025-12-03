@@ -130,15 +130,31 @@ class Reservation:
 
 		Dates are converted to ISO 8601 strings when possible.
 		"""
-		try:
+		from datetime import datetime
+		
+		# Handle reserved_date - convert to ISO string if it's a datetime object
+		if isinstance(self.__reserved_date, datetime):
 			reserved = self.__reserved_date.isoformat()
-		except Exception:
+		elif isinstance(self.__reserved_date, str):
 			reserved = self.__reserved_date
+		else:
+			try:
+				reserved = self.__reserved_date.isoformat()
+			except Exception:
+				reserved = str(self.__reserved_date)
 
-		try:
-			assigned = self.__assigned_date.isoformat() if self.__assigned_date else None
-		except Exception:
+		# Handle assigned_date - convert to ISO string if it's a datetime object
+		if self.__assigned_date is None:
+			assigned = None
+		elif isinstance(self.__assigned_date, datetime):
+			assigned = self.__assigned_date.isoformat()
+		elif isinstance(self.__assigned_date, str):
 			assigned = self.__assigned_date
+		else:
+			try:
+				assigned = self.__assigned_date.isoformat()
+			except Exception:
+				assigned = str(self.__assigned_date)
 
 		return {
 			"reservation_id": self.__reservation_id,
@@ -153,16 +169,31 @@ class Reservation:
 	@classmethod
 	def from_dict(cls, data: dict):
 		"""Construct a Reservation from a dict (as stored in JSON)."""
+		from datetime import datetime as _dt
+		
 		res_date = data.get('reserved_date')
 		assigned_date = data.get('assigned_date')
-		# leave date strings as-is; service may parse them if necessary
-		r = cls(data.get('reservation_id'), data.get('user_id'), data.get('isbn'), res_date, data.get('status', 'pending'))
-		if assigned_date:
+		
+		# Convert reserved_date string to datetime object
+		if res_date and isinstance(res_date, str):
 			try:
-				from datetime import datetime as _dt
-				r.set_assigned_date(_dt.fromisoformat(assigned_date))
+				res_date = _dt.fromisoformat(res_date)
 			except Exception:
+				pass
+		
+		r = cls(data.get('reservation_id'), data.get('user_id'), data.get('isbn'), res_date, data.get('status', 'pending'))
+		
+		# Convert assigned_date string to datetime object
+		if assigned_date:
+			if isinstance(assigned_date, str):
+				try:
+					assigned_date = _dt.fromisoformat(assigned_date)
+					r.set_assigned_date(assigned_date)
+				except Exception:
+					r.set_assigned_date(assigned_date)
+			else:
 				r.set_assigned_date(assigned_date)
+		
 		r.set_position(data.get('position'))
 		return r
 

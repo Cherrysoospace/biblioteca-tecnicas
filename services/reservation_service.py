@@ -125,7 +125,15 @@ class ReservationService:
 		if 'status' in kwargs:
 			res.set_status(kwargs.get('status'))
 		if 'assigned_date' in kwargs:
-			res.set_assigned_date(kwargs.get('assigned_date'))
+			assigned_val = kwargs.get('assigned_date')
+			# Convert ISO string to datetime object if needed
+			if assigned_val and isinstance(assigned_val, str):
+				try:
+					from datetime import datetime as _dt
+					assigned_val = _dt.fromisoformat(assigned_val)
+				except Exception:
+					pass
+			res.set_assigned_date(assigned_val)
 		self._save_reservations()
 		return res
 
