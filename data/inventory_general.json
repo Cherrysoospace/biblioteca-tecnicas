@@ -492,5 +492,19 @@
         "isBorrowed": false
       }
     ]
+  },
+  {
+    "stock": 1,
+    "items": [
+      {
+        "id": "B038",
+        "ISBNCode": "00000000000",
+        "title": "HOLA",
+        "author": "YO",
+        "weight": 1.0,
+        "price": 200000,
+        "isBorrowed": false
+      }
+    ]
   }
 ]
