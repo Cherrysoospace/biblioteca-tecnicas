@@ -9,4 +9,14 @@ wheels/
 # Virtual environments
 .venv
 logs/
-data/
+
+# Data files (database JSONs)
+data/books.json
+data/example.json
+data/inventory_general.json
+data/inventory_sorted.json
+data/inventory_value.json
+data/loan.json
+data/reservations.json
+data/shelves.json
+data/users.json
