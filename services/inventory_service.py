@@ -6,6 +6,7 @@ from models.Books import Book
 from models.inventory import Inventory
 from repositories.inventory_repository import InventoryRepository
 from utils.algorithms.AlgoritmosOrdenamiento import insercion_ordenada
+from utils.algorithms.AlgoritmosBusqueda import busqueda_lineal
 from utils.config import FilePaths
 
 
@@ -455,54 +456,76 @@ class InventoryService:
     def find_by_title(self, title: str) -> List[Inventory]:
         """Find inventory items where the book title matches using linear search.
 
+        Uses the recursive busqueda_lineal algorithm to search through the
+        Inventario General (unsorted list) for books matching the title.
+        The search is case-insensitive and supports partial matches.
+
         Parameters:
-        - title: title string to search
+        - title: title string to search (can be partial)
 
         Returns:
-        - List[Inventory]
+        - List[Inventory]: All inventory items with matching titles
 
-        Raises:
-        - ImportError: if `buscar_lineal` not available.
+        Example:
+        >>> service.find_by_title("quijote")
+        [<Inventory for "Don Quijote de la Mancha">]
         """
-        if buscar_lineal is None:
-            raise ImportError("Required algorithm `buscar_lineal` not found in utils.algoritmos/busqueda_lineal")
-
-        try:
-            result = buscar_lineal(self.inventory_general, title, lambda inv: inv.get_book().get_title())
-        except TypeError:
-            result = buscar_lineal(self.inventory_general, title)
-
-        if result is None:
-            return []
-        if isinstance(result, list):
-            return result
-        return [result]
+        results = []
+        start_index = 0
+        
+        # Buscar todas las coincidencias iterativamente usando búsqueda lineal
+        while start_index < len(self.inventory_general):
+            # Usar busqueda_lineal desde start_index
+            index = busqueda_lineal(self.inventory_general, title, start_index)
+            
+            if index == -1:
+                # No más coincidencias
+                break
+            
+            # Agregar resultado encontrado
+            results.append(self.inventory_general[index])
+            
+            # Continuar buscando desde la siguiente posición
+            start_index = index + 1
+        
+        return results
 
     def find_by_author(self, author: str) -> List[Inventory]:
         """Find inventory items where the book author matches using linear search.
 
+        Uses the recursive busqueda_lineal algorithm to search through the
+        Inventario General (unsorted list) for books matching the author.
+        The search is case-insensitive and supports partial matches.
+
         Parameters:
-        - author: author string to search
+        - author: author string to search (can be partial)
 
         Returns:
-        - List[Inventory]
+        - List[Inventory]: All inventory items with matching authors
 
-        Raises:
-        - ImportError: if `buscar_lineal` not available.
+        Example:
+        >>> service.find_by_author("garcía márquez")
+        [<Inventory for books by Gabriel García Márquez>]
         """
-        if buscar_lineal is None:
-            raise ImportError("Required algorithm `buscar_lineal` not found in utils.algoritmos/busqueda_lineal")
-
-        try:
-            result = buscar_lineal(self.inventory_general, author, lambda inv: inv.get_book().get_author())
-        except TypeError:
-            result = buscar_lineal(self.inventory_general, author)
-
-        if result is None:
-            return []
-        if isinstance(result, list):
-            return result
-        return [result]
+        results = []
+        start_index = 0
+        
+        # Buscar todas las coincidencias iterativamente usando búsqueda lineal
+        while start_index < len(self.inventory_general):
+            # Usar busqueda_lineal desde start_index
+            index = busqueda_lineal(self.inventory_general, author, start_index)
+            
+            if index == -1:
+                # No más coincidencias
+                break
+            
+            # Agregar resultado encontrado
+            results.append(self.inventory_general[index])
+            
+            # Continuar buscando desde la siguiente posición
+            start_index = index + 1
+        
+        return results
 
 
 # Example usage:

@@ -14,6 +14,7 @@ logger = LibraryLogger.get_logger(__name__)
 from ui.book.book_form import BookForm
 from ui.user.user_form import UserForm
 from ui.book.book_list import BookList
+from ui.book.book_search import BookSearch
 from ui.user.user_list import UserList
 from ui.loan.loan_list import LoanList
 from tkinter import messagebox
@@ -220,9 +221,16 @@ class MainMenu(ctk.CTk):
             except Exception as fallback_e:
                 UIErrorHandler.log_and_pass(logger, "cargar icono sakura (fallback)", fallback_e)
                 self.icon_loan = None
+        
+        try:
+            self.icon_search = ctk.CTkImage(Image.open(os.path.join(assets_path, "search.png")), size=(36, 36))
+        except Exception as e:
+            UIErrorHandler.log_and_pass(logger, "cargar icono búsqueda", e)
+            self.icon_search = None
 
         # Build a list of button specs to create and place in a 2-column grid
         button_specs = [
+            ("🔍 Buscar Libros", self.open_book_search, self.icon_search),
             ("Crear Libro", self.open_create_book, self.icon_book),
             ("Crear Usuario", self.open_create_user, self.icon_user),
             ("Ver Libros", self.open_view_books, self.icon_view),
@@ -328,6 +336,10 @@ class MainMenu(ctk.CTk):
     def open_view_books(self):
         # Open the provisional book list viewer
         self._open_toplevel(BookList)
+    
+    def open_book_search(self):
+        # Open the book search window
+        self._open_toplevel(BookSearch)
 
     def open_view_users(self):
         # Open the user list viewer

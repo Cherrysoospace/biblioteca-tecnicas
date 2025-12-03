@@ -2,9 +2,82 @@
 
 Funciones auxiliares para validación y soporte de búsquedas en el sistema.
 
+Incluye:
+- Normalización de texto para búsquedas insensibles a mayúsculas y acentos
+- Validación de listas ordenadas para prerequisitos de búsqueda binaria
+
 Autor: Sistema de Gestión de Bibliotecas
-Fecha: 2025-12-02
+Fecha: 2025-12-03
 """
+
+
+def normalizar_texto(texto):
+    """Normaliza texto para búsquedas insensibles a mayúsculas y acentos.
+    
+    PROPÓSITO:
+    ==========
+    Facilita la búsqueda de libros permitiendo que el usuario busque sin
+    preocuparse por mayúsculas, minúsculas o acentos.
+    
+    TRANSFORMACIONES:
+    =================
+    1. Convierte a minúsculas
+    2. Elimina acentos (á→a, é→e, í→i, ó→o, ú→u, ñ→n)
+    3. Elimina espacios extra
+    
+    PARÁMETROS:
+    ===========
+    texto : str
+        Texto a normalizar (título, autor, criterio de búsqueda).
+        
+    RETORNO:
+    ========
+    str
+        Texto normalizado en minúsculas sin acentos.
+        
+    EJEMPLO DE USO:
+    ===============
+    >>> from utils.search_helpers import normalizar_texto
+    >>> 
+    >>> # Normalizar para comparación
+    >>> titulo = "Cien Años de Soledad"
+    >>> busqueda = "cien anos"
+    >>> 
+    >>> if normalizar_texto(busqueda) in normalizar_texto(titulo):
+    ...     print("¡Coincidencia encontrada!")
+    
+    CASOS DE PRUEBA:
+    ================
+    >>> normalizar_texto("García Márquez")
+    'garcia marquez'
+    >>> normalizar_texto("JOSÉ")
+    'jose'
+    >>> normalizar_texto("Año Nuevo")
+    'ano nuevo'
+    """
+    if not texto:
+        return ""
+    
+    # Convertir a minúsculas
+    texto = texto.lower()
+    
+    # Tabla de reemplazo para acentos comunes en español
+    reemplazos = {
+        'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u',
+        'à': 'a', 'è': 'e', 'ì': 'i', 'ò': 'o', 'ù': 'u',
+        'ä': 'a', 'ë': 'e', 'ï': 'i', 'ö': 'o', 'ü': 'u',
+        'â': 'a', 'ê': 'e', 'î': 'i', 'ô': 'o', 'û': 'u',
+        'ñ': 'n', 'ç': 'c'
+    }
+    
+    # Aplicar reemplazos
+    for acento, sin_acento in reemplazos.items():
+        texto = texto.replace(acento, sin_acento)
+    
+    # Eliminar espacios extra
+    texto = ' '.join(texto.split())
+    
+    return texto
 
 
 def verificar_lista_ordenada(lista, atributo='ISBNCode'):
@@ -52,4 +125,4 @@ def verificar_lista_ordenada(lista, atributo='ISBNCode'):
     return True
 
 
-__all__ = ['verificar_lista_ordenada']
+__all__ = ['normalizar_texto', 'verificar_lista_ordenada']
