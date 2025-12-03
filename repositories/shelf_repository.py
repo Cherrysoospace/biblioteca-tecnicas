@@ -86,8 +86,8 @@ def _shelf_to_dict(shelf: Shelf) -> dict:
                 books_serialized.append(str(b))
 
     return {
-        'id': getattr(shelf, '_Shelf__id', None),
-        'name': getattr(shelf, '_Shelf__name', ''),
+        'id': shelf.get_id(),
+        'name': shelf.get_name(),
         'capacity': shelf.capacity,
         'books': books_serialized,
     }

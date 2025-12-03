@@ -148,16 +148,8 @@ class ShelfList(ctk.CTkToplevel):
         self.load_shelves()
 
     def load_shelves(self):
-        # Try to reload persisted shelves so "Refrescar" picks up external changes.
-        try:
-            try:
-                self.controller.load_shelves(FilePaths.SHELVES)
-            except Exception:
-                # silently ignore file load errors and continue with in-memory data
-                pass
-        except Exception:
-            pass
-
+        """Carga y muestra las estanterías en la tabla."""
+        # Limpiar filas existentes
         for r in self.tree.get_children():
             self.tree.delete(r)
 
@@ -167,12 +159,13 @@ class ShelfList(ctk.CTkToplevel):
             messagebox.showerror("Error", f"No se pudieron cargar las estanterías: {e}")
             return
 
-        # Prepare rows and determine needed rowheight based on number of lines
+        # Preparar filas y determinar altura necesaria basada en número de líneas
         rows = []
         max_lines = 1
-        LINE_CAP = 10  # avoid extremely tall rows
+        LINE_CAP = 10  # evitar filas extremadamente altas
 
         def fmt_weight(v):
+            """Formatear peso para mostrar"""
             try:
                 fv = float(v)
                 s = f"{fv:.2f}".rstrip('0').rstrip('.')
@@ -180,36 +173,32 @@ class ShelfList(ctk.CTkToplevel):
             except Exception:
                 return str(v)
 
-        for i, s in enumerate(shelves):
+        for i, shelf in enumerate(shelves):
             try:
-                sid = getattr(s, '_Shelf__id', None)
-                name = s.get_name() if hasattr(s, 'get_name') else getattr(s, '_Shelf__name', '')
-                capacity = getattr(s, 'capacity', '')
-                summary = self.controller.shelf_summary(sid) if sid else {}
+                # Obtener datos básicos de la estantería usando getters
+                sid = shelf.get_id()
+                name = shelf.get_name()
+                capacity = shelf.capacity
 
+                # Obtener libros de la estantería
                 try:
-                    books_objs = self.controller.get_books(sid) if sid else []
+                    books_objs = self.controller.get_books(sid)
                     lines = []
                     for b in books_objs:
                         try:
                             bid = b.get_id()
-                        except Exception:
-                            bid = getattr(b, '_Book__id', None)
-                        try:
                             w = fmt_weight(b.get_weight())
+                            if w == '':
+                                lines.append(f"id: {bid}, peso: -")
+                            else:
+                                lines.append(f"id: {bid}, peso: {w}kg")
                         except Exception:
-                            try:
-                                w = fmt_weight(getattr(b, '_Book__weight', ''))
-                            except Exception:
-                                w = ''
-                        if w == '':
-                            lines.append(f"id: {bid}, peso:, ")
-                        else:
-                            lines.append(f"id: {bid}, peso, {w}")
+                            continue
                 except Exception:
                     lines = []
+                    books_objs = []
 
-                # apply cap and compute display string with newlines
+                # Aplicar límite y calcular string de visualización con saltos de línea
                 extra = 0
                 if len(lines) > LINE_CAP:
                     extra = len(lines) - LINE_CAP
@@ -218,32 +207,44 @@ class ShelfList(ctk.CTkToplevel):
                 else:
                     disp_lines = lines
 
-                books_display = "\n".join(disp_lines)
+                books_display = "\n".join(disp_lines) if disp_lines else "-"
                 line_count = max(1, len(disp_lines))
                 if line_count > max_lines:
                     max_lines = line_count
 
-                books_count = summary.get('books_count', '')
-                total_w = summary.get('total_weight', '')
-                remaining = summary.get('remaining_capacity', '')
+                # Calcular estadísticas usando métodos del servicio
+                books_count = len(books_objs)
+                try:
+                    total_w = fmt_weight(self.controller.service.total_weight(sid))
+                except Exception:
+                    total_w = '0'
+                
+                try:
+                    remaining = fmt_weight(self.controller.service.remaining_capacity(sid))
+                except Exception:
+                    remaining = fmt_weight(capacity)
+
                 tag = 'even' if i % 2 == 0 else 'odd'
-                rows.append((sid, name, books_display, capacity, books_count, total_w, remaining, tag))
-            except Exception:
+                rows.append((sid, name, books_display, fmt_weight(capacity), books_count, total_w, remaining, tag))
+            except Exception as e:
+                # Si hay error con una estantería específica, continuar con las demás
                 continue
 
-        # update rowheight to fit lines (estimate 18px per line)
+        # Actualizar altura de fila para ajustar líneas (22px por línea + padding adicional)
         try:
-            height = max(24, 18 * max_lines)
+            height = max(24, 22 * max_lines + 8)
             self._tree_style.configure("Treeview", rowheight=height)
         except Exception:
             pass
 
+        # Insertar filas en la tabla
         for row in rows:
             try:
                 self.tree.insert("", "end", values=row[:-1], tags=(row[-1],))
             except Exception:
                 continue
 
+        # Configurar colores alternados para las filas
         try:
             self.tree.tag_configure('odd', background='#F7F1E6')
             self.tree.tag_configure('even', background=theme.BG_COLOR)
@@ -301,10 +302,12 @@ class ShelfList(ctk.CTkToplevel):
             messagebox.showerror("Error", f"No se pudo abrir el formulario de edición.\n{e}")
 
     def delete_selected(self):
+        """Elimina la estantería seleccionada."""
         sel = self.tree.selection()
         if not sel:
             messagebox.showinfo("Info", "Selecciona primero una estantería en la tabla.")
             return
+        
         try:
             values = self.tree.item(sel[0], "values")
             shelf_id = values[0]
@@ -316,26 +319,8 @@ class ShelfList(ctk.CTkToplevel):
             return
 
         try:
-            deleted = False
-            try:
-                deleted = self.controller.delete_shelf(shelf_id)
-            except Exception:
-                # fallback: try direct service manipulation if controller wrapper fails
-                svc = getattr(self.controller, 'service', None)
-                if svc is not None:
-                    for s in list(svc._shelves):
-                        if getattr(s, '_Shelf__id', None) == shelf_id:
-                            try:
-                                svc._shelves.remove(s)
-                                try:
-                                    svc.save_to_file(FilePaths.SHELVES)
-                                except Exception:
-                                    pass
-                                deleted = True
-                            except Exception:
-                                pass
-                            break
-
+            deleted = self.controller.delete_shelf(shelf_id)
+            
             if not deleted:
                 messagebox.showerror("Error", "Estantería no encontrada o no se pudo eliminar.")
                 return
@@ -343,7 +328,7 @@ class ShelfList(ctk.CTkToplevel):
             messagebox.showinfo("Borrado", "Estantería eliminada correctamente.")
             self.load_shelves()
         except Exception as e:
-            messagebox.showerror("Error", str(e))
+            messagebox.showerror("Error", f"Error al eliminar la estantería: {e}")
 
 
 __all__ = ["ShelfList"]

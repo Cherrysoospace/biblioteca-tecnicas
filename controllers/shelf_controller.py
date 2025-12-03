@@ -31,7 +31,7 @@ class ShelfController:
 		"""
 		max_n = 0
 		for s in self.service.list_shelves():
-			sid = getattr(s, '_Shelf__id', None)
+			sid = s.get_id()
 			if not isinstance(sid, str):
 				continue
 			if sid.startswith('S') and len(sid) > 1:
@@ -143,7 +143,7 @@ class ShelfController:
 		"""
 		shelves = self.service._shelves
 		for s in list(shelves):
-			if getattr(s, '_Shelf__id', None) == id:
+			if s.get_id() == id:
 				try:
 					shelves.remove(s)
 					# service persists changes

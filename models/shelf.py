@@ -34,15 +34,10 @@ class Shelf:
         # optional human-readable name for the shelf (e.g., "Shelf A1")
         self.__name: str = ""
 
-    # ID accessor
+    # ID accessor (read-only, id should not be modified after creation)
     def get_id(self) -> str:
         """Return the shelf's unique identifier."""
         return self.__id
-
-    # Books accessor
-    def get_books(self) -> List[Book]:
-        """Return the list of books on this shelf."""
-        return self.__books
 
     # Name accessors (kept for backward compatibility with code that used them)
     def get_name(self) -> str:

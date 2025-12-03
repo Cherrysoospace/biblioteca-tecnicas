@@ -44,8 +44,8 @@ def test_ui_scenario():
         capacity=8.0,  # Capacidad máxima permitida
         name="Mi Estantería Nueva"
     )
-    # Acceder al id usando name mangling (atributo privado)
-    shelf_id = new_shelf._Shelf__id
+    # Usar los métodos getter para acceder a los atributos
+    shelf_id = new_shelf.get_id()
     shelf_name = new_shelf.get_name()
     print(f"  → Estantería creada: ID={shelf_id}, nombre={shelf_name}")
     
