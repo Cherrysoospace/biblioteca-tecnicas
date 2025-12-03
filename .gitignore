@@ -20,3 +20,4 @@ data/loan.json
 data/reservations.json
 data/shelves.json
 data/users.json
+data/load_history.json
