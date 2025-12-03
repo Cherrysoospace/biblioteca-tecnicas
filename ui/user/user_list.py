@@ -49,6 +49,30 @@ class UserList(ctk.CTkToplevel):
         title_lbl = wf.create_title_label(title_frame, "Listado de Usuarios")
         title_lbl.pack(side="left")
 
+        # Frame de búsqueda
+        search_frame = ctk.CTkFrame(container, fg_color=theme.BG_COLOR, corner_radius=0)
+        search_frame.pack(fill="x", pady=(0, 8))
+
+        search_label = ctk.CTkLabel(search_frame, text="Buscar:", 
+                                    font=theme.get_font(self, size=11))
+        search_label.pack(side="left", padx=(0, 8))
+
+        self.search_entry = ctk.CTkEntry(search_frame, width=300, 
+                                         placeholder_text="Buscar por ID o nombre...")
+        self.search_entry.pack(side="left", padx=(0, 8))
+        
+        # Bind Enter key to search
+        try:
+            self.search_entry.bind("<Return>", lambda e: self.search_users())
+        except Exception as e:
+            UIErrorHandler.log_and_pass(logger, "bind Enter key en search_entry", e)
+
+        search_btn = wf.create_small_button(search_frame, text="Buscar", command=self.search_users)
+        search_btn.pack(side="left", padx=(0, 8))
+
+        clear_btn = wf.create_small_button(search_frame, text="Limpiar", command=self.clear_search)
+        clear_btn.pack(side="left")
+
         table_holder = tk.Frame(container, bg=theme.BG_COLOR)
         table_holder.pack(expand=True, fill="both", pady=(8, 8))
 
@@ -158,6 +182,77 @@ class UserList(ctk.CTkToplevel):
             self.tree.tag_configure('even', background=theme.BG_COLOR)
         except Exception as e:
             UIErrorHandler.log_and_pass(logger, "configurar tags de colores en tree", e)
+
+    def search_users(self):
+        """Buscar usuarios por ID o nombre."""
+        search_term = self.search_entry.get().strip()
+        
+        if not search_term:
+            messagebox.showinfo("Info", "Ingrese un término de búsqueda.")
+            return
+        
+        # clear rows
+        for r in self.tree.get_children():
+            self.tree.delete(r)
+
+        try:
+            # Usar los métodos existentes del controlador (find_by_id y find_by_name)
+            filtered_users = []
+            
+            # Buscar por ID
+            user_by_id = self.controller.find_by_id(search_term)
+            if user_by_id:
+                filtered_users.append(user_by_id)
+            
+            # Buscar por nombre (puede retornar múltiples usuarios)
+            users_by_name = self.controller.find_by_name(search_term)
+            if users_by_name:
+                # Evitar duplicados si ya se encontró por ID
+                for u in users_by_name:
+                    if u not in filtered_users:
+                        filtered_users.append(u)
+            
+            logger.info(f"Búsqueda '{search_term}': {len(filtered_users)} resultados")
+            
+            if not filtered_users:
+                messagebox.showinfo("Búsqueda", f"No se encontraron usuarios que coincidan con '{search_term}'.")
+                return
+
+            for i, u in enumerate(filtered_users):
+                try:
+                    uid = u.get_id()
+                    name = u.get_name()
+                    tag = 'even' if i % 2 == 0 else 'odd'
+                    self.tree.insert("", "end", values=(uid, name), tags=(tag,))
+                except Exception as e:
+                    logger.warning(f"Error insertando usuario en tabla (índice {i}): {e}")
+                    continue
+
+            try:
+                self.tree.tag_configure('odd', background='#F7F1E6')
+                self.tree.tag_configure('even', background=theme.BG_COLOR)
+            except Exception as e:
+                UIErrorHandler.log_and_pass(logger, "configurar tags de colores en tree", e)
+
+        except Exception as e:
+            UIErrorHandler.handle_error(
+                logger, e,
+                title="Error al buscar usuarios",
+                user_message="No se pudo realizar la búsqueda. Por favor, intente nuevamente."
+            )
+
+    def clear_search(self):
+        """Limpiar el campo de búsqueda y recargar todos los usuarios."""
+        try:
+            self.search_entry.delete(0, 'end')
+            self.load_users()
+            logger.info("Búsqueda limpiada, mostrando todos los usuarios")
+        except Exception as e:
+            UIErrorHandler.handle_error(
+                logger, e,
+                title="Error al limpiar búsqueda",
+                user_message="No se pudo limpiar la búsqueda."
+            )
 
     def _on_close(self):
         try:

@@ -70,6 +70,28 @@ class ShelfController:
 		"""Return a Shelf by id or None if not found."""
 		return self.service.find_shelf(id)
 
+	def search_shelves(self, search_term: str) -> List:
+		"""Search shelves by ID or name.
+		
+		Args:
+			search_term: Term to search for (case-insensitive)
+			
+		Returns:
+			List of Shelf objects matching the search term
+		"""
+		if not search_term:
+			return []
+		
+		search_term = search_term.lower().strip()
+		all_shelves = self.service.list_shelves()
+		
+		filtered_shelves = [
+			shelf for shelf in all_shelves
+			if search_term in shelf.get_id().lower() or search_term in shelf.get_name().lower()
+		]
+		
+		return filtered_shelves
+
 	def add_book(self, shelf_id: str, book: Book) -> bool:
 		"""Add a Book instance to a shelf if it fits.
 

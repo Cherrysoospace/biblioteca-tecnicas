@@ -1,2 +1,3 @@
-source .venv/Scripts/activate#activar el entorno virtual:
+#activar el entorno virtual:
+source .venv/Scripts/activate
 

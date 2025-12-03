@@ -57,6 +57,30 @@ class ShelfList(ctk.CTkToplevel):
         title_lbl = wf.create_title_label(title_frame, "Listado de Estanterías")
         title_lbl.pack(side="left")
 
+        # Frame de búsqueda
+        search_frame = ctk.CTkFrame(container, fg_color=theme.BG_COLOR, corner_radius=0)
+        search_frame.grid(row=0, column=0, sticky="ew", pady=(40, 8))
+
+        search_label = ctk.CTkLabel(search_frame, text="Buscar:", 
+                                    font=theme.get_font(self, size=11))
+        search_label.pack(side="left", padx=(0, 8))
+
+        self.search_entry = ctk.CTkEntry(search_frame, width=300, 
+                                         placeholder_text="Buscar por ID o nombre...")
+        self.search_entry.pack(side="left", padx=(0, 8))
+        
+        # Bind Enter key to search
+        try:
+            self.search_entry.bind("<Return>", lambda e: self.search_shelves())
+        except Exception:
+            pass
+
+        search_btn = wf.create_small_button(search_frame, text="Buscar", command=self.search_shelves)
+        search_btn.pack(side="left", padx=(0, 8))
+
+        clear_btn = wf.create_small_button(search_frame, text="Limpiar", command=self.clear_search)
+        clear_btn.pack(side="left")
+
         table_holder = tk.Frame(container, bg=theme.BG_COLOR)
         table_holder.grid(row=1, column=0, sticky="nsew", padx=0, pady=(8, 8))
 
@@ -147,14 +171,15 @@ class ShelfList(ctk.CTkToplevel):
 
         self.load_shelves()
 
-    def load_shelves(self):
+    def load_shelves(self, shelves=None):
         """Carga y muestra las estanterías en la tabla."""
         # Limpiar filas existentes
         for r in self.tree.get_children():
             self.tree.delete(r)
 
         try:
-            shelves = self.controller.list_shelves()
+            if shelves is None:
+                shelves = self.controller.list_shelves()
         except Exception as e:
             messagebox.showerror("Error", f"No se pudieron cargar las estanterías: {e}")
             return
@@ -329,6 +354,35 @@ class ShelfList(ctk.CTkToplevel):
             self.load_shelves()
         except Exception as e:
             messagebox.showerror("Error", f"Error al eliminar la estantería: {e}")
+
+    def search_shelves(self):
+        """Buscar estanterías por ID o nombre."""
+        search_term = self.search_entry.get().strip()
+        
+        if not search_term:
+            messagebox.showinfo("Info", "Ingrese un término de búsqueda.")
+            return
+        
+        try:
+            # Delegar la búsqueda al controlador (principio de POO)
+            filtered_shelves = self.controller.search_shelves(search_term)
+            
+            if not filtered_shelves:
+                messagebox.showinfo("Búsqueda", f"No se encontraron estanterías que coincidan con '{search_term}'.")
+                self.load_shelves([])  # Mostrar tabla vacía
+                return
+
+            self.load_shelves(filtered_shelves)
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo realizar la búsqueda: {e}")
+
+    def clear_search(self):
+        """Limpiar el campo de búsqueda y recargar todas las estanterías."""
+        try:
+            self.search_entry.delete(0, 'end')
+            self.load_shelves()
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo limpiar la búsqueda: {e}")
 
 
 __all__ = ["ShelfList"]
