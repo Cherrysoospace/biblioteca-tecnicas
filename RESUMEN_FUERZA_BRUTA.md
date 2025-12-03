@@ -207,15 +207,17 @@ for i in range(n - 3):
 
 ### Nuevos Archivos
 1. ✅ `utils/algorithms/brute_force.py` - Algoritmo principal
-2. ✅ `demo_brute_force.py` - Demostración
+2. ✅ `demo_brute_force.py` - Demostración por consola
 3. ✅ `test_brute_force.py` - Pruebas unitarias
-4. ✅ `IMPLEMENTACION_FUERZA_BRUTA.md` - Documentación completa
-5. ✅ `GUIA_PROBAR_FUERZA_BRUTA.md` - Guía de pruebas
-6. ✅ `RESUMEN_FUERZA_BRUTA.md` - Este archivo
+4. ✅ `ui/book/brute_force_report.py` - Interfaz gráfica
+5. ✅ `IMPLEMENTACION_FUERZA_BRUTA.md` - Documentación completa
+6. ✅ `GUIA_PROBAR_FUERZA_BRUTA.md` - Guía de pruebas
+7. ✅ `RESUMEN_FUERZA_BRUTA.md` - Este archivo
 
 ### Archivos Modificados
-1. ✅ `services/shelf_service.py` - Agregados métodos para fuerza bruta
-2. ✅ `controllers/shelf_controller.py` - Agregados métodos de exposición
+1. ✅ `services/book_service.py` - Agregados métodos para fuerza bruta
+2. ✅ `controllers/book_controller.py` - Agregados métodos de exposición
+3. ✅ `ui/main_menu.py` - Agregado botón para visualizar algoritmo
 
 ---
 

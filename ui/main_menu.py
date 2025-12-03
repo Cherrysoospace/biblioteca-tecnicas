@@ -17,6 +17,7 @@ from ui.book.book_list import BookList
 from ui.book.book_search import BookSearch
 from ui.book.author_value_report import AuthorValueReport
 from ui.book.author_weight_report import AuthorWeightReport
+from ui.book.brute_force_report import BruteForceReport
 from ui.user.user_list import UserList
 from ui.loan.loan_list import LoanList
 from tkinter import messagebox
@@ -246,6 +247,7 @@ class MainMenu(ctk.CTk):
             ("Crear Reserva", self.open_create_reservation, self.icon_loan),
             ("📚 Valor por Autor", self.open_author_value_report, self.icon_book),
             ("⚖️ Peso por Autor", self.open_author_weight_report, self.icon_book),
+            ("🔍 Fuerza Bruta", self.open_brute_force_report, self.icon_search),
         ]
 
         # Create an inner frame to host the grid inside the scrollable frame
@@ -367,5 +369,9 @@ class MainMenu(ctk.CTk):
     def open_author_weight_report(self):
         # Open the author weight report window (tail/queue recursion)
         self._open_toplevel(AuthorWeightReport)
+    
+    def open_brute_force_report(self):
+        # Open the brute force algorithm report window
+        self._open_toplevel(BruteForceReport)
         
 

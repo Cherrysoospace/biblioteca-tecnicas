@@ -171,13 +171,35 @@ def count_possible_combinations(self) -> int:
 
 ## Uso del Algoritmo
 
-### Desde la UI o Script Principal
+### Desde la Interfaz Gráfica (Recomendado)
+
+1. **Ejecutar el sistema:**
+   ```bash
+   python main.py
+   ```
+
+2. **En el menú principal:**
+   - Hacer clic en el botón **"🔍 Fuerza Bruta"**
+   
+3. **La ventana mostrará:**
+   - 📚 Total de libros en el catálogo
+   - 🔢 Número de combinaciones a explorar
+   - ⚠️ Combinaciones riesgosas encontradas
+   - ⚖️ Umbral de peso actual (8 Kg por defecto)
+   - Detalles de cada combinación riesgosa
+
+4. **Funciones disponibles:**
+   - **🔄 Actualizar:** Recalcula las combinaciones
+   - **⚙️ Cambiar Umbral:** Modifica el peso máximo permitido
+   - **Cerrar:** Cierra la ventana
+
+### Desde código Python
 
 ```python
-from controllers.shelf_controller import ShelfController
+from controllers.book_controller import BookController
 
 # Inicializar controlador
-controller = ShelfController()
+controller = BookController()
 
 # Encontrar combinaciones riesgosas
 risky = controller.find_risky_book_combinations(threshold=8.0)
