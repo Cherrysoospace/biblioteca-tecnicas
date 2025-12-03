@@ -148,6 +148,16 @@ class ShelfList(ctk.CTkToplevel):
         self.load_shelves()
 
     def load_shelves(self):
+        # Try to reload persisted shelves so "Refrescar" picks up external changes.
+        try:
+            try:
+                self.controller.load_shelves(FilePaths.SHELVES)
+            except Exception:
+                # silently ignore file load errors and continue with in-memory data
+                pass
+        except Exception:
+            pass
+
         for r in self.tree.get_children():
             self.tree.delete(r)
 

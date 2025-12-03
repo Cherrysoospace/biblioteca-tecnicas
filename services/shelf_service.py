@@ -18,7 +18,7 @@ from typing import List, Optional, Dict, Any
 
 from models.shelf import Shelf
 from models.Books import Book
-from utils.file_handler import JSONFileHandler
+from repositories.shelf_repository import ShelfRepository
 
 
 class ShelfService:
@@ -32,10 +32,23 @@ class ShelfService:
 	Methods are straightforward and documented per-function.
 	"""
 
-	def __init__(self, shelves: Optional[List[Shelf]] = None):
-		self._shelves: List[Shelf] = shelves if shelves is not None else []
+	def __init__(self, repository: ShelfRepository = None, shelves: Optional[List[Shelf]] = None):
+		"""Initialize ShelfService.
 
-	def create_shelf(self, id, capacity: float = 8.0, books: Optional[List[Book]] = None) -> Shelf:
+		Parameters:
+		- repository: optional ShelfRepository instance. If None, creates a new one.
+		- shelves: optional initial list of Shelf objects (used for testing).
+		"""
+		self.repository = repository or ShelfRepository()
+		self._shelves: List[Shelf] = shelves if shelves is not None else []
+		# load persisted shelves unless an initial list was provided
+		if shelves is None:
+			try:
+				self._load_shelves()
+			except Exception:
+				self._shelves = []
+
+	def create_shelf(self, id, capacity: float = 8.0, books: Optional[List[Book]] = None, name: Optional[str] = None) -> Shelf:
 		"""Create and register a new Shelf.
 
 		Args:
@@ -47,7 +60,21 @@ class ShelfService:
 			The created :class:`models.shelf.Shelf` instance.
 		"""
 		shelf = Shelf(id, books=books, capacity=capacity)
+		# set optional name before persisting so it's saved
+		if name is not None:
+			try:
+				shelf.set_name(name)
+			except Exception:
+				try:
+					setattr(shelf, '_Shelf__name', name)
+				except Exception:
+					pass
 		self._shelves.append(shelf)
+		# persist change
+		try:
+			self._save_shelves()
+		except Exception:
+			pass
 		return shelf
 
 	def list_shelves(self) -> List[Shelf]:
@@ -115,6 +142,11 @@ class ShelfService:
 
 		if total + w <= capacity:
 			books_list.append(book)
+			# persist change
+			try:
+				self._save_shelves()
+			except Exception:
+				pass
 			return True
 		return False
 
@@ -134,7 +166,13 @@ class ShelfService:
 		books_list: List[Book] = getattr(shelf, '_Shelf__books')
 		for i, b in enumerate(books_list):
 			if getattr(b, '_Book__ISBNCode', None) == isbn:
-				return books_list.pop(i)
+				removed = books_list.pop(i)
+				# persist change
+				try:
+					self._save_shelves()
+				except Exception:
+					pass
+				return removed
 		return None
 
 	def total_weight(self, shelf_id) -> float:
@@ -245,6 +283,11 @@ class ShelfService:
 		books_list: List[Book] = getattr(shelf, '_Shelf__books')
 		removed = list(books_list)
 		books_list.clear()
+		# persist change
+		try:
+			self._save_shelves()
+		except Exception:
+			pass
 		return removed
 
 	def move_book(self, from_shelf_id, to_shelf_id, isbn: str) -> bool:
@@ -274,6 +317,10 @@ class ShelfService:
 		src = self.find_shelf(from_shelf_id)
 		if src is not None:
 			getattr(src, '_Shelf__books').append(book)
+			try:
+				self._save_shelves()
+			except Exception:
+				pass
 		return False
 
 	def set_capacity(self, shelf_id, capacity: float) -> bool:
@@ -299,102 +346,26 @@ class ShelfService:
 		except Exception:
 			# if model validation fails, do not update and return False
 			return False
+		# persist change
+		try:
+			self._save_shelves()
+		except Exception:
+			pass
 		return True
 
-	def shelf_summary(self, shelf_id) -> Dict[str, Any]:
-		"""Return a quick summary dict for a given shelf.
 
-		Fields: id, capacity, total_weight, remaining_capacity, books_count
-		"""
-		shelf = self.find_shelf(shelf_id)
-		if shelf is None:
-			return {}
-		capacity = shelf.capacity
-		books = getattr(shelf, '_Shelf__books')
-		return {
-			'id': getattr(shelf, '_Shelf__id', None),
-			'capacity': capacity,
-			'total_weight': self.total_weight(shelf_id),
-			'remaining_capacity': capacity - self.total_weight(shelf_id),
-			'books_count': len(books),
-		}
 
-	# Serialization helpers
-	def shelf_to_dict(self, shelf: Shelf) -> Dict[str, Any]:
-		"""Serialize a Shelf to a JSON-friendly dictionary.
+	# Persistence helpers using repository
 
-		The returned dict contains shelf id, capacity and a list of serialized
-		books (basic properties are extracted via Book getters).
+	def _load_shelves(self) -> None:
+		"""Load shelves from the repository into memory."""
+		self._shelves = self.repository.load_all()
 
-		Args:
-			shelf: Shelf instance to serialize.
+	def _save_shelves(self) -> None:
+		"""Persist current in-memory shelves using the repository."""
+		self.repository.save_all(self._shelves)
 
-		Returns:
-			A dictionary ready to be passed to :func:`json.dump`.
-		"""
-		# Use the model's to_dict for basic metadata, then ensure books are
-		# serialized using Book getters so the JSON shape remains stable.
-		meta = shelf.to_dict()
-		books_list: List[Book] = getattr(shelf, '_Shelf__books')
-		books_serialized = []
-		for b in books_list:
-			books_serialized.append({
-				'id': b.get_id(),
-				'ISBNCode': b.get_ISBNCode(),
-				'title': b.get_title(),
-				'author': b.get_author(),
-				'weight': b.get_weight(),
-				'price': b.get_price(),
-				'isBorrowed': b.get_isBorrowed(),
-			})
-		meta['books'] = books_serialized
-		return meta
 
-	def shelf_from_dict(self, data: Dict[str, Any]) -> Shelf:
-		"""Create a Shelf (and Book instances) from a dictionary.
-
-		Args:
-			data: Dictionary with keys 'id', 'capacity' and 'books' as produced by
-			:shelf_to_dict:.
-
-		Returns:
-			The created Shelf (also registered in the service's internal list).
-		"""
-		books = []
-		for bd in data.get('books', []):
-			book = Book(
-				bd.get('id'), bd.get('ISBNCode'), bd.get('title'), bd.get('author'), bd.get('weight'), bd.get('price'), bd.get('isBorrowed')
-			)
-			books.append(book)
-		shelf = Shelf(data.get('id'), books=books, capacity=data.get('capacity', 8.0))
-		# set optional name if present using model API
-		if data.get('name') is not None:
-			shelf.set_name(data.get('name', ''))
-		self._shelves.append(shelf)
-		return shelf
-
-	def save_to_file(self, path: str) -> None:
-		"""Save all registered shelves to a JSON file.
-
-		Args:
-			path: Filesystem path where JSON will be written.
-		"""
-		payload = [self.shelf_to_dict(s) for s in self._shelves]
-		JSONFileHandler.save_json(path, payload)
-
-	def load_from_file(self, path: str) -> None:
-		"""Load shelves from a JSON file and register them.
-
-		This will clear any currently registered shelves before loading.
-
-		Args:
-			path: Path to JSON file produced by :meth:`save_to_file`.
-		"""
-		payload = JSONFileHandler.load_json(path, expected_type=list)
-		# clear existing
-		self._shelves = []
-		for sd in payload:
-			self.shelf_from_dict(sd)
 
 
 __all__ = ['ShelfService']
