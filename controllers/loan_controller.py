@@ -34,6 +34,47 @@ class LoanController:
 
 	def get_loan(self, loan_id: str):
 		return self.service.find_by_id(loan_id)
+	
+	def find_by_id(self, loan_id: str):
+		"""Find a loan by its ID.
+		
+		Args:
+			loan_id: ID del préstamo
+			
+		Returns:
+			Loan object or None if not found
+		"""
+		return self.service.find_by_id(loan_id)
+	
+	def find_by_user(self, user_id: str):
+		"""Find all loans for a specific user.
+		
+		Args:
+			user_id: ID del usuario
+			
+		Returns:
+			List[Loan] - All loans for the user
+		"""
+		return self.service.find_by_user(user_id)
+	
+	def find_by_isbn(self, isbn: str):
+		"""Find all loans for a specific ISBN.
+		
+		Args:
+			isbn: ISBN del libro
+			
+		Returns:
+			List[Loan] - All loans for this ISBN
+		"""
+		return self.service.find_by_isbn(isbn)
+	
+	def find_active_loans(self):
+		"""Find all active loans (not returned).
+		
+		Returns:
+			List[Loan] - All active loans
+		"""
+		return self.service.find_active_loans()
 
 	def delete_loan(self, loan_id: str) -> dict:
 		"""Delete a loan record. Returns dict with success/message."""

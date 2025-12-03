@@ -356,6 +356,36 @@ class LoanService:
     def find_by_id(self, loan_id: str) -> Optional[Loan]:
         return next((l for l in self.loans if l.get_loan_id() == loan_id), None)
 
+    def find_by_user(self, user_id: str) -> List[Loan]:
+        """Find all loans for a specific user.
+        
+        Args:
+            user_id: ID del usuario
+            
+        Returns:
+            List[Loan] - All loans (active and returned) for the user
+        """
+        return [l for l in self.loans if l.get_user_id() == user_id]
+    
+    def find_by_isbn(self, isbn: str) -> List[Loan]:
+        """Find all loans for a specific ISBN.
+        
+        Args:
+            isbn: ISBN del libro
+            
+        Returns:
+            List[Loan] - All loans for this ISBN
+        """
+        return [l for l in self.loans if l.get_isbn() == isbn]
+    
+    def find_active_loans(self) -> List[Loan]:
+        """Find all active loans (not returned).
+        
+        Returns:
+            List[Loan] - All loans where returned=False
+        """
+        return [l for l in self.loans if not l.is_returned()]
+
     def delete_loan(self, loan_id: str) -> None:
         """Delete a loan. If the loan is active (not returned) attempt to
         mark it returned first (to restore inventory) and then remove it.

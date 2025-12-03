@@ -22,7 +22,7 @@ class LoanList(ctk.CTkToplevel):
                 pass
 
         self.title("Listado de Préstamos")
-        self.geometry("700x460")
+        self.geometry("900x550")
         try:
             if parent is not None:
                 self.transient(parent)
@@ -87,6 +87,9 @@ class LoanList(ctk.CTkToplevel):
 
         action_frame = ctk.CTkFrame(container, fg_color=theme.BG_COLOR, corner_radius=0)
         action_frame.pack(fill="x", pady=(8, 4))
+
+        search_btn = wf.create_small_button(action_frame, text="Buscar", command=self.open_search_window)
+        search_btn.pack(side="left", padx=(0, 8))
 
         refresh_btn = wf.create_small_button(action_frame, text="Refrescar", command=self.load_loans)
         refresh_btn.pack(side="left", padx=(0, 8))
@@ -228,6 +231,14 @@ class LoanList(ctk.CTkToplevel):
                 messagebox.showerror("Error", res.get('message'))
         except Exception as e:
             messagebox.showerror("Error", str(e))
+
+    def open_search_window(self):
+        """Open the loan search window."""
+        try:
+            from ui.loan.loan_search import LoanSearch
+            search_window = LoanSearch(parent=self)
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo abrir la ventana de búsqueda: {e}")
 
 
 __all__ = ["LoanList"]
