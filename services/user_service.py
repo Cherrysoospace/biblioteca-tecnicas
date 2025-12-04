@@ -10,20 +10,6 @@ from utils.logger import LibraryLogger
 # Configurar logger
 logger = LibraryLogger.get_logger(__name__)
 
-# Attempt to import algorithms. If not available, set to None and raise ImportError when used.
-# The project should not rely on a custom insertion sort here; use Python's built-in sorted().
-insertion_sort_users = None
-
-try:
-	from utils.algoritmos.busqueda_lineal import buscar_lineal
-except Exception:
-	buscar_lineal = None
-
-try:
-	from utils.algoritmos.busqueda_binaria import buscar_binario
-except Exception:
-	buscar_binario = None
-
 
 class UserService:
 	"""Service for managing simple User catalog.
@@ -183,38 +169,31 @@ class UserService:
 		return None
 
 	def find_by_name(self, name: str) -> List[User]:
-		"""Find users matching `name` using external search algorithms.
+		"""Find users matching `name` using simple linear search.
 
-		Prefers `buscar_lineal` on the general list. If `buscar_lineal` is None
-		and `buscar_binario` exists, uses binary search on `users_sorted`.
+		Searches for users whose name contains the search term (case-insensitive).
 
 		Parameters:
 		- name: str
 
 		Returns:
 		- List[User] matching the name (may be empty)
-
-		Raises:
-		- ImportError: if neither `buscar_lineal` nor `buscar_binario` are available.
 		"""
-		if buscar_lineal is not None:
-			try:
-				result = buscar_lineal(self.users_general, name, lambda u: u.get_name())
-			except TypeError:
-				result = buscar_lineal(self.users_general, name)
-		elif buscar_binario is not None:
-			try:
-				result = buscar_binario(self.users_sorted, name, lambda u: u.get_name())
-			except TypeError:
-				result = buscar_binario(self.users_sorted, name)
-		else:
-			raise ImportError('Required search algorithms (buscar_lineal or buscar_binario) not available')
-
-		if result is None:
+		if not name:
 			return []
-		if isinstance(result, list):
-			return result
-		return [result]
+		
+		# Normalize search term
+		from utils.search_helpers import normalizar_texto
+		search_term = normalizar_texto(name)
+		
+		# Find all users that match
+		matching_users = []
+		for user in self.users_general:
+			user_name = normalizar_texto(user.get_name())
+			if search_term in user_name:
+				matching_users.append(user)
+		
+		return matching_users
 
 	def update_user(self, id: str, new_data: Dict[str, Any]) -> None:
 		"""Update an existing user's fields and keep lists consistent.
