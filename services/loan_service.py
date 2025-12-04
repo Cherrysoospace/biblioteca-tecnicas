@@ -27,6 +27,31 @@ class LoanService:
     """
 
     def __init__(self, repository: LoanRepository = None, history_repository: LoanHistoryRepository = None, book_service=None, inventory_service=None):
+        """Initialize the LoanService.
+
+    Parameters
+    ----------
+    repository : LoanRepository, optional
+        Repository used to persist loans. If omitted, a default
+        :class:`LoanRepository` instance will be created.
+    history_repository : LoanHistoryRepository, optional
+        Repository used to persist user stacks/history. If omitted a default
+        :class:`LoanHistoryRepository` instance will be created.
+    book_service : optional
+        Optional BookService instance (lazy-loaded if None) used to find and
+        update book records.
+    inventory_service : optional
+        Optional InventoryService instance (lazy-loaded if None). Kept for
+        backward-compatibility; inventory interactions are delegated to the
+        service when available.
+
+    Notes
+    -----
+    The service is responsible for business logic only; persistence is
+    delegated to repository objects. The constructor loads current loans and
+    rebuilds the in-memory per-user stacks for quick access.
+    """
+
         self.repository = repository or LoanRepository()
         self.history_repository = history_repository or LoanHistoryRepository()
         # Lazy imports to avoid circular dependencies
@@ -44,6 +69,12 @@ class LoanService:
     
     @property
     def book_service(self):
+        """Lazily import and return a :class:`BookService` instance.
+
+	This avoids circular imports at module import time. The returned object
+	provides methods such as :meth:`find_by_isbn` and :meth:`update_book` used
+	by loan flows.
+	"""
         if self._book_service is None:
             from services.book_service import BookService
             self._book_service = BookService()
@@ -51,6 +82,13 @@ class LoanService:
     
     @property
     def inventory_service(self):
+        """Lazily return an :class:`InventoryService` instance if available.
+
+	This property exists for backward compatibility. The loan service
+	references the inventory service when available to inspect pre-sorted
+	inventories and make decisions such as checking reservations. The actual
+	import/creation is done lazily to avoid circular import issues.
+	"""
         # Keep property for backward compatibility but avoid using it in loan flows
         if self._inventory_service is None:
             try:

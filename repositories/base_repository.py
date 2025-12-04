@@ -6,8 +6,6 @@ de la lógica de persistencia (Principio de Responsabilidad Única).
 
 Responsabilidad ÚNICA: Persistencia de datos en archivos JSON
 
-Autor: Sistema de Gestión de Bibliotecas
-Fecha: 2025-12-02
 """
 
 from typing import TypeVar, Generic, List, Callable, Optional, Any
