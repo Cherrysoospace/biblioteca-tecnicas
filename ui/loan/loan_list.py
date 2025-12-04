@@ -24,13 +24,13 @@ class LoanList(ctk.CTkToplevel):
     This class provides a comprehensive interface for loan management with a table
     displaying all loans and action buttons for searching, refreshing, editing, and
     deleting records. Users can double-click a row to edit a loan or use the action
-    buttons. The table shows loan ID, user ID, ISBN, loan date, and return status.
+    buttons. The table shows loan ID, user ID, ISBN, book ID, loan date, and return status.
 
     Attributes:
         _parent_window: Reference to the parent window that opened this dialog
         controller (LoanController): The loan controller instance for database operations
         tree (ttk.Treeview): The table widget displaying all loan records with columns
-                            for loan_id, user_id, isbn, loan_date, and returned status
+                            for loan_id, user_id, isbn, book_id, loan_date, and returned status
     """
 
     def __init__(self, parent=None):
@@ -90,7 +90,7 @@ class LoanList(ctk.CTkToplevel):
         table_holder = tk.Frame(container, bg=theme.BG_COLOR)
         table_holder.pack(expand=True, fill="both", pady=(8, 8))
 
-        cols = ("loan_id", "user_id", "isbn", "loan_date", "returned")
+        cols = ("loan_id", "user_id", "isbn", "book_id", "loan_date", "returned")
 
         style = ttk.Style()
         try:
@@ -120,15 +120,17 @@ class LoanList(ctk.CTkToplevel):
             pass
 
         self.tree = ttk.Treeview(table_holder, columns=cols, show="headings")
-        headings = {"loan_id": "ID", "user_id": "Usuario", "isbn": "ISBN", "loan_date": "Fecha", "returned": "Devuelto"}
+        headings = {"loan_id": "ID", "user_id": "Usuario", "isbn": "ISBN", "book_id": "ID Libro", "loan_date": "Fecha", "returned": "Devuelto"}
         for c in cols:
             self.tree.heading(c, text=headings.get(c, c))
             if c == "loan_id":
-                self.tree.column(c, width=130, anchor="center")
+                self.tree.column(c, width=120, anchor="center")
+            elif c == "book_id":
+                self.tree.column(c, width=100, anchor="center")
             elif c == "returned":
                 self.tree.column(c, width=80, anchor="center")
             else:
-                self.tree.column(c, width=160, anchor="w")
+                self.tree.column(c, width=140, anchor="w")
 
         vsb = ttk.Scrollbar(table_holder, orient="vertical", command=self.tree.yview)
         self.tree.configure(yscrollcommand=vsb.set)
@@ -146,6 +148,9 @@ class LoanList(ctk.CTkToplevel):
 
         edit_btn = wf.create_small_button(action_frame, text="Editar", command=self.open_selected_for_edit)
         edit_btn.pack(side="left", padx=(0, 8))
+
+        return_btn = wf.create_small_button(action_frame, text="Devolver Libro", command=self.return_selected_loan)
+        return_btn.pack(side="left", padx=(0, 8))
 
         delete_btn = wf.create_small_button(action_frame, text="Eliminar", command=self.delete_selected)
         delete_btn.pack(side="left", padx=(0, 8))
@@ -208,6 +213,7 @@ class LoanList(ctk.CTkToplevel):
                 lid = l.get_loan_id()
                 uid = l.get_user_id()
                 isbn = l.get_isbn()
+                book_id = l.get_book_id() if l.get_book_id() else "N/A"
                 ldate = l.get_loan_date()
                 try:
                     ldate = ldate.isoformat()
@@ -215,7 +221,7 @@ class LoanList(ctk.CTkToplevel):
                     pass
                 returned = "Sí" if l.is_returned() else "No"
                 tag = 'even' if i % 2 == 0 else 'odd'
-                self.tree.insert("", "end", values=(lid, uid, isbn, ldate, returned), tags=(tag,))
+                self.tree.insert("", "end", values=(lid, uid, isbn, book_id, ldate, returned), tags=(tag,))
             except Exception:
                 continue
 
@@ -326,6 +332,64 @@ class LoanList(ctk.CTkToplevel):
             except Exception:
                 pass
 
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
+
+    def return_selected_loan(self):
+        """
+        Mark the selected loan as returned.
+
+        Retrieves the loan ID from the selected table row, checks if it's already
+        returned, and marks it as returned if not. Refreshes the table after
+        successful return operation. This updates the book's availability status.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Shows info message if no loan is selected
+            - Shows error message if the selected row cannot be read
+            - Shows info message if the loan is already marked as returned
+            - Shows confirmation dialog before marking as returned
+            - Marks the loan as returned via controller
+            - Updates book availability in the database
+            - Shows success message if return succeeds
+            - Shows error message if return fails
+            - Refreshes the loan list after successful return
+
+        Raises:
+            Exception: Catches and displays exceptions via message box
+        """
+        sel = self.tree.selection()
+        if not sel:
+            messagebox.showinfo("Info", "Selecciona primero un préstamo en la tabla.")
+            return
+        try:
+            values = self.tree.item(sel[0], "values")
+            loan_id = values[0]
+            returned_status = values[5]  # La columna "returned" está en la posición 5
+        except Exception:
+            messagebox.showerror("Error", "No se pudo leer la fila seleccionada.")
+            return
+
+        # Verificar si ya está devuelto
+        if returned_status == "Sí":
+            messagebox.showinfo("Info", f"El préstamo {loan_id} ya fue devuelto anteriormente.")
+            return
+
+        if not messagebox.askyesno("Confirmar", f"¿Marcar el préstamo {loan_id} como devuelto?"):
+            return
+
+        try:
+            res = self.controller.return_loan(loan_id)
+            if res.get('success'):
+                messagebox.showinfo("Éxito", "Libro devuelto correctamente.")
+                self.load_loans()
+            else:
+                messagebox.showerror("Error", res.get('message'))
         except Exception as e:
             messagebox.showerror("Error", str(e))
 

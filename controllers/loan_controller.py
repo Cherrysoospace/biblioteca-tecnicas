@@ -75,17 +75,6 @@ class LoanController:
 		"""
 		return self.service.find_by_user(user_id)
 	
-	def find_by_isbn(self, isbn: str):
-		"""Find all loans for a specific ISBN.
-		
-		Args:
-			isbn: ISBN del libro
-			
-		Returns:
-			List[Loan] - All loans for this ISBN
-		"""
-		return self.service.find_by_isbn(isbn)
-	
 	def find_active_loans(self):
 		"""Find all active loans (not returned).
 		

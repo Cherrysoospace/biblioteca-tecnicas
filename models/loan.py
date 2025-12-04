@@ -44,7 +44,7 @@ class Loan:
 	notifications) belong in the service layer.
 	"""
 
-	def __init__(self, loan_id, user_id, isbn, loan_date=None, returned: bool = False):
+	def __init__(self, loan_id, user_id, isbn, loan_date=None, returned: bool = False, book_id=None):
 		"""Create a new :class:`Loan` instance.
 
 		Parameters
@@ -92,6 +92,11 @@ class Loan:
 		# Returned flag
 		self.__returned = bool(returned)
 
+		# Book copy identifier (optional). This is the specific book id (not ISBN)
+		# representing the physical copy that was lent. It may be None for older
+		# records and is stored as-is.
+		self.__book_id = book_id
+
 	# --- Accessors ---
 	def get_loan_id(self):
 		"""Return the loan's identifier (string)."""
@@ -104,6 +109,10 @@ class Loan:
 	def get_isbn(self):
 		"""Return the ISBN of the borrowed book (string)."""
 		return self.__isbn
+
+	def get_book_id(self):
+		"""Return the specific book copy id associated with this loan (or None)."""
+		return getattr(self, '_Loan__book_id', None)
 
 	def get_loan_date(self):
 		"""Return the loan date as a :class:`datetime.date`-like object.
@@ -149,6 +158,10 @@ class Loan:
 		except Exception:
 			self.__loan_date = loan_date
 
+	def set_book_id(self, book_id):
+		"""Associate a specific book copy id with this loan."""
+		self.__book_id = book_id
+
 	def set_returned(self, returned: bool):
 		"""Set the returned flag.
 
@@ -189,6 +202,7 @@ class Loan:
 			"loan_id": self.__loan_id,
 			"user_id": self.__user_id,
 			"isbn": self.__isbn,
+			"book_id": getattr(self, '_Loan__book_id', None),
 			"loan_date": loan_date_serialized,
 			"returned": self.__returned,
 		}
@@ -196,7 +210,7 @@ class Loan:
 	def __str__(self):
 		"""Return a human-readable string representation for debugging."""
 		return (f"Loan[ID: {self.__loan_id}, User: {self.__user_id}, ISBN: {self.__isbn}, "
-				f"Date: {self.__loan_date}, Returned: {self.__returned}]")
+				f"BookID: {getattr(self, '_Loan__book_id', None)}, Date: {self.__loan_date}, Returned: {self.__returned}]")
 
 
 __all__ = ["Loan"]

@@ -28,7 +28,8 @@ def _loan_from_dict(data: dict) -> Loan:
         data.get('user_id'),
         data.get('isbn'),
         datetime.fromisoformat(data['loan_date']) if 'loan_date' in data and data['loan_date'] else None,
-        data.get('returned', False)
+        data.get('returned', False),
+        book_id=data.get('book_id')
     )
 
     return loan
@@ -44,6 +45,7 @@ def _loan_to_dict(loan: Loan) -> dict:
         'loan_id': loan.get_loan_id(),
         'user_id': loan.get_user_id(),
         'isbn': loan.get_isbn(),
+        'book_id': loan.get_book_id(),
         'loan_date': loan.get_loan_date().isoformat() if loan.get_loan_date() else None,
         'returned': loan.is_returned()
     }

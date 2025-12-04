@@ -21,7 +21,7 @@ class LoanSearch(ctk.CTkToplevel):
     A top-level window for searching loan records with multiple criteria.
 
     This class provides a comprehensive search interface allowing users to search
-    for loans by loan ID, user ID, ISBN, or filter for active (unreturned) loans.
+    for loans by loan ID, user ID, or filter for active (unreturned) loans.
     Search results are displayed in a table format with full loan details including
     loan ID, user ID, ISBN, loan date, and return status.
 
@@ -29,7 +29,7 @@ class LoanSearch(ctk.CTkToplevel):
         _parent_window: Reference to the parent window that opened this dialog
         controller (LoanController): The loan controller instance for database operations
         search_type (StringVar): Variable tracking the selected search type radio button
-                                (values: "id", "user", "isbn", "active")
+                                (values: "id", "user", "active")
         search_entry (CTkEntry): Entry field for inputting search values
         tree (ttk.Treeview): The table widget displaying search results with columns
                             for loan_id, user_id, isbn, loan_date, and returned status
@@ -42,8 +42,8 @@ class LoanSearch(ctk.CTkToplevel):
 
         Sets up the window layout with search controls (radio buttons and input field),
         a results table, and action buttons. Applies styling, configures the table,
-        and binds the Enter key to trigger searches. The window supports four search
-        types: by loan ID, user ID, ISBN, or active loans only.
+        and binds the Enter key to trigger searches. The window supports three search
+        types: by loan ID, user ID, or active loans only.
 
         Parameters:
             parent: The parent window that opened this dialog. Can be None if opened
@@ -128,17 +128,6 @@ class LoanSearch(ctk.CTkToplevel):
         )
         user_radio.pack(side="left", padx=(0, 12))
         
-        isbn_radio = ctk.CTkRadioButton(
-            type_frame,
-            text="ISBN",
-            variable=self.search_type,
-            value="isbn",
-            font=theme.get_font(type_frame, size=12),
-            fg_color=theme.ACCENT_RED,
-            hover_color=theme.BUTTON_HOVER
-        )
-        isbn_radio.pack(side="left", padx=(0, 12))
-        
         active_radio = ctk.CTkRadioButton(
             type_frame,
             text="Solo Activos",
@@ -157,7 +146,7 @@ class LoanSearch(ctk.CTkToplevel):
         input_label = wf.create_body_label(input_frame, "Valor:")
         input_label.pack(side="left", padx=(0, 12))
         
-        self.search_entry = wf.create_entry(input_frame, placeholder="Ingrese ID, Usuario o ISBN")
+        self.search_entry = wf.create_entry(input_frame, placeholder="Ingrese ID o Usuario")
         self.search_entry.pack(side="left", fill="x", expand=True, padx=(0, 12))
         
         search_btn = wf.create_small_button(input_frame, text="Buscar", command=self.perform_search)
@@ -248,7 +237,6 @@ class LoanSearch(ctk.CTkToplevel):
         Search Types:
             - "id": Search for a specific loan by loan ID
             - "user": Search for all loans by a specific user ID
-            - "isbn": Search for all loans of a specific book by ISBN
             - "active": Find all active (unreturned) loans (no input value needed)
 
         Parameters:
@@ -296,10 +284,6 @@ class LoanSearch(ctk.CTkToplevel):
                 # Search by user ID
                 loans = self.controller.find_by_user(search_value)
                 search_desc = f"Usuario: {search_value}"
-            elif search_type == "isbn":
-                # Search by ISBN
-                loans = self.controller.find_by_isbn(search_value)
-                search_desc = f"ISBN: {search_value}"
             
             # Display results
             if not loans:

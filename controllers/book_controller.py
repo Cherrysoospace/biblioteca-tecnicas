@@ -61,8 +61,8 @@ class BookController:
             data["author"],
             float(data["weight"]),
             int(data["price"]),
-            # stock is managed by Inventory; do not pass it to Book
-            bool(data.get("isBorrowed", False))
+            # ALWAYS False for new books (available by default)
+            False
         )
         # Persist book in catalog
         self.service.add_book(book)
@@ -168,26 +168,27 @@ class BookController:
 
     def clone_book(self, existing_book_id: str):
         """Clone an existing book (same data, new id) and update related systems.
+        
+        The service layer handles:
+        - Book catalog update
+        - Inventory synchronization
+        - Transaction rollback on failure
+        
+        The controller only handles:
+        - Orchestration
+        - Report generation (best-effort)
 
         Returns the id of the newly created clone.
         """
+        # Service handles all business logic including inventory sync
         new_book = self.service.clone_book(existing_book_id)
-
-        # Add a new inventory item for the cloned physical copy (best-effort)
-        try:
-            inv_svc = InventoryService()
-            try:
-                inv_svc.add_item(new_book, 1)
-            except Exception:
-                pass
-        except Exception:
-            pass
 
         # Update global report (best-effort)
         try:
             self.report_service.generate_inventory_value_report()
-        except Exception:
-            pass
+            logger.info(f"Global report updated after cloning book {new_book.get_id()}")
+        except Exception as e:
+            logger.warning(f"Failed to update global report: {e}")
 
         return new_book.get_id()
 

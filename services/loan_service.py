@@ -177,6 +177,7 @@ class LoanService:
                 stack_entry = {
                     'user_id': user_id,
                     'isbn': loan.get_isbn(),
+                    'book_id': loan.get_book_id(),
                     'loan_date': loan_date_str,
                     'loan_id': loan.get_loan_id(),
                     'returned': loan.is_returned()  # Include returned status
@@ -295,8 +296,9 @@ class LoanService:
             logger.error(f"Failed to mark book {book_id} as borrowed: {e}")
             raise
 
-        # Create loan record and persist
-        loan = Loan(loan_id, user_id, isbn)
+
+        # Create loan record and persist (store the specific book copy id)
+        loan = Loan(loan_id, user_id, isbn, book_id=book_id)
         self.loans.append(loan)
         logger.info(f"Préstamo creado: id={loan_id}, user={user_id}, isbn={isbn}, book={book_id}")
         
@@ -323,15 +325,29 @@ class LoanService:
 
         # find a book by isbn that is currently marked borrowed and clear it
         try:
-            books = self.book_service.find_by_isbn(loan.get_isbn())
-            if books:
-                book_borrowed = next((b for b in books if b.get_isBorrowed()), None)
-                if book_borrowed:
-                    try:
-                        self.book_service.update_book(book_borrowed.get_id(), {'isBorrowed': False})
-                    except Exception:
-                        # ignore failures to update book but continue marking returned
-                        pass
+            # Prefer using the book_id stored on the loan to update the exact copy.
+            loan_book_id = None
+            try:
+                loan_book_id = loan.get_book_id()
+            except Exception:
+                loan_book_id = None
+
+            if loan_book_id:
+                try:
+                    self.book_service.update_book(loan_book_id, {'isBorrowed': False})
+                except Exception:
+                    # ignore failures but continue
+                    pass
+            else:
+                # Fallback: find a borrowed copy by ISBN and mark it returned
+                books = self.book_service.find_by_isbn(loan.get_isbn())
+                if books:
+                    book_borrowed = next((b for b in books if b.get_isBorrowed()), None)
+                    if book_borrowed:
+                        try:
+                            self.book_service.update_book(book_borrowed.get_id(), {'isBorrowed': False})
+                        except Exception:
+                            pass
         except Exception:
             pass
 
@@ -405,17 +421,6 @@ class LoanService:
         """
         return [l for l in self.loans if l.get_user_id() == user_id]
     
-    def find_by_isbn(self, isbn: str) -> List[Loan]:
-        """Find all loans for a specific ISBN.
-        
-        Args:
-            isbn: ISBN del libro
-            
-        Returns:
-            List[Loan] - All loans for this ISBN
-        """
-        return [l for l in self.loans if l.get_isbn() == isbn]
-    
     def find_active_loans(self) -> List[Loan]:
         """Find all active loans (not returned).
         
@@ -484,7 +489,9 @@ class LoanService:
                     self.book_service.update_book(book_id, {'isBorrowed': True})
                 except Exception:
                     pass
+                # Update returned flag and record the new specific book id
                 loan.set_returned(False)
+                loan.set_book_id(book_id)
 
         # Update ISBN: if changed and loan not returned, adjust inventories
         if isbn is not None and isbn != old_isbn:
@@ -520,6 +527,11 @@ class LoanService:
 
             # finally set new isbn on loan
             loan.set_isbn(isbn)
+            # record which specific book copy was assigned for this loan
+            try:
+                loan.set_book_id(chosen_new.get_id())
+            except Exception:
+                pass
 
         # Update loan_date if provided (accept ISO string or date/datetime)
         if loan_date is not None:
