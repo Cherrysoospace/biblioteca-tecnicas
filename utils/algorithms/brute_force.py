@@ -24,15 +24,18 @@ def find_risky_combinations(books_data: List[Dict[str, Any]], threshold: float =
     the specified threshold (default 8 Kg - maximum shelf capacity).
     
     Algorithm Logic (Pseudocode style):
-    
-        PARA i DESDE 0 HASTA libros.tamaño - 4 HACER
-            PARA j DESDE i+1 HASTA libros.tamaño - 3 HACER
-                PARA k DESDE j+1 HASTA libros.tamaño - 2 HACER
-                    PARA m DESDE k+1 HASTA libros.tamaño - 1 HACER
-                        peso_total = libros[i].peso + libros[j].peso + libros[k].peso + libros[m].peso
-                        SI peso_total > umbral ENTONCES
-                            AGREGAR (libros[i], libros[j], libros[k], libros[m]) A resultado
-        RETORNAR resultado
+
+        for i in range(0, len(books) - 3):
+            for j in range(i + 1, len(books) - 2):
+                for k in range(j + 1, len(books) - 1):
+                    for m in range(k + 1, len(books)):
+                        total_weight = (
+                            books[i]['weight'] + books[j]['weight'] +
+                            books[k]['weight'] + books[m]['weight']
+                        )
+                        if total_weight > threshold:
+                            add (books[i], books[j], books[k], books[m]) to result
+        return result
     
     Parameters:
     - books_data: List of dictionaries containing book information.
@@ -76,20 +79,16 @@ def find_risky_combinations(books_data: List[Dict[str, Any]], threshold: float =
     if n < 4:
         return risky_combinations
     
-    # PARA i DESDE 0 HASTA libros.tamaño - 4 HACER
-    # Range goes from 0 to n-3 (to leave room for 3 more books)
+    # Loop i from 0 to n-4 (leave room for 3 more books)
     for i in range(n - 3):
-        
-        # PARA j DESDE i+1 HASTA libros.tamaño - 3 HACER
-        # Range goes from i+1 to n-2 (to leave room for 2 more books)
+
+        # Loop j from i+1 to n-3 (leave room for 2 more books)
         for j in range(i + 1, n - 2):
-            
-            # PARA k DESDE j+1 HASTA libros.tamaño - 2 HACER
-            # Range goes from j+1 to n-1 (to leave room for 1 more book)
+
+            # Loop k from j+1 to n-2 (leave room for 1 more book)
             for k in range(j + 1, n - 1):
-                
-                # PARA m DESDE k+1 HASTA libros.tamaño - 1 HACER
-                # Range goes from k+1 to n (last book)
+
+                # Loop m from k+1 to n-1 (last book index)
                 for m in range(k + 1, n):
                     
                     # Get the 4 books from the indices
@@ -99,7 +98,6 @@ def find_risky_combinations(books_data: List[Dict[str, Any]], threshold: float =
                     book4 = books_data[m]
                     
                     # Calculate total weight of this combination
-                    # peso_total = libros[i].peso + libros[j].peso + libros[k].peso + libros[m].peso
                     try:
                         weight1 = float(book1.get('weight', 0))
                         weight2 = float(book2.get('weight', 0))
@@ -112,9 +110,9 @@ def find_risky_combinations(books_data: List[Dict[str, Any]], threshold: float =
                         # Skip combinations with invalid weight data
                         continue
                     
-                    # SI peso_total > umbral ENTONCES
+                    # If total weight exceeds the threshold, record the combination
                     if total_weight > threshold:
-                        # AGREGAR (libros[i], libros[j], libros[k], libros[m]) A resultado
+                        # ADD (books[i], books[j], books[k], books[m]) TO result
                         # Create a clean representation of this risky combination
                         combination = {
                             'books': [
@@ -149,7 +147,7 @@ def find_risky_combinations(books_data: List[Dict[str, Any]], threshold: float =
                         
                         risky_combinations.append(combination)
     
-    # RETORNAR resultado
+    # Return result
     return risky_combinations
 
 

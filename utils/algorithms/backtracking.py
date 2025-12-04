@@ -60,9 +60,6 @@ def knapsack_backtracking(index, current_weight, current_value, current_selectio
     Returns:
     - None (updates best_solution dict in place)
     
-    Complexity:
-    - Time: O(2^n) worst case, where n is number of books (explores binary tree)
-    - Space: O(n) for recursion depth + O(k) for best solution where k is books selected
     """
     
     # --- BASE CASE ---
@@ -139,9 +136,6 @@ def solve_optimal_shelf(books_data, max_capacity=8.0):
     >>> len(result['books'])
     2
     
-    Complexity:
-    - Time: O(2^n) worst case, where n is number of books
-    - Space: O(n) for recursion depth + O(k) for solution where k is books selected
     """
     
     # Edge case: empty book list
