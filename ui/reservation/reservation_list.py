@@ -1,3 +1,13 @@
+"""
+Reservation List Window Module
+
+This module provides a graphical user interface for viewing and managing all
+reservation records in the library management system. It displays reservations
+in a table format with full CRUD operations including viewing, editing, and
+deleting records. The interface shows comprehensive reservation details including
+user information, book ISBN, reservation status, and dates.
+"""
+
 import os
 import tkinter as tk
 import tkinter.font as tkfont
@@ -11,8 +21,52 @@ from ui.reservation.reservation_edit import ReservationEditForm
 
 
 class ReservationList(ctk.CTkToplevel):
-    """List all reservations in a table with edit and delete actions."""
+    """
+    A top-level window for displaying and managing all reservation records.
+
+    This class provides a comprehensive interface for reservation management with a table
+    displaying all reservations and action buttons for refreshing, editing, and deleting
+    records. Users can double-click a row to edit a reservation or use the action buttons.
+    The table shows reservation ID, user ID, user name, ISBN, reserved date, status
+    (pending/assigned/cancelled), and assigned date.
+
+    Attributes:
+        _parent_window: Reference to the parent window that opened this dialog
+        controller (ReservationController): The reservation controller instance for database operations
+        _open_windows (list): List of child windows opened from this window
+        tree (ttk.Treeview): The table widget displaying all reservation records with columns
+                            for reservation_id, user_id, user_name, isbn, reserved_date,
+                            status, and assigned_date
+    """
+
     def __init__(self, parent=None):
+        """
+        Initialize the reservation list window.
+
+        Sets up the window layout with a table displaying all reservations and action buttons
+        for managing them. Applies styling, configures the table with appropriate columns,
+        and loads all reservations from the database. Sets up event handlers for double-click
+        editing and window closing.
+
+        Parameters:
+            parent: The parent window that opened this dialog. Can be None if opened
+                   as a standalone window. Used for window management and focus control
+
+        Returns:
+            None
+
+        Side Effects:
+            - Creates and displays a new top-level window (900x420)
+            - Loads all reservation records from the database via ReservationController
+            - Applies application theme to the window and table
+            - Makes the window transient to the parent if provided
+            - Binds double-click event to open edit dialog
+            - Automatically loads and displays all reservations on initialization
+
+        Raises:
+            Exception: Catches and handles various exceptions during initialization
+                      to ensure the window opens even if some operations fail
+        """
         super().__init__(parent)
         self._parent_window = parent
         try:
@@ -117,6 +171,34 @@ class ReservationList(ctk.CTkToplevel):
             pass
 
     def load_reservations(self):
+        """
+        Load and display all reservation records in the table.
+
+        Clears the current table contents and retrieves all reservations from the controller,
+        then populates the table with reservation data including reservation ID, user ID,
+        user name (loaded from UserService), ISBN, reserved date, status, and assigned date.
+        Applies alternating row colors for better readability.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Clears all existing rows from the table
+            - Retrieves all reservations from ReservationController
+            - Loads user names from UserService for each reservation
+            - Populates table with reservation records
+            - Applies alternating row background colors (odd/even)
+            - Shows error message box if loading fails
+            - Converts dates to ISO format for display
+            - Displays empty string for null assigned dates
+
+        Raises:
+            Exception: Catches and displays errors via message box if reservation loading fails,
+                      continues processing remaining records if individual record loading fails
+        """
         # clear
         for r in self.tree.get_children():
             self.tree.delete(r)
@@ -165,6 +247,30 @@ class ReservationList(ctk.CTkToplevel):
             pass
 
     def _on_close(self):
+        """
+        Handle the window close event.
+
+        Properly closes the reservation list window and returns focus to the parent window.
+        Attempts multiple cleanup methods to ensure the window is properly destroyed
+        even if some operations fail. This method is called when the user clicks the
+        return button or the window's close button.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Destroys the current window
+            - If destroy fails, attempts to withdraw (hide) the window
+            - Lifts and focuses the parent window if it exists
+            - Restores the parent window to the foreground
+
+        Raises:
+            Exception: Catches and ignores all exceptions during cleanup to ensure
+                      the method completes without errors
+        """
         try:
             self.destroy()
         except Exception:
@@ -183,6 +289,31 @@ class ReservationList(ctk.CTkToplevel):
             pass
 
     def open_selected_for_edit(self):
+        """
+        Open the edit dialog for the selected reservation record.
+
+        Retrieves the reservation ID from the selected table row and opens the
+        ReservationEditForm dialog. Tracks the opened window in the _open_windows list.
+        Also handles double-click events on table rows. The edit form will automatically
+        refresh this list when changes are saved.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Shows info message if no reservation is selected
+            - Shows error message if the selected row cannot be read
+            - Opens ReservationEditForm window as a top-level dialog
+            - Adds the edit window to _open_windows list for tracking
+            - Deiconifies, lifts, and focuses the edit window
+
+        Raises:
+            Exception: Catches and displays exceptions via message box if edit window
+                      cannot be opened
+        """
         sel = self.tree.selection()
         if not sel:
             messagebox.showinfo("Info", "Selecciona primero una reserva en la tabla.")
@@ -203,6 +334,31 @@ class ReservationList(ctk.CTkToplevel):
             messagebox.showerror("Error", f"No se pudo abrir el editor: {e}")
 
     def delete_selected(self):
+        """
+        Delete the selected reservation record from the database.
+
+        Retrieves the reservation ID from the selected table row, prompts the user for
+        confirmation, and deletes the reservation if confirmed. Refreshes the table after
+        successful deletion. Warns the user that this action cannot be undone.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Shows info message if no reservation is selected
+            - Shows error message if the selected row cannot be read
+            - Shows confirmation dialog before deletion
+            - Deletes the reservation record from the database via controller
+            - Shows success message if deletion succeeds
+            - Shows error message if deletion fails
+            - Refreshes the reservation list after successful deletion
+
+        Raises:
+            Exception: Catches and displays exceptions via message box
+        """
         sel = self.tree.selection()
         if not sel:
             messagebox.showinfo("Info", "Selecciona primero una reserva en la tabla.")

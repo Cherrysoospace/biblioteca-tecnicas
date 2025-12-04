@@ -1,3 +1,12 @@
+"""
+Reservation Edit Form Module
+
+This module provides a graphical user interface for editing existing reservation
+records in the library management system. It allows modification of reservation
+details including user assignment, book assignment, status, and assigned date.
+The form is specifically designed for managing reservations of books with zero stock.
+"""
+
 import customtkinter as ctk
 from tkinter import messagebox
 from ui import theme
@@ -10,8 +19,62 @@ from datetime import datetime
 
 
 class ReservationEditForm(ctk.CTkToplevel):
-    """Small editor to update reservation status and optionally assigned date."""
+    """
+    A top-level window for editing existing reservation records.
+
+    This class provides a graphical interface that allows users to modify reservation
+    details including the assigned user, the reserved book (ISBNs with zero stock),
+    reservation status (pending, assigned, cancelled), and the assigned date. The form
+    includes validation and error handling for all operations.
+
+    Attributes:
+        _parent_window: Reference to the parent window that opened this dialog
+        controller (ReservationController): The reservation controller instance for database operations
+        reservation_id: The ID of the reservation being edited
+        user_service (UserService or None): Service for retrieving user data
+        inventory_service (InventoryService or None): Service for retrieving books with zero stock
+        lbl_id (CTkLabel): Label displaying the reservation ID
+        lbl_user (CTkLabel): Label for the user selector
+        opt_user (CTkOptionMenu or CTkEntry): Widget for selecting the user
+        lbl_book (CTkLabel): Label for the book selector
+        opt_book (CTkOptionMenu or CTkEntry): Widget for selecting the book (ISBNs with zero stock)
+        lbl_status (CTkLabel): Label for the status selector
+        opt_status (CTkOptionMenu or CTkEntry): Widget for selecting reservation status
+        lbl_assigned (CTkLabel): Label for the assigned date field
+        entry_assigned (CTkEntry): Entry field for the assigned date
+    """
+
     def __init__(self, parent=None, reservation_id=None):
+        """
+        Initialize the reservation edit form window.
+
+        Sets up the window layout, loads available users and books with zero stock,
+        and populates the form with the current reservation data. Applies the application
+        theme and configures window properties. Loads the reservation data immediately
+        upon initialization.
+
+        Parameters:
+            parent: The parent window that opened this dialog. Can be None if opened
+                   as a standalone window. Used for window management and focus control
+            reservation_id: The ID of the reservation to be edited. Required to load
+                          and update the reservation record
+
+        Returns:
+            None
+
+        Side Effects:
+            - Creates and displays a new top-level window (820x520)
+            - Initializes ReservationController, UserService, and InventoryService
+            - Loads all users from UserService
+            - Loads all books with zero stock from InventoryService
+            - Applies application theme to the window
+            - Makes the window transient to the parent if provided
+            - Automatically loads the reservation data via _load method
+
+        Raises:
+            Exception: Catches and handles various exceptions during initialization
+                      to ensure the window opens even if some operations fail
+        """
         super().__init__(parent)
         self._parent_window = parent
         try:
@@ -138,6 +201,32 @@ class ReservationEditForm(ctk.CTkToplevel):
             pass
 
     def _load(self):
+        """
+        Load the reservation data and populate the form fields.
+
+        Retrieves the reservation record from the controller using the reservation_id,
+        and populates all form fields with the current values including user, book ISBN,
+        status, and assigned date. Handles both OptionMenu and Entry widget types for
+        compatibility.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Retrieves reservation data from ReservationController
+            - Populates opt_user with the current user selection
+            - Populates opt_book with the current book ISBN selection
+            - Sets opt_status to the current reservation status
+            - Populates entry_assigned with the assigned date if available
+            - Shows error message and closes window if reservation is not found
+            - Shows error message if loading fails
+
+        Raises:
+            Exception: Catches and displays exceptions via message box
+        """
         try:
             r = self.controller.get_reservation(self.reservation_id)
             if not r:
@@ -220,6 +309,26 @@ class ReservationEditForm(ctk.CTkToplevel):
             messagebox.showerror("Error", str(e))
 
     def _set_now(self):
+        """
+        Set the assigned date field to the current UTC timestamp.
+
+        Clears the assigned date entry field and populates it with the current UTC
+        datetime in ISO format. This provides a convenient way to mark when a
+        reservation was assigned.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Deletes the current content of entry_assigned field
+            - Inserts the current UTC datetime in ISO format (YYYY-MM-DDTHH:MM:SS)
+
+        Raises:
+            Exception: Catches and ignores all exceptions to prevent disruption
+        """
         try:
             now = datetime.utcnow().isoformat()
             self.entry_assigned.delete(0, 'end')
@@ -228,6 +337,34 @@ class ReservationEditForm(ctk.CTkToplevel):
             pass
 
     def save(self):
+        """
+        Save the changes to the reservation record.
+
+        Validates and extracts data from all form fields, constructs an update request
+        with the modified values, and sends it to the controller. Automatically sets
+        the assigned date to the current time if the status is changed to 'assigned'
+        and no date is provided. Refreshes the parent window's reservation list after
+        successful update.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Extracts user_id, isbn, status, and assigned_date from form fields
+            - Automatically sets assigned_date to current UTC time if status is 'assigned'
+              and no date is provided
+            - Updates the reservation record in the database via controller
+            - Shows success message box if update succeeds
+            - Shows error message box if update fails
+            - Refreshes parent window's reservation list if parent has load_reservations method
+            - Closes the window after successful update
+
+        Raises:
+            Exception: Catches and displays exceptions via message box
+        """
         status = None
         try:
             status = self.opt_status.get()
@@ -290,6 +427,30 @@ class ReservationEditForm(ctk.CTkToplevel):
             messagebox.showerror("Error", str(e))
 
     def _on_close(self):
+        """
+        Handle the window close event.
+
+        Properly closes the reservation edit window and returns focus to the parent window.
+        Attempts multiple cleanup methods to ensure the window is properly destroyed
+        even if some operations fail. This method is called when the user clicks the
+        cancel button or the window's close button.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Destroys the current window
+            - If destroy fails, attempts to withdraw (hide) the window
+            - Lifts and focuses the parent window if it exists
+            - Restores the parent window to the foreground
+
+        Raises:
+            Exception: Catches and ignores all exceptions during cleanup to ensure
+                      the method completes without errors
+        """
         try:
             self.destroy()
         except Exception:

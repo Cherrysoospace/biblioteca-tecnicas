@@ -1,3 +1,11 @@
+"""
+Loan Edit Window Module
+
+This module provides a graphical user interface for editing existing loan records
+in the library management system. It allows modification of loan details including
+user assignment, book assignment, return status, and loan date.
+"""
+
 import customtkinter as ctk
 from tkinter import messagebox
 from ui import theme
@@ -7,11 +15,47 @@ from services.inventory_service import InventoryService
 
 
 class LoanEdit(ctk.CTkToplevel):
-    """Small editor for an existing loan.
-
-    Allows changing the user and toggling returned status.
     """
+    A top-level window for editing existing loan records.
+
+    This class provides a graphical interface that allows users to modify loan details
+    including the assigned user, the loaned book, return status, and loan date. The
+    window includes validation and error handling for all operations.
+
+    Attributes:
+        _parent_window: Reference to the parent window that opened this dialog
+        controller: The loan controller instance for performing database operations
+        loan: The loan object being edited
+        _user_map (dict): Maps user display strings to user IDs
+        _book_map (dict): Maps book display strings to ISBNs
+        user_selector (CTkOptionMenu or CTkLabel): Widget for selecting the user
+        book_selector (CTkOptionMenu or CTkLabel): Widget for selecting the book
+        return_var (BooleanVar): Variable tracking the returned status checkbox
+        date_entry (CTkEntry): Entry field for the loan date
+    """
+
     def __init__(self, parent, loan, controller=None):
+        """
+        Initialize the loan edit window.
+
+        Sets up the window layout, loads available users and books, and populates
+        the form with the current loan data. Applies the application theme and
+        configures window properties.
+
+        Parameters:
+            parent: The parent window that opened this dialog
+            loan: The loan object to be edited, must have methods get_user_id(),
+                  get_isbn(), is_returned(), get_loan_date(), and get_loan_id()
+            controller: The loan controller instance for database operations. If None,
+                       the save operation will fail
+
+        Returns:
+            None
+
+        Raises:
+            Exception: Catches and handles various exceptions during initialization
+                      to ensure the window opens even if some operations fail
+        """
         super().__init__(parent)
         self._parent_window = parent
         try:
@@ -186,6 +230,28 @@ class LoanEdit(ctk.CTkToplevel):
             pass
 
     def _on_save(self):
+        """
+        Handle the save button click event.
+
+        Validates the form data, extracts the selected user ID, book ISBN, return status,
+        and loan date, then calls the controller to update the loan in the database.
+        Displays success or error messages based on the operation result.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Shows error message box if validation fails or no users are available
+            - Shows success message box if the loan is updated successfully
+            - Closes the window after successful update
+            - Updates the loan record in the database via the controller
+
+        Raises:
+            Exception: Catches and displays any exceptions that occur during the update
+        """
         # Map selected user
         try:
             if isinstance(self.user_selector, ctk.CTkLabel):
@@ -230,6 +296,29 @@ class LoanEdit(ctk.CTkToplevel):
             messagebox.showerror("Error", str(e))
 
     def _on_close(self):
+        """
+        Handle the window close event.
+
+        Properly closes the edit window and returns focus to the parent window.
+        Attempts multiple cleanup methods to ensure the window is properly destroyed
+        even if some operations fail.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Destroys the current window
+            - If destroy fails, attempts to withdraw (hide) the window
+            - Lifts and focuses the parent window if it exists
+            - Restores the parent window to the foreground
+
+        Raises:
+            Exception: Catches and ignores all exceptions during cleanup to ensure
+                      the method completes without errors
+        """
         try:
             self.destroy()
         except Exception:

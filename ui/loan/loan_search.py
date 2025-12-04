@@ -1,3 +1,12 @@
+"""
+Loan Search Window Module
+
+This module provides a graphical user interface for searching loan records using
+multiple search criteria. Users can search by loan ID, user ID, ISBN, or filter
+for active loans only. The interface includes radio buttons for search type selection,
+a search input field, and a table displaying the search results.
+"""
+
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -8,9 +17,53 @@ from controllers.loan_controller import LoanController
 
 
 class LoanSearch(ctk.CTkToplevel):
-    """Ventana de búsqueda de préstamos por ID, Usuario o ISBN."""
+    """
+    A top-level window for searching loan records with multiple criteria.
+
+    This class provides a comprehensive search interface allowing users to search
+    for loans by loan ID, user ID, ISBN, or filter for active (unreturned) loans.
+    Search results are displayed in a table format with full loan details including
+    loan ID, user ID, ISBN, loan date, and return status.
+
+    Attributes:
+        _parent_window: Reference to the parent window that opened this dialog
+        controller (LoanController): The loan controller instance for database operations
+        search_type (StringVar): Variable tracking the selected search type radio button
+                                (values: "id", "user", "isbn", "active")
+        search_entry (CTkEntry): Entry field for inputting search values
+        tree (ttk.Treeview): The table widget displaying search results with columns
+                            for loan_id, user_id, isbn, loan_date, and returned status
+        results_label (CTkLabel): Label displaying search result count and description
+    """
     
     def __init__(self, parent=None):
+        """
+        Initialize the loan search window.
+
+        Sets up the window layout with search controls (radio buttons and input field),
+        a results table, and action buttons. Applies styling, configures the table,
+        and binds the Enter key to trigger searches. The window supports four search
+        types: by loan ID, user ID, ISBN, or active loans only.
+
+        Parameters:
+            parent: The parent window that opened this dialog. Can be None if opened
+                   as a standalone window. Used for window management and focus control
+
+        Returns:
+            None
+
+        Side Effects:
+            - Creates and displays a new top-level window (750x520)
+            - Initializes LoanController for database operations
+            - Applies application theme to the window and controls
+            - Makes the window transient to the parent if provided
+            - Binds Enter key to perform_search method
+            - Sets default search type to "id"
+
+        Raises:
+            Exception: Catches and handles various exceptions during initialization
+                      to ensure the window opens even if some operations fail
+        """
         super().__init__(parent)
         self._parent_window = parent
         
@@ -184,7 +237,38 @@ class LoanSearch(ctk.CTkToplevel):
         self.search_entry.bind('<Return>', lambda e: self.perform_search())
 
     def perform_search(self):
-        """Execute search based on selected type."""
+        """
+        Execute the search operation based on the selected search type and input value.
+
+        Retrieves the selected search type from radio buttons and the search value from
+        the input field. Clears previous results and performs the appropriate search
+        operation via the controller. Displays results in the table with alternating
+        row colors. Shows result count and search description in the results label.
+
+        Search Types:
+            - "id": Search for a specific loan by loan ID
+            - "user": Search for all loans by a specific user ID
+            - "isbn": Search for all loans of a specific book by ISBN
+            - "active": Find all active (unreturned) loans (no input value needed)
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Clears all existing rows from the results table
+            - Shows warning message if search value is empty (except for "active" type)
+            - Shows info message if no results are found
+            - Populates table with matching loan records
+            - Updates results_label with count and search description
+            - Shows error message box if search operation fails
+            - Applies alternating row background colors to results
+
+        Raises:
+            Exception: Catches and displays errors via message box if search fails
+        """
         search_type = self.search_type.get()
         search_value = self.search_entry.get().strip()
         
@@ -254,13 +338,57 @@ class LoanSearch(ctk.CTkToplevel):
             self.results_label.configure(text="Error en la búsqueda")
 
     def clear_search(self):
-        """Clear search input and results."""
+        """
+        Clear the search input field and all search results.
+
+        Resets the search interface to its initial state by removing the search value
+        from the input field, clearing all rows from the results table, and resetting
+        the results label.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Deletes all text from the search_entry field
+            - Removes all rows from the results table
+            - Clears the results_label text
+
+        Raises:
+            None
+        """
         self.search_entry.delete(0, 'end')
         for r in self.tree.get_children():
             self.tree.delete(r)
         self.results_label.configure(text="")
 
     def _on_close(self):
+        """
+        Handle the window close event.
+
+        Properly closes the loan search window and returns focus to the parent window.
+        Attempts multiple cleanup methods to ensure the window is properly destroyed
+        even if some operations fail. This method is called when the user clicks the
+        close button or the window's close button.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Destroys the current window
+            - If destroy fails, attempts to withdraw (hide) the window
+            - Lifts and focuses the parent window if it exists
+            - Restores the parent window to the foreground
+
+        Raises:
+            Exception: Catches and ignores all exceptions during cleanup to ensure
+                      the method completes without errors
+        """
         try:
             self.destroy()
         except Exception:

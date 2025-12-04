@@ -1,3 +1,12 @@
+"""
+Shelf Edit Window Module
+
+This module provides a graphical user interface for editing shelf records in the
+library management system. It allows users to modify the shelf name and manage
+the books assigned to the shelf. Users can add books via the assign book form,
+remove selected books, and view all currently assigned books in a table.
+"""
+
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -11,9 +20,56 @@ from utils.config import FilePaths
 
 
 class ShelfEdit(ctk.CTkToplevel):
-    """Edición de una estantería: nombre y libros asociados."""
+    """
+    A top-level window for editing shelf records and managing shelf books.
+
+    This class provides a comprehensive interface for shelf management including editing
+    the shelf name and managing the collection of books assigned to the shelf. Users can
+    view all books on the shelf in a table, add new books via the assign book form, remove
+    selected books, and save name changes. The table supports multi-selection for batch
+    removal of books.
+
+    Attributes:
+        _parent_window: Reference to the parent window that opened this dialog
+        shelf_id (str): The ID of the shelf being edited
+        controller (ShelfController): The shelf controller instance for database operations
+        entry_id (CTkEntry): Disabled entry field displaying the shelf ID (read-only)
+        entry_name (CTkEntry): Entry field for editing the shelf name
+        tree (ttk.Treeview): Table widget displaying books assigned to this shelf with
+                            columns for id, ISBN, title, and weight
+    """
 
     def __init__(self, parent=None, shelf_id: str = None):
+        """
+        Initialize the shelf edit window.
+
+        Sets up the window layout with fields for shelf ID (read-only) and shelf name (editable),
+        a table displaying all books currently assigned to the shelf, and action buttons for
+        managing books and saving changes. Loads the shelf data immediately upon initialization.
+
+        Parameters:
+            parent: The parent window that opened this dialog. Can be None if opened
+                   as a standalone window. Used for window management and focus control
+            shelf_id (str): The ID of the shelf to be edited. Required to load and update
+                           the shelf record. If None, the form will display but data loading
+                           will be skipped
+
+        Returns:
+            None
+
+        Side Effects:
+            - Creates and displays a new top-level window (900x520)
+            - Initializes ShelfController for database operations
+            - Loads shelf data including name and assigned books if shelf_id is provided
+            - Applies application theme to the window and table
+            - Makes the window transient to the parent if provided
+            - Configures table for multi-selection mode (selectmode='extended')
+            - Disables the shelf ID entry field to prevent modification
+
+        Raises:
+            Exception: Catches and handles various exceptions during initialization
+                      to ensure the window opens even if some operations fail
+        """
         super().__init__(parent)
         self._parent_window = parent
         self.shelf_id = shelf_id
@@ -132,6 +188,34 @@ class ShelfEdit(ctk.CTkToplevel):
             self.load_shelf()
 
     def load_shelf(self):
+        """
+        Load and display the shelf data including name and assigned books.
+
+        Retrieves the shelf record from the controller using the shelf_id, populates the
+        ID and name fields, clears the table, and loads all books currently assigned to
+        the shelf. Applies alternating row colors to the book table for readability.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Retrieves shelf data from ShelfController
+            - Temporarily enables entry_id to populate it, then disables it again
+            - Populates entry_id with the shelf ID (read-only)
+            - Populates entry_name with the current shelf name
+            - Clears all existing rows from the books table
+            - Retrieves all books assigned to this shelf via controller
+            - Populates table with book data (id, ISBN, title, weight)
+            - Applies alternating row background colors (odd/even)
+            - Shows error message box if shelf is not found
+
+        Raises:
+            Exception: Catches exceptions during field population and book loading,
+                      continues processing to display as much data as possible
+        """
         s = self.controller.find_shelf(self.shelf_id)
         if not s:
             messagebox.showerror('Error', 'Estantería no encontrada')
@@ -183,6 +267,31 @@ class ShelfEdit(ctk.CTkToplevel):
             pass
 
     def open_assign_form(self):
+        """
+        Open the assign book form dialog with the current shelf preselected.
+
+        Creates and displays an AssignBookForm window with the current shelf already
+        selected in the dropdown, allowing the user to assign additional books to this
+        shelf. Binds a destroy event handler to refresh the shelf book list when the
+        assign form is closed.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Creates and displays AssignBookForm as a child window
+            - Retrieves current shelf data to format the display value
+            - Preselects the current shelf in the assign form's dropdown
+            - Binds destroy event to refresh the book table when form closes
+            - Shows error message box if the assign form cannot be opened
+
+        Raises:
+            Exception: Catches and displays exceptions via message box if the assign
+                      form fails to open
+        """
         # open existing AssignBookForm and preselect shelf
         try:
             win = AssignBookForm(self)
@@ -209,6 +318,33 @@ class ShelfEdit(ctk.CTkToplevel):
             messagebox.showerror('Error', f'No se pudo abrir el formulario de asignación: {e}')
 
     def remove_selected(self):
+        """
+        Remove the selected books from the shelf.
+
+        Validates that at least one book is selected, then iterates through all selected
+        books and removes each from the shelf via the shelf controller. Displays a summary
+        of successes and failures with detailed error messages for failed removals. Refreshes
+        the shelf data after the operation.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Shows info message if no books are selected
+            - Retrieves ISBN from each selected table row
+            - Calls shelf_controller.remove_book for each selected book
+            - Controller persists changes automatically
+            - Shows result message box with success/failure counts and error details
+            - Displays up to 10 error details for failed removals
+            - Refreshes the shelf book table after the operation
+
+        Raises:
+            Exception: Catches exceptions for each book removal individually,
+                      continues processing remaining books if one fails
+        """
         sel = self.tree.selection()
         if not sel:
             messagebox.showinfo('Info', 'Selecciona uno o más libros para quitar de la estantería.')
@@ -240,6 +376,32 @@ class ShelfEdit(ctk.CTkToplevel):
         self.load_shelf()
 
     def save_name(self):
+        """
+        Save the updated shelf name to the database.
+
+        Validates that the shelf ID is valid, retrieves the shelf object from the controller,
+        updates the shelf name with the value from the entry field, and persists the changes
+        to the file system. Displays success or error messages based on the operation result.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Shows error message if shelf_id is invalid
+            - Extracts name from entry_name field and trims whitespace
+            - Retrieves shelf object from ShelfController
+            - Shows error message if shelf is not found
+            - Updates the shelf name via setter or direct attribute access
+            - Persists changes to the shelves file via service.save_to_file
+            - Shows success message box if name is updated successfully
+            - Shows error message box if update fails
+
+        Raises:
+            Exception: Catches and displays exceptions via message box
+        """
         sid = self.shelf_id
         if not sid:
             messagebox.showerror('Error', 'Shelf ID inválido')
@@ -267,6 +429,30 @@ class ShelfEdit(ctk.CTkToplevel):
             messagebox.showerror('Error', str(e))
 
     def _on_close(self):
+        """
+        Handle the window close event.
+
+        Properly closes the shelf edit window and returns focus to the parent window.
+        Attempts multiple cleanup methods to ensure the window is properly destroyed
+        even if some operations fail. This method is called when the user clicks the
+        return button or the window's close button.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Destroys the current window
+            - If destroy fails, attempts to withdraw (hide) the window
+            - Lifts and focuses the parent window if it exists
+            - Restores the parent window to the foreground
+
+        Raises:
+            Exception: Catches and ignores all exceptions during cleanup to ensure
+                      the method completes without errors
+        """
         try:
             self.destroy()
         except Exception:

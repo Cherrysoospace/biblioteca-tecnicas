@@ -1,3 +1,12 @@
+"""
+Loan List Window Module
+
+This module provides a graphical user interface for viewing and managing all loan
+records in the library management system. It displays loans in a table format with
+full CRUD operations including viewing, editing, deleting, and searching loans.
+The interface includes double-click editing and automatic refresh functionality.
+"""
+
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -9,8 +18,49 @@ from ui.loan.loan_edit import LoanEdit
 
 
 class LoanList(ctk.CTkToplevel):
-    """Listado de préstamos con opciones para editar y eliminar."""
+    """
+    A top-level window for displaying and managing all loan records.
+
+    This class provides a comprehensive interface for loan management with a table
+    displaying all loans and action buttons for searching, refreshing, editing, and
+    deleting records. Users can double-click a row to edit a loan or use the action
+    buttons. The table shows loan ID, user ID, ISBN, loan date, and return status.
+
+    Attributes:
+        _parent_window: Reference to the parent window that opened this dialog
+        controller (LoanController): The loan controller instance for database operations
+        tree (ttk.Treeview): The table widget displaying all loan records with columns
+                            for loan_id, user_id, isbn, loan_date, and returned status
+    """
+
     def __init__(self, parent=None):
+        """
+        Initialize the loan list window.
+
+        Sets up the window layout with a table displaying all loans and action buttons
+        for managing them. Applies styling, configures the table with appropriate columns,
+        and loads all loans from the database. Sets up event handlers for double-click
+        editing and window closing.
+
+        Parameters:
+            parent: The parent window that opened this dialog. Can be None if opened
+                   as a standalone window. Used for window management and focus control
+
+        Returns:
+            None
+
+        Side Effects:
+            - Creates and displays a new top-level window (900x550)
+            - Loads all loan records from the database via LoanController
+            - Applies application theme to the window and table
+            - Makes the window transient to the parent if provided
+            - Binds double-click event to open edit dialog
+            - Automatically loads and displays all loans on initialization
+
+        Raises:
+            Exception: Catches and handles various exceptions during initialization
+                      to ensure the window opens even if some operations fail
+        """
         super().__init__(parent)
         self._parent_window = parent
         try:
@@ -119,6 +169,30 @@ class LoanList(ctk.CTkToplevel):
         self.load_loans()
 
     def load_loans(self):
+        """
+        Load and display all loan records in the table.
+
+        Clears the current table contents and retrieves all loans from the controller,
+        then populates the table with loan data including loan ID, user ID, ISBN,
+        loan date, and return status. Applies alternating row colors for better readability.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Clears all existing rows from the table
+            - Retrieves all loans from LoanController
+            - Populates table with loan records
+            - Applies alternating row background colors (odd/even)
+            - Shows error message box if loading fails
+            - Converts loan dates to ISO format for display
+
+        Raises:
+            Exception: Catches and displays errors via message box if loan loading fails
+        """
         # clear rows
         for r in self.tree.get_children():
             self.tree.delete(r)
@@ -152,6 +226,30 @@ class LoanList(ctk.CTkToplevel):
             pass
 
     def _on_close(self):
+        """
+        Handle the window close event.
+
+        Properly closes the loan list window and returns focus to the parent window.
+        Attempts multiple cleanup methods to ensure the window is properly destroyed
+        even if some operations fail. This method is called when the user clicks the
+        return button or the window's close button.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Destroys the current window
+            - If destroy fails, attempts to withdraw (hide) the window
+            - Lifts and focuses the parent window if it exists
+            - Restores the parent window to the foreground
+
+        Raises:
+            Exception: Catches and ignores all exceptions during cleanup to ensure
+                      the method completes without errors
+        """
         try:
             self.destroy()
         except Exception:
@@ -171,6 +269,30 @@ class LoanList(ctk.CTkToplevel):
             pass
 
     def open_selected_for_edit(self):
+        """
+        Open the edit dialog for the selected loan record.
+
+        Retrieves the loan ID from the selected table row, fetches the full loan object
+        from the controller, and opens the LoanEdit dialog. Automatically refreshes the
+        table when the edit dialog is closed. Also handles double-click events on table rows.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Shows info message if no loan is selected
+            - Shows error message if the selected row cannot be read
+            - Shows error message if the loan is not found in the database
+            - Opens LoanEdit window as a top-level dialog
+            - Binds a destroy event handler to refresh the table when edit window closes
+            - Automatically refreshes the loan list after editing
+
+        Raises:
+            Exception: Catches and displays exceptions via message box
+        """
         sel = self.tree.selection()
         if not sel:
             messagebox.showinfo("Info", "Selecciona primero un préstamo en la tabla.")
@@ -208,6 +330,31 @@ class LoanList(ctk.CTkToplevel):
             messagebox.showerror("Error", str(e))
 
     def delete_selected(self):
+        """
+        Delete the selected loan record from the database.
+
+        Retrieves the loan ID from the selected table row, prompts the user for
+        confirmation, and deletes the loan if confirmed. Refreshes the table after
+        successful deletion. Warns the user that this action cannot be undone.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Shows info message if no loan is selected
+            - Shows error message if the selected row cannot be read
+            - Shows confirmation dialog before deletion
+            - Deletes the loan record from the database via controller
+            - Shows success message if deletion succeeds
+            - Shows error message if deletion fails
+            - Refreshes the loan list after successful deletion
+
+        Raises:
+            Exception: Catches and displays exceptions via message box
+        """
         sel = self.tree.selection()
         if not sel:
             messagebox.showinfo("Info", "Selecciona primero un préstamo en la tabla.")
@@ -233,7 +380,28 @@ class LoanList(ctk.CTkToplevel):
             messagebox.showerror("Error", str(e))
 
     def open_search_window(self):
-        """Open the loan search window."""
+        """
+        Open the loan search window for advanced search functionality.
+
+        Creates and displays a new LoanSearch window as a child of this window,
+        allowing users to perform advanced searches on loan records using various
+        search criteria and algorithms.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Imports the LoanSearch class dynamically
+            - Creates and displays a new LoanSearch top-level window
+            - Shows error message box if the search window cannot be opened
+
+        Raises:
+            Exception: Catches and displays exceptions via message box if
+                      the search window fails to open
+        """
         try:
             from ui.loan.loan_search import LoanSearch
             search_window = LoanSearch(parent=self)
