@@ -210,13 +210,94 @@ class BookService:
         Returns: None
 
         Raises:
-        - ValueError: if book not found or if the book is currently borrowed (`isBorrowed==True`).
+        - ValueError: if book not found, if the book is currently borrowed,
+                     if the book has active loans, or if the book has pending reservations.
         - Exception: for IO errors when saving.
         """
         book = self.find_by_id(id)
         if book is None:
             raise ValueError(f"No book found with id '{id}'")
-        # Prevent deleting if book is currently borrowed or has stock remaining
+        
+        # CRITICAL VALIDATION 1: Check if book is referenced in loans
+        # This check is more specific than isBorrowed and provides better error messages
+        try:
+            from services.loan_service import LoanService
+            loan_service = LoanService()
+            
+            # Check for active loans (not returned)
+            book_loans = [loan for loan in loan_service.get_all_loans() 
+                         if loan.get_isbn() == book.get_ISBNCode() and not loan.is_returned()]
+            
+            if book_loans:
+                loan_ids = [loan.get_loan_id() for loan in book_loans]
+                raise ValueError(
+                    f"Cannot delete book: ISBN '{book.get_ISBNCode()}' has {len(book_loans)} "
+                    f"active loan(s) [{', '.join(loan_ids)}]. "
+                    f"Please return all loans before deleting."
+                )
+            
+            # Check for loan history (returned loans) - optional validation
+            historical_loans = [loan for loan in loan_service.get_all_loans() 
+                               if loan.get_isbn() == book.get_ISBNCode()]
+            
+            if historical_loans:
+                logger.warning(
+                    f"Book {id} (ISBN: {book.get_ISBNCode()}) has {len(historical_loans)} "
+                    f"loan records in history. Deletion will keep historical data intact."
+                )
+        except ValueError:
+            # Re-raise ValueError (our validation error)
+            raise
+        except ImportError:
+            # If LoanService is not available, skip validation
+            pass
+        except Exception as e:
+            # Log error but allow validation to continue
+            logger.error(f"Error checking loans for book {id}: {e}")
+        
+        # CRITICAL VALIDATION 2: Check if book is in reservation queue
+        try:
+            from services.reservation_service import ReservationService
+            reservation_service = ReservationService()
+            
+            # Check for pending reservations
+            pending_reservations = reservation_service.find_by_isbn(
+                book.get_ISBNCode(), 
+                only_pending=True
+            )
+            
+            if pending_reservations:
+                res_ids = [res.get_reservation_id() for res in pending_reservations]
+                user_ids = [res.get_user_id() for res in pending_reservations]
+                raise ValueError(
+                    f"Cannot delete book: ISBN '{book.get_ISBNCode()}' has {len(pending_reservations)} "
+                    f"pending reservation(s) [{', '.join(res_ids)}] from users [{', '.join(user_ids)}]. "
+                    f"Please cancel all reservations before deleting."
+                )
+            
+            # Check for any reservations (including assigned/cancelled) - informational
+            all_reservations = reservation_service.find_by_isbn(
+                book.get_ISBNCode(), 
+                only_pending=False
+            )
+            
+            if all_reservations:
+                logger.warning(
+                    f"Book {id} (ISBN: {book.get_ISBNCode()}) has {len(all_reservations)} "
+                    f"reservation records in history."
+                )
+        except ValueError:
+            # Re-raise ValueError (our validation error)
+            raise
+        except ImportError:
+            # If ReservationService is not available, skip validation
+            pass
+        except Exception as e:
+            # Log error but allow validation to continue
+            logger.error(f"Error checking reservations for book {id}: {e}")
+        
+        # VALIDATION 3: Final check - prevent deleting if book is currently borrowed
+        # This is a fallback in case the loan service check didn't catch it
         if book.get_isBorrowed():
             raise ValueError("Cannot delete a book that is currently borrowed")
 
