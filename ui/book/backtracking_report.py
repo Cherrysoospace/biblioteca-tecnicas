@@ -54,109 +54,112 @@ class BacktrackingReport(ctk.CTkToplevel):
         main_frame = ctk.CTkFrame(self, fg_color=theme.BG_COLOR)
         main_frame.pack(fill="both", expand=True, padx=20, pady=20)
         
-        # Title
+        # Title (más compacto)
         title_frame = ctk.CTkFrame(main_frame, fg_color=theme.BG_COLOR)
-        title_frame.pack(fill="x", pady=(0, 20))
+        title_frame.pack(fill="x", pady=(0, 10))
         
-        title = wf.create_title_label(
-            title_frame, 
-            "🎯 Algoritmo de Backtracking"
+        title = ctk.CTkLabel(
+            title_frame,
+            text="🎯 Algoritmo de Backtracking",
+            font=theme.get_font(self, size=18, weight="bold"),
+            text_color=theme.TEXT_COLOR
         )
         title.pack()
         
         subtitle = ctk.CTkLabel(
             title_frame,
-            text="Problema de la Mochila - Maximizar valor sin exceder capacidad",
-            font=theme.get_font(self, size=14),
+            text="Maximizar valor sin exceder capacidad",
+            font=theme.get_font(self, size=12),
             text_color=theme.TEXT_COLOR
         )
         subtitle.pack()
         
-        # Statistics frame
+        # Statistics frame (más compacto)
         stats_frame = ctk.CTkFrame(main_frame, fg_color=CARD_BG_COLOR, corner_radius=10)
-        stats_frame.pack(fill="x", pady=(0, 15))
+        stats_frame.pack(fill="x", pady=(0, 10))
         stats_frame.pack_propagate(False)
-        stats_frame.configure(height=140)
+        stats_frame.configure(height=120)
         
         # Create a grid inside stats_frame
         stats_inner = ctk.CTkFrame(stats_frame, fg_color="transparent")
-        stats_inner.pack(expand=True, fill="both", padx=20, pady=15)
+        stats_inner.pack(expand=True, fill="both", padx=15, pady=12)
         
-        # Stats labels
+        # Stats labels (más compactos)
         self.lbl_total_books = ctk.CTkLabel(
             stats_inner, 
             text="Total de libros: -",
-            font=theme.get_font(self, size=13),
+            font=theme.get_font(self, size=11),
             text_color=theme.TEXT_COLOR
         )
-        self.lbl_total_books.grid(row=0, column=0, sticky="w", padx=10, pady=5)
+        self.lbl_total_books.grid(row=0, column=0, sticky="w", padx=8, pady=3)
         
         self.lbl_max_value = ctk.CTkLabel(
             stats_inner, 
             text="Valor máximo: -",
-            font=theme.get_font(self, size=13, weight="bold"),
+            font=theme.get_font(self, size=11, weight="bold"),
             text_color=SUCCESS_COLOR
         )
-        self.lbl_max_value.grid(row=0, column=1, sticky="w", padx=10, pady=5)
+        self.lbl_max_value.grid(row=0, column=1, sticky="w", padx=8, pady=3)
         
         self.lbl_total_weight = ctk.CTkLabel(
             stats_inner, 
             text="Peso total: -",
-            font=theme.get_font(self, size=13),
+            font=theme.get_font(self, size=11),
             text_color=theme.TEXT_COLOR
         )
-        self.lbl_total_weight.grid(row=1, column=0, sticky="w", padx=10, pady=5)
+        self.lbl_total_weight.grid(row=1, column=0, sticky="w", padx=8, pady=3)
         
         self.lbl_capacity = ctk.CTkLabel(
             stats_inner, 
             text=f"Capacidad: {self.max_capacity} Kg",
-            font=theme.get_font(self, size=13),
+            font=theme.get_font(self, size=11),
             text_color=theme.TEXT_COLOR
         )
-        self.lbl_capacity.grid(row=1, column=1, sticky="w", padx=10, pady=5)
+        self.lbl_capacity.grid(row=1, column=1, sticky="w", padx=8, pady=3)
         
         self.lbl_books_selected = ctk.CTkLabel(
             stats_inner, 
             text="Libros seleccionados: -",
-            font=theme.get_font(self, size=13),
+            font=theme.get_font(self, size=11),
             text_color=theme.TEXT_COLOR
         )
-        self.lbl_books_selected.grid(row=2, column=0, sticky="w", padx=10, pady=5)
+        self.lbl_books_selected.grid(row=2, column=0, sticky="w", padx=8, pady=(8, 3))
         
         self.lbl_capacity_used = ctk.CTkLabel(
             stats_inner, 
             text="Capacidad usada: -",
-            font=theme.get_font(self, size=13),
+            font=theme.get_font(self, size=11),
             text_color=theme.TEXT_COLOR
         )
-        self.lbl_capacity_used.grid(row=2, column=1, sticky="w", padx=10, pady=5)
+        self.lbl_capacity_used.grid(row=2, column=1, sticky="w", padx=8, pady=(8, 3))
         
-        # Configure grid weights
+        # Configure grid weights for proper spacing
         stats_inner.grid_columnconfigure(0, weight=1)
         stats_inner.grid_columnconfigure(1, weight=1)
+        stats_inner.grid_rowconfigure(0, weight=1)
+        stats_inner.grid_rowconfigure(1, weight=1)
+        stats_inner.grid_rowconfigure(2, weight=1)
         
-        # Algorithm info frame
-        info_frame = ctk.CTkFrame(main_frame, fg_color=INFO_COLOR, corner_radius=10)
-        info_frame.pack(fill="x", pady=(0, 15))
+        # Algorithm info frame (más compacto)
+        info_frame = ctk.CTkFrame(main_frame, fg_color=INFO_COLOR, corner_radius=8)
+        info_frame.pack(fill="x", pady=(0, 10))
         
-        info_text = "💡 Este algoritmo explora sistemáticamente todas las posibles combinaciones\n"
-        info_text += "   de libros usando backtracking, podando ramas que exceden la capacidad.\n"
-        info_text += "   Garantiza encontrar la solución óptima (máximo valor)."
+        info_text = "💡 Backtracking: Explora combinaciones podando ramas inválidas. Garantiza solución óptima."
         
         info_label = ctk.CTkLabel(
             info_frame,
             text=info_text,
-            font=theme.get_font(self, size=11),
+            font=theme.get_font(self, size=10),
             text_color="white",
             justify="left"
         )
-        info_label.pack(padx=15, pady=10)
+        info_label.pack(padx=12, pady=6)
         
-        # Scrollable results frame
+        # Scrollable results frame (título más pequeño)
         results_label = ctk.CTkLabel(
             main_frame, 
-            text="Solución Óptima Encontrada:",
-            font=theme.get_font(self, size=14, weight="bold"),
+            text="📋 Solución Óptima:",
+            font=theme.get_font(self, size=13, weight="bold"),
             text_color=theme.TEXT_COLOR
         )
         results_label.pack(anchor="w", pady=(0, 5))
