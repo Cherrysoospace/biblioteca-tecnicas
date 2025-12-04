@@ -1,15 +1,17 @@
 """file_handler.py
 
-Módulo centralizado para el manejo de archivos JSON en el Sistema de Gestión de Bibliotecas.
-Este módulo elimina la duplicación de código de operaciones de archivos en los servicios.
+Centralized JSON file utilities for the Library Management System.
 
-Responsabilidades:
-- Asegurar que archivos y directorios existan
-- Leer y escribir archivos JSON con manejo de errores consistente
-- Proveer una interfaz unificada para operaciones de persistencia
+This module provides a small, focused helper class used across services
+to ensure files exist, and to read/write JSON with consistent error handling.
 
-Autor: Sistema de Gestión de Bibliotecas
-Fecha: 2025-12-02
+Responsibilities:
+- Ensure required directories and JSON files exist
+- Load JSON data with validation and clear error messages
+- Save JSON data with readable formatting
+
+Author: Library Management System
+Date: 2025-12-02
 """
 
 import os
@@ -18,40 +20,41 @@ from typing import Any, List, Optional
 
 
 class JSONFileHandler:
-    """Manejador centralizado para operaciones de archivos JSON.
-    
-    Esta clase provee métodos estáticos para operaciones comunes de archivos
-    que son usadas por todos los servicios del sistema.
+    """A small utility class for JSON file operations.
+
+    All methods are provided as statics; the class groups related helpers
+    for ensuring files exist and for reading/writing JSON in a uniform way.
+
+    Usage examples:
+        JSONFileHandler.ensure_file('/path/to/data.json', default_content=[])
+        data = JSONFileHandler.load_json('/path/to/data.json', expected_type=list)
+        JSONFileHandler.save_json('/path/to/data.json', data)
     """
 
     @staticmethod
     def ensure_file(file_path: str, default_content: Any = None) -> None:
-        """Asegurar que un archivo JSON y su directorio existan.
-        
-        Si el archivo no existe, lo crea con el contenido por defecto.
-        Si el directorio no existe, lo crea recursivamente.
-        
-        PARÁMETROS:
-        ===========
+        """Ensure a JSON file and its parent directory exist.
+
+        If the parent directory does not exist it will be created. If the file
+        does not exist it will be created and initialized with
+        ``default_content`` (defaults to an empty list).
+
+        Parameters
+        ----------
         file_path : str
-            Ruta absoluta del archivo JSON a asegurar.
-        default_content : Any, opcional
-            Contenido por defecto para inicializar el archivo si no existe.
-            Por defecto es una lista vacía [].
-            
-        RETORNO:
-        ========
-        None
-        
-        EXCEPCIONES:
-        ============
+            Absolute or relative path to the JSON file to ensure exists.
+        default_content : Any, optional
+            Default content to write when creating a new file. Defaults to ``[]``.
+
+        Raises
+        ------
         Exception
-            Si no se puede crear el directorio o el archivo.
-            
-        EJEMPLO:
-        ========
-        >>> JSONFileHandler.ensure_file('/path/to/books.json', [])
-        >>> JSONFileHandler.ensure_file('/path/to/config.json', {})
+            When the directory or file cannot be created due to an I/O error.
+
+        Examples
+        --------
+        >>> JSONFileHandler.ensure_file('/tmp/books.json', [])
+        >>> JSONFileHandler.ensure_file('config/settings.json', {})
         """
         if default_content is None:
             default_content = []
@@ -74,35 +77,39 @@ class JSONFileHandler:
 
     @staticmethod
     def load_json(file_path: str, expected_type: Optional[type] = None) -> Any:
-        """Cargar datos desde un archivo JSON.
-        
-        Lee el archivo JSON y opcionalmente valida que el tipo de datos
-        sea el esperado.
-        
-        PARÁMETROS:
-        ===========
+        """Load and return JSON data from a file.
+
+        The file is opened and parsed. If ``expected_type`` is provided the
+        deserialized value is validated to be an instance of that type and a
+        ValueError is raised when the type does not match.
+
+        Parameters
+        ----------
         file_path : str
-            Ruta absoluta del archivo JSON a leer.
-        expected_type : type, opcional
-            Tipo esperado de los datos (list, dict, etc.).
-            Si se provee y no coincide, lanza ValueError.
-            
-        RETORNO:
-        ========
+            Path to the JSON file to read.
+        expected_type : Optional[type]
+            If provided, assert that the loaded value is an instance of this
+            type (for example ``list`` or ``dict``).
+
+        Returns
+        -------
         Any
-            Datos deserializados desde el archivo JSON.
-            
-        EXCEPCIONES:
-        ============
+            The Python object resulting from JSON deserialization.
+
+        Raises
+        ------
         ValueError
-            Si el JSON es inválido o el tipo no coincide con expected_type.
+            If the file contains invalid JSON or the type does not match
+            ``expected_type``.
+        FileNotFoundError
+            If the given file does not exist.
         Exception
-            Si hay errores de I/O al leer el archivo.
-            
-        EJEMPLO:
-        ========
-        >>> data = JSONFileHandler.load_json('/path/to/books.json', expected_type=list)
-        >>> config = JSONFileHandler.load_json('/path/to/config.json', expected_type=dict)
+            For other I/O related errors when opening/reading the file.
+
+        Examples
+        --------
+        >>> data = JSONFileHandler.load_json('data/books.json', expected_type=list)
+        >>> cfg = JSONFileHandler.load_json('config.json', expected_type=dict)
         """
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
@@ -125,35 +132,31 @@ class JSONFileHandler:
 
     @staticmethod
     def save_json(file_path: str, data: Any, indent: int = 2) -> None:
-        """Guardar datos a un archivo JSON.
-        
-        Serializa los datos a JSON y los escribe al archivo con formato
-        legible (indentación).
-        
-        PARÁMETROS:
-        ===========
+        """Serialize Python data to JSON and write it to a file.
+
+        The output is written with UTF-8 encoding and formatted using the
+        provided indentation level to keep files human readable.
+
+        Parameters
+        ----------
         file_path : str
-            Ruta absoluta del archivo JSON donde guardar.
+            Destination path for the JSON file.
         data : Any
-            Datos a serializar (debe ser JSON-serializable).
-        indent : int, opcional
-            Número de espacios para indentar (default: 2).
-            
-        RETORNO:
-        ========
-        None
-        
-        EXCEPCIONES:
-        ============
+            JSON-serializable Python object to write.
+        indent : int, optional
+            Number of spaces to use for indentation (default: 2).
+
+        Raises
+        ------
         TypeError
-            Si los datos no son serializables a JSON.
+            If ``data`` is not JSON serializable.
         Exception
-            Si hay errores de I/O al escribir el archivo.
-            
-        EJEMPLO:
-        ========
-        >>> JSONFileHandler.save_json('/path/to/books.json', [{'id': 'B001', ...}])
-        >>> JSONFileHandler.save_json('/path/to/config.json', {'theme': 'dark'})
+            For other I/O related errors when opening/writing the file.
+
+        Examples
+        --------
+        >>> JSONFileHandler.save_json('data/books.json', books_list)
+        >>> JSONFileHandler.save_json('config.json', {'theme': 'dark'})
         """
         try:
             with open(file_path, 'w', encoding='utf-8') as f:
@@ -165,31 +168,27 @@ class JSONFileHandler:
 
     @staticmethod
     def ensure_multiple_files(file_paths: List[str], default_content: Any = None) -> None:
-        """Asegurar que múltiples archivos JSON existan.
-        
-        Versión optimizada para crear varios archivos con el mismo contenido
-        por defecto (útil para inventory_service que maneja 2 archivos).
-        
-        PARÁMETROS:
-        ===========
+        """Ensure multiple JSON files exist, creating them with default content.
+
+        This is a convenience wrapper that iterates over ``file_paths`` and
+        calls :meth:`ensure_file` for each path. Useful when the application
+        manages several JSON files with the same initial content.
+
+        Parameters
+        ----------
         file_paths : List[str]
-            Lista de rutas absolutas de archivos a asegurar.
-        default_content : Any, opcional
-            Contenido por defecto para todos los archivos (default: []).
-            
-        RETORNO:
-        ========
-        None
-        
-        EXCEPCIONES:
-        ============
+            Iterable of file paths to ensure.
+        default_content : Any, optional
+            Default content to write to any missing files (default: []).
+
+        Raises
+        ------
         Exception
-            Si no se puede crear algún directorio o archivo.
-            
-        EJEMPLO:
-        ========
-        >>> paths = ['/path/to/general.json', '/path/to/sorted.json']
-        >>> JSONFileHandler.ensure_multiple_files(paths, [])
+            If creating any directory or file fails.
+
+        Examples
+        --------
+        >>> JSONFileHandler.ensure_multiple_files(['data/a.json', 'data/b.json'], [])
         """
         for path in file_paths:
             JSONFileHandler.ensure_file(path, default_content)
