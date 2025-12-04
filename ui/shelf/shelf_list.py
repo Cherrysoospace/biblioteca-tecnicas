@@ -1,3 +1,13 @@
+"""
+Shelf List Window Module
+
+This module provides a graphical user interface for viewing and managing all shelf
+records in the library management system. It displays shelves in a table format with
+detailed information including assigned books, capacity, weight statistics, and search
+functionality. The interface supports full CRUD operations including viewing, searching,
+editing, and deleting shelves.
+"""
+
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -10,8 +20,58 @@ from utils.config import FilePaths
 
 
 class ShelfList(ctk.CTkToplevel):
-    """Listado de estanterías con opciones para editar y eliminar."""
+    """
+    A top-level window for displaying and managing all shelf records.
+
+    This class provides a comprehensive interface for shelf management with a searchable
+    table displaying all shelves and action buttons for refreshing, editing, and deleting
+    records. Users can double-click a row to edit a shelf or use the action buttons.
+    The table shows detailed information for each shelf including ID, name, list of assigned
+    books with weights, total capacity, book count, total weight, and remaining capacity.
+    Supports dynamic row height adjustment based on the number of books displayed.
+
+    Attributes:
+        _parent_window: Reference to the parent window that opened this dialog
+        controller (ShelfController): The shelf controller instance for database operations
+        _tree_style (ttk.Style): Reference to the ttk style for dynamic row height adjustment
+        search_entry (CTkEntry): Entry field for search input (ID or name)
+        tree (ttk.Treeview): Table widget displaying all shelf records with columns for
+                            id, name, books (with weights), capacity, books_count,
+                            total_weight, and remaining capacity
+    """
+
     def __init__(self, parent=None):
+        """
+        Initialize the shelf list window.
+
+        Sets up the window layout with a search bar at the top, a table displaying all
+        shelves with detailed information, and action buttons for managing shelves. Applies
+        styling, configures the table with dynamic row heights based on book count, and
+        loads all shelves from the database. Sets up event handlers for search (Enter key),
+        double-click editing, and window closing.
+
+        Parameters:
+            parent: The parent window that opened this dialog. Can be None if opened
+                   as a standalone window. Used for window management and focus control
+
+        Returns:
+            None
+
+        Side Effects:
+            - Creates and displays a new top-level window (1000x700, min 800x500)
+            - Initializes ShelfController for database operations
+            - Loads all shelf records from the database
+            - Applies application theme to the window and table
+            - Makes the window transient to the parent if provided
+            - Binds Enter key in search field to perform search
+            - Binds double-click event to open edit dialog
+            - Configures grid layout for responsive sizing
+            - Automatically calculates and sets dynamic row heights based on book count
+
+        Raises:
+            Exception: Catches and handles various exceptions during initialization
+                      to ensure the window opens even if some operations fail
+        """
         super().__init__(parent)
         self._parent_window = parent
 
@@ -173,7 +233,38 @@ class ShelfList(ctk.CTkToplevel):
         self.load_shelves()
 
     def load_shelves(self, shelves=None):
-        """Carga y muestra las estanterías en la tabla."""
+        """
+        Load and display shelf records in the table with detailed information.
+
+        Clears the current table contents and retrieves all shelves (or uses provided filtered
+        shelves). For each shelf, displays ID, name, a formatted list of books with their weights,
+        capacity, book count, total weight, and remaining capacity. Dynamically calculates and
+        sets row height based on the maximum number of book lines displayed (capped at 10 books
+        per shelf to prevent excessive row heights). Applies alternating row colors for readability.
+
+        Parameters:
+            shelves (list, optional): Pre-filtered list of shelf objects to display. If None,
+                                     loads all shelves from the controller. Defaults to None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Clears all existing rows from the table
+            - Retrieves all shelves from ShelfController if shelves parameter is None
+            - For each shelf, retrieves assigned books via controller
+            - Formats book information as "id: X, peso: Ykg" with line breaks
+            - Limits display to 10 books per shelf, showing "... y N más" for overflow
+            - Calculates statistics: total weight and remaining capacity
+            - Dynamically adjusts table row height (22px per line + 8px padding)
+            - Applies alternating row background colors (odd/even)
+            - Shows error message box if loading fails
+            - Continues processing remaining shelves if individual shelf loading fails
+
+        Raises:
+            Exception: Catches and displays errors via message box if shelf loading fails,
+                      continues processing remaining shelves if individual shelf fails
+        """
         # Limpiar filas existentes
         for r in self.tree.get_children():
             self.tree.delete(r)
@@ -278,6 +369,30 @@ class ShelfList(ctk.CTkToplevel):
             pass
 
     def _on_close(self):
+        """
+        Handle the window close event.
+
+        Properly closes the shelf list window and returns focus to the parent window.
+        Attempts multiple cleanup methods to ensure the window is properly destroyed
+        even if some operations fail. This method is called when the user clicks the
+        return button or the window's close button.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Destroys the current window
+            - If destroy fails, attempts to withdraw (hide) the window
+            - Lifts and focuses the parent window if it exists
+            - Restores the parent window to the foreground
+
+        Raises:
+            Exception: Catches and ignores all exceptions during cleanup to ensure
+                      the method completes without errors
+        """
         try:
             self.destroy()
         except Exception:
@@ -296,6 +411,31 @@ class ShelfList(ctk.CTkToplevel):
             pass
 
     def open_selected_for_edit(self):
+        """
+        Open the edit dialog for the selected shelf record.
+
+        Retrieves the shelf ID from the selected table row and opens the ShelfEdit dialog
+        which allows editing the shelf name and managing assigned books. Binds a destroy
+        event handler to refresh the shelf list when the edit dialog is closed. Also handles
+        double-click events on table rows.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Shows info message if no shelf is selected
+            - Shows error message if the selected row cannot be read
+            - Opens ShelfEdit window as a top-level dialog with the shelf_id
+            - Binds destroy event to refresh the shelf table when edit window closes
+            - Automatically refreshes the shelf list after editing
+
+        Raises:
+            Exception: Catches and displays exceptions via message box if edit window
+                      cannot be opened
+        """
         sel = self.tree.selection()
         if not sel:
             messagebox.showinfo("Info", "Selecciona primero una estantería en la tabla.")
@@ -328,7 +468,32 @@ class ShelfList(ctk.CTkToplevel):
             messagebox.showerror("Error", f"No se pudo abrir el formulario de edición.\n{e}")
 
     def delete_selected(self):
-        """Elimina la estantería seleccionada."""
+        """
+        Delete the selected shelf record from the database.
+
+        Validates that a shelf is selected, retrieves the shelf ID from the selected table row,
+        prompts the user for confirmation, and deletes the shelf if confirmed. Warns the user
+        that this action will delete both the shelf and all its assigned books. Refreshes the
+        table after successful deletion.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Shows info message if no shelf is selected
+            - Shows error message if the selected row cannot be read
+            - Shows confirmation dialog warning about shelf and content deletion
+            - Deletes the shelf record from the database via controller
+            - Shows error message if shelf is not found or deletion fails
+            - Shows success message if deletion succeeds
+            - Refreshes the shelf list after successful deletion
+
+        Raises:
+            Exception: Catches and displays exceptions via message box
+        """
         sel = self.tree.selection()
         if not sel:
             messagebox.showinfo("Info", "Selecciona primero una estantería en la tabla.")
@@ -357,7 +522,32 @@ class ShelfList(ctk.CTkToplevel):
             messagebox.showerror("Error", f"Error al eliminar la estantería: {e}")
 
     def search_shelves(self):
-        """Buscar estanterías por ID o nombre."""
+        """
+        Search for shelves by ID or name.
+
+        Extracts the search term from the search entry field, delegates the search operation
+        to the controller (following OOP principles), and displays the filtered results in
+        the table. Shows an info message if no matches are found. This method is triggered
+        by clicking the search button or pressing Enter in the search field.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Shows info message if search term is empty
+            - Extracts and trims search term from search_entry field
+            - Calls shelf_controller.search_shelves with the search term
+            - Displays filtered shelves in the table via load_shelves
+            - Shows info message if no shelves match the search term
+            - Shows empty table if no results found
+            - Shows error message box if search operation fails
+
+        Raises:
+            Exception: Catches and displays exceptions via message box
+        """
         search_term = self.search_entry.get().strip()
         
         if not search_term:
@@ -378,7 +568,26 @@ class ShelfList(ctk.CTkToplevel):
             messagebox.showerror("Error", f"No se pudo realizar la búsqueda: {e}")
 
     def clear_search(self):
-        """Limpiar el campo de búsqueda y recargar todas las estanterías."""
+        """
+        Clear the search field and reload all shelves.
+
+        Removes the search term from the search entry field and reloads the complete
+        shelf list, effectively resetting the view to show all shelves.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Clears all text from the search_entry field
+            - Reloads and displays all shelves via load_shelves
+            - Shows error message box if clear operation fails
+
+        Raises:
+            Exception: Catches and displays exceptions via message box
+        """
         try:
             self.search_entry.delete(0, 'end')
             self.load_shelves()
