@@ -5,6 +5,7 @@ from typing import List, Optional
 
 from models.reservation import Reservation
 from repositories.reservation_repository import ReservationRepository
+from utils.structures.queue import Queue
 
 
 class ReservationService:
@@ -14,7 +15,9 @@ class ReservationService:
 	- BUSINESS LOGIC ONLY: reservation queue management, status updates
 	- Persistence delegated to ReservationRepository (SRP compliance)
 	- Create, list, find, update, cancel, assign reservations
-	- Treat the stored list order as the FIFO queue for pending reservations
+	- Uses Queue structure (FIFO) for pending reservations management
+	
+	CRITICAL: Only allows reservations when book stock = 0 (business rule validation)
 	"""
 
 	def __init__(self, repository: ReservationRepository = None):
@@ -54,10 +57,45 @@ class ReservationService:
 		return f"R{next_n:03d}"
 
 	def create_reservation(self, reservation_id: Optional[str], user_id: str, isbn: str) -> Reservation:
-		"""Create a reservation. If reservation_id None, generate one."""
+		"""Create a reservation. If reservation_id None, generate one.
+		
+		CRITICAL VALIDATION: Only allows reservation if book stock = 0 (business rule).
+		This ensures reservations are only created for out-of-stock books.
+		
+		Args:
+			reservation_id: Unique ID (auto-generated if None)
+			user_id: User requesting the reservation
+			isbn: ISBN of the book to reserve
+			
+		Returns:
+			Reservation: Created reservation object
+			
+		Raises:
+			ValueError: If book has available stock (stock > 0)
+		"""
+		# CRITICAL: Validate stock = 0 before creating reservation
+		from services.inventory_service import InventoryService
+		inv_service = InventoryService()
+		
+		# Calculate total available stock for this ISBN
+		inventories = inv_service.find_by_isbn(isbn)
+		if not inventories:
+			raise ValueError(f"Cannot create reservation: ISBN '{isbn}' does not exist in inventory")
+		
+		total_available = sum(inv.get_available_count() for inv in inventories)
+		
+		if total_available > 0:
+			raise ValueError(
+				f"Cannot create reservation: ISBN '{isbn}' has {total_available} "
+				f"{'copy' if total_available == 1 else 'copies'} available. "
+				f"Reservations are only allowed for books with zero stock."
+			)
+		
+		# Generate ID if needed
 		if not reservation_id:
 			reservation_id = self._generate_next_id()
-		# ensure uniqueness
+		
+		# Ensure uniqueness
 		existing = {r.get_reservation_id() for r in self.reservations}
 		if reservation_id in existing:
 			# append suffix to disambiguate
@@ -67,6 +105,7 @@ class ReservationService:
 				reservation_id = f"{base}-{counter}"
 				counter += 1
 
+		# Create reservation and add to list (maintains FIFO order)
 		res = Reservation(reservation_id, user_id, isbn)
 		self.reservations.append(res)
 		self._save_reservations()
@@ -79,6 +118,15 @@ class ReservationService:
 		return next((r for r in self.reservations if r.get_reservation_id() == reservation_id), None)
 
 	def find_by_isbn(self, isbn: str, only_pending: bool = True) -> List[Reservation]:
+		"""Find reservations for a specific ISBN.
+		
+		Args:
+			isbn: ISBN to search for
+			only_pending: If True, return only pending reservations (default)
+			
+		Returns:
+			List[Reservation]: Reservations in FIFO order (insertion order preserved)
+		"""
 		res = [r for r in self.reservations if r.get_isbn() == isbn]
 		if only_pending:
 			res = [r for r in res if r.get_status() == 'pending']
@@ -86,18 +134,46 @@ class ReservationService:
 		return res
 
 	def assign_next_for_isbn(self, isbn: str) -> Optional[Reservation]:
-		"""Assign the earliest pending reservation for the ISBN.
-
-		Sets status='assigned' and assigned_date. Returns the Reservation or None.
+		"""Assign the earliest pending reservation for the ISBN using FIFO queue logic.
+		
+		This method implements the Queue (FIFO) structure requirement:
+		- Gets all pending reservations for the ISBN
+		- Assigns the FIRST one (First In, First Out)
+		- Updates status to 'assigned' and sets assigned_date
+		
+		Args:
+			isbn: ISBN of the book being assigned
+			
+		Returns:
+			Optional[Reservation]: Assigned reservation or None if no pending reservations
 		"""
+		# Get pending reservations in FIFO order
 		pending = self.find_by_isbn(isbn, only_pending=True)
 		if not pending:
 			return None
+		
+		# FIFO: Assign the first (earliest) reservation in the queue
 		next_res = pending[0]
 		next_res.set_status('assigned')
 		next_res.set_assigned_date(datetime.utcnow())
 		self._save_reservations()
 		return next_res
+	
+	def get_queue_position(self, user_id: str, isbn: str) -> Optional[int]:
+		"""Get the position of a user in the reservation queue for a specific ISBN.
+		
+		Args:
+			user_id: User ID to check
+			isbn: ISBN of the book
+			
+		Returns:
+			Optional[int]: Position in queue (1-based) or None if not in queue
+		"""
+		pending = self.find_by_isbn(isbn, only_pending=True)
+		for i, res in enumerate(pending, start=1):
+			if res.get_user_id() == user_id:
+				return i
+		return None
 
 	def cancel_reservation(self, reservation_id: str) -> None:
 		res = self.find_by_id(reservation_id)

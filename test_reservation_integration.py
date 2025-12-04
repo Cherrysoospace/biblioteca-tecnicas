@@ -53,7 +53,7 @@ def test_reservation_auto_assignment_on_return():
     print("\n1️⃣ Creating reservation for User A...")
     reservation = reservation_service.create_reservation(
         reservation_id=None,
-        user_id="USER_A",
+        user_id="U002",  # Usuario válido de la BD
         isbn=test_isbn
     )
     print(f"   ✅ Reservation created: {reservation.get_reservation_id()}")
@@ -64,7 +64,7 @@ def test_reservation_auto_assignment_on_return():
     try:
         loan = loan_service.create_loan(
             loan_id=None,
-            user_id="USER_B",
+            user_id="U003",  # Usuario válido de la BD
             isbn=test_isbn
         )
         print(f"   ✅ Loan created: {loan.get_loan_id()}")
@@ -162,7 +162,7 @@ def test_no_assignment_when_no_reservations():
     
     # Create and return a loan
     try:
-        loan = loan_service.create_loan(None, "TEST_USER", test_isbn)
+        loan = loan_service.create_loan(None, "U005", test_isbn)  # Usuario válido de la BD
         print(f"   ✅ Loan created: {loan.get_loan_id()}")
         
         loan_service.mark_returned(loan.get_loan_id())
