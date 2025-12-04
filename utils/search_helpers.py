@@ -1,53 +1,50 @@
 """search_helpers.py
 
-Funciones auxiliares para validación y soporte de búsquedas en el sistema.
+Helper utilities for search validation and support.
 
-Incluye:
-- Normalización de texto para búsquedas insensibles a mayúsculas y acentos
-- Validación de listas ordenadas para prerequisitos de búsqueda binaria
+This module contains small helpers used by the search subsystem:
+- text normalization for case- and accent-insensitive searches
+- validation of ordered lists (precondition for binary search)
 
-Autor: Sistema de Gestión de Bibliotecas
-Fecha: 2025-12-03
+Author: Library Management System
+Date: 2025-12-03
 """
 
 
 def normalizar_texto(texto):
-    """Normaliza texto para búsquedas insensibles a mayúsculas y acentos.
-    
-    PROPÓSITO:
-    ==========
-    Facilita la búsqueda de libros permitiendo que el usuario busque sin
-    preocuparse por mayúsculas, minúsculas o acentos.
-    
-    TRANSFORMACIONES:
-    =================
-    1. Convierte a minúsculas
-    2. Elimina acentos (á→a, é→e, í→i, ó→o, ú→u, ñ→n)
-    3. Elimina espacios extra
-    
-    PARÁMETROS:
-    ===========
+    """Normalize text for case- and accent-insensitive searches.
+
+    Purpose
+    -------
+    Make user searches more forgiving by removing case differences,
+    common diacritics and extra whitespace.
+
+    Transformations
+    ---------------
+    1. Convert to lowercase
+    2. Remove common accented characters (á→a, é→e, í→i, ó→o, ú→u, ñ→n)
+    3. Collapse multiple spaces into a single space
+
+    Parameters
+    ----------
     texto : str
-        Texto a normalizar (título, autor, criterio de búsqueda).
-        
-    RETORNO:
-    ========
+        Text to normalize (title, author, search term).
+
+    Returns
+    -------
     str
-        Texto normalizado en minúsculas sin acentos.
-        
-    EJEMPLO DE USO:
-    ===============
+        Normalized lowercase text without accents.
+
+    Examples
+    --------
     >>> from utils.search_helpers import normalizar_texto
-    >>> 
-    >>> # Normalizar para comparación
-    >>> titulo = "Cien Años de Soledad"
-    >>> busqueda = "cien anos"
-    >>> 
-    >>> if normalizar_texto(busqueda) in normalizar_texto(titulo):
-    ...     print("¡Coincidencia encontrada!")
-    
-    CASOS DE PRUEBA:
-    ================
+    >>> title = "Cien Años de Soledad"
+    >>> query = "cien anos"
+    >>> if normalizar_texto(query) in normalizar_texto(title):
+    ...     print("Match found!")
+
+    Test cases
+    ----------
     >>> normalizar_texto("García Márquez")
     'garcia marquez'
     >>> normalizar_texto("JOSÉ")
@@ -57,11 +54,11 @@ def normalizar_texto(texto):
     """
     if not texto:
         return ""
-    
-    # Convertir a minúsculas
+
+    # Convert to lowercase
     texto = texto.lower()
-    
-    # Tabla de reemplazo para acentos comunes en español
+
+    # Replacement table for common accent characters
     reemplazos = {
         'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u',
         'à': 'a', 'è': 'e', 'ì': 'i', 'ò': 'o', 'ù': 'u',
@@ -69,59 +66,60 @@ def normalizar_texto(texto):
         'â': 'a', 'ê': 'e', 'î': 'i', 'ô': 'o', 'û': 'u',
         'ñ': 'n', 'ç': 'c'
     }
-    
-    # Aplicar reemplazos
+
+    # Apply replacements
     for acento, sin_acento in reemplazos.items():
         texto = texto.replace(acento, sin_acento)
-    
-    # Eliminar espacios extra
+
+    # Remove extra spaces
     texto = ' '.join(texto.split())
-    
+
     return texto
 
 
 def verificar_lista_ordenada(lista, atributo='ISBNCode'):
-    """Verifica si una lista está ordenada por un atributo específico.
-    
-    PROPÓSITO:
-    ==========
-    Útil para validar el prerequisito de la búsqueda binaria antes de ejecutarla.
-    Ayuda a detectar errores donde se intenta buscar en una lista no ordenada.
-    
-    PARÁMETROS:
-    ===========
+    """Check whether a list is ordered by a specific attribute.
+
+    Purpose
+    -------
+    Use this to validate the precondition for binary search. Detects
+    cases where a binary search would be attempted on an unordered list.
+
+    Parameters
+    ----------
     lista : list
-        Lista de objetos a verificar (Book, Inventory, etc.).
-    atributo : str, opcional
-        Atributo por el cual verificar el orden (default: 'ISBNCode').
-        
-    RETORNO:
-    ========
+        List of objects to verify (Book, Inventory item, etc.).
+    atributo : str, optional
+        Attribute name to check ordering by (default: 'ISBNCode').
+
+    Returns
+    -------
     bool
-        True si la lista está ordenada ascendentemente, False en caso contrario.
-        
-    EJEMPLO DE USO:
-    ===============
+        True if the list is ordered ascending by the given attribute,
+        False otherwise.
+
+    Example
+    -------
     >>> from utils.search_helpers import verificar_lista_ordenada
     >>> from utils.algorithms.AlgoritmosOrdenamiento import insercion_ordenada
-    >>> 
-    >>> if not verificar_lista_ordenada(inventario):
-    ...     print("Ordenando inventario...")
-    ...     insercion_ordenada(inventario)
-    >>> 
-    >>> # Ahora es seguro usar búsqueda binaria
-    >>> indice = busqueda_binaria(inventario, isbn_buscado)
+    >>>
+    >>> if not verificar_lista_ordenada(inventory):
+    ...     print("Sorting inventory...")
+    ...     insercion_ordenada(inventory)
+    >>>
+    >>> # Now it is safe to use binary search
+    >>> index = busqueda_binaria(inventory, searched_isbn)
     """
     if not lista or len(lista) <= 1:
         return True
-    
+
     for i in range(len(lista) - 1):
         valor_actual = getattr(lista[i], atributo)
         valor_siguiente = getattr(lista[i + 1], atributo)
-        
+
         if valor_actual > valor_siguiente:
             return False
-    
+
     return True
 
 
