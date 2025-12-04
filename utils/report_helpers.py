@@ -1,17 +1,20 @@
 """report_helpers.py
 
-Funciones auxiliares para generación de reportes.
+Helper functions for report generation.
 
-Este módulo contiene las funciones auxiliares que NO son algoritmos de ordenamiento
-pero que son necesarias para la generación de reportes:
-- generar_reporte_global(): Serializar libros ordenados a JSON
-- verificar_ordenamiento(): Validar que una lista esté ordenada
-- ordenar_y_generar_reporte(): Función de conveniencia que combina ordenamiento + reporte
+This module provides small utility functions that are not sorting
+algorithms themselves but are used to produce reports from sorted
+book lists:
+- ``generar_reporte_global``: serialize sorted books into a JSON-ready list
+- ``verificar_ordenamiento``: validate that a list is sorted by price
+- ``ordenar_y_generar_reporte``: convenience function that sorts and
+    generates a report in a single call
 
-Los ALGORITMOS puros (Merge Sort, etc.) permanecen en AlgoritmosOrdenamiento.py
+Pure sorting algorithms (e.g. merge sort) live in
+``utils.algorithms.AlgoritmosOrdenamiento``.
 
-Autor: Sistema de Gestión de Bibliotecas
-Fecha: 2025-12-02
+Author: Library Management System
+Date: 2025-12-02
 """
 
 from typing import List, Dict, Any
@@ -22,78 +25,48 @@ logger = LibraryLogger.get_logger(__name__)
 
 
 def generar_reporte_global(lista_ordenada: List[Any]) -> List[Dict[str, Any]]:
-    """Generar un reporte global serializable del inventario ordenado por precio.
-    
-    PROPÓSITO:
-    ==========
-    Convertir una lista de objetos Book ordenados en una estructura de datos
-    serializable (lista de diccionarios) que puede ser:
-    - Guardada en un archivo JSON
-    - Enviada como respuesta de API
-    - Mostrada en la UI
-    - Exportada a otros formatos (CSV, Excel, etc.)
-    
-    ESTRUCTURA DEL REPORTE:
-    =======================
-    Cada libro se convierte en un diccionario con los siguientes campos:
-    - id: str - Identificador único del libro
-    - ISBNCode: str - Código ISBN
-    - title: str - Título del libro
-    - author: str - Nombre del autor
-    - weight: float - Peso en kilogramos
-    - price: int - Precio en pesos colombianos (COP)
-    - isBorrowed: bool - Estado de préstamo
-    
-    NOTA: Los nombres de campos están en INGLÉS para mantener consistencia
-    con books.json, inventory_general.json y el modelo Book.
-    
-    USO TÍPICO:
-    ===========
-    1. Ordenar inventario:
-       >>> from utils.algorithms.AlgoritmosOrdenamiento import merge_sort_books_by_price
-       >>> libros_ordenados = merge_sort_books_by_price(inventario_general)
-    
-    2. Generar reporte:
-       >>> reporte = generar_reporte_global(libros_ordenados)
-    
-    3. Guardar en JSON:
-       >>> import json
-       >>> with open('reporte_inventario.json', 'w') as f:
-       ...     json.dump(reporte, f, indent=2, ensure_ascii=False)
-    
-    PARÁMETROS:
-    ===========
+    """Create a serializable global report from a list of books sorted by price.
+
+    Purpose
+    -------
+    Convert a list of Book objects into a JSON-serializable structure
+    (a list of dictionaries) that can be saved to disk, returned from an
+    API, shown in the UI, or exported to CSV/Excel.
+
+    Report structure
+    ----------------
+    Each book is transformed into a dictionary containing the following
+    fields (field names use English to match ``books.json`` and the
+    Book model): ``id``, ``ISBNCode``, ``title``, ``author``, ``weight``,
+    ``price``, ``isBorrowed``.
+
+    Parameters
+    ----------
     lista_ordenada : List[Any]
-        Lista de objetos Book ya ordenados por precio (resultado de
-        merge_sort_books_by_price). Cada objeto debe tener los siguientes
-        métodos getter:
-        - get_id() -> str
-        - get_ISBNCode() -> str
-        - get_title() -> str
-        - get_author() -> str
-        - get_weight() -> float
-        - get_price() -> int
-        - get_isBorrowed() -> bool
-        
-    RETORNO:
-    ========
+        A list of Book objects already sorted by price. Each object is
+        expected to expose these getters:
+        ``get_id()``, ``get_ISBNCode()``, ``get_title()``, ``get_author()``,
+        ``get_weight()``, ``get_price()``, ``get_isBorrowed()``.
+
+    Returns
+    -------
     List[Dict[str, Any]]
-        Lista de diccionarios, donde cada diccionario representa un libro
-        con sus atributos. La lista mantiene el orden de lista_ordenada.
-        
-    EXCEPCIONES:
-    ============
-    - AttributeError: si algún libro no tiene todos los getters requeridos
-    
-    EJEMPLO:
-    ========
-    >>> libros = [libro1, libro2, libro3]  # Ya ordenados por precio
-    >>> reporte = generar_reporte_global(libros)
+        A list of dictionaries where each dictionary represents a book.
+
+    Raises
+    ------
+    AttributeError
+        If a Book object does not implement one of the expected getters.
+
+    Example
+    -------
+    >>> # Assuming `libros_ordenados` is a list of Book objects sorted by price
+    >>> reporte = generar_reporte_global(libros_ordenados)
     >>> reporte[0]
     {
         'id': 'B001',
         'ISBNCode': '978-1234567890',
-        'title': 'El Quijote',
+        'title': 'Don Quixote',
         'author': 'Miguel de Cervantes',
         'weight': 1.2,
         'price': 25000,
@@ -102,13 +75,13 @@ def generar_reporte_global(lista_ordenada: List[Any]) -> List[Dict[str, Any]]:
     """
     reporte = []
     
-    logger.info(f"Generando reporte global de {len(lista_ordenada)} libros ordenados por precio")
+    logger.info(f"Generating global report for {len(lista_ordenada)} books sorted by price")
     
     for libro in lista_ordenada:
         try:
-            # Extraer información de cada libro usando sus getters
-            # IMPORTANTE: Usar nombres en INGLÉS para mantener consistencia
-            # con books.json, inventory_general.json y el modelo Book
+            # Extract information from each book using its getters.
+            # IMPORTANT: Use English field names to remain consistent with
+            # books.json, inventory_general.json and the Book model.
             libro_dict = {
                 'id': libro.get_id(),
                 'ISBNCode': libro.get_ISBNCode(),
@@ -122,43 +95,44 @@ def generar_reporte_global(lista_ordenada: List[Any]) -> List[Dict[str, Any]]:
             reporte.append(libro_dict)
             
         except AttributeError as e:
-            # Si un libro no tiene algún getter, loguear error y continuar
-            logger.error(f"Error al procesar libro en reporte: {e}")
-            # Agregar entrada con información parcial
+            # If a book is missing a getter, log the error and continue.
+            logger.error(f"Error processing book for report: {e}")
+            # Append an entry with partial information so the report remains
+            # usable even when some items could not be fully serialized.
             reporte.append({
-                'error': f'Libro con atributos faltantes: {str(e)}',
-                'libro': str(libro)
+                'error': f'Missing attributes on book: {str(e)}',
+                'book': str(libro)
             })
     
-    logger.info(f"Reporte global generado exitosamente con {len(reporte)} entradas")
+    logger.info(f"Global report successfully generated with {len(reporte)} entries")
     
     return reporte
 
 
 def verificar_ordenamiento(lista: List[Any]) -> bool:
-    """Verificar si una lista de Books está ordenada por precio (ascendente).
-    
-    UTILIDAD:
-    =========
-    Función de debugging y testing para validar que el ordenamiento funciona
-    correctamente. Útil para pruebas unitarias.
-    
-    PARÁMETROS:
-    ===========
+    """Check whether a list of Book objects is sorted by price (ascending).
+
+    Utility
+    -------
+    A small helper used for debugging and unit tests to ensure the sorting
+    algorithm produced a correctly ordered list.
+
+    Parameters
+    ----------
     lista : List[Any]
-        Lista de objetos Book a verificar
-        
-    RETORNO:
-    ========
+        List of Book objects to verify.
+
+    Returns
+    -------
     bool
-        True si la lista está ordenada por precio (menor a mayor)
-        False en caso contrario
-        
-    EJEMPLO:
-    ========
+        True if the list is sorted by price (lowest to highest), otherwise
+        False.
+
+    Example
+    -------
     >>> from utils.algorithms.AlgoritmosOrdenamiento import merge_sort_books_by_price
-    >>> ordenados = merge_sort_books_by_price(libros)
-    >>> assert verificar_ordenamiento(ordenados), "Error: lista no está ordenada"
+    >>> ordered = merge_sort_books_by_price(books)
+    >>> assert verificar_ordenamiento(ordered), "List is not sorted"
     """
     if len(lista) <= 1:
         return True
@@ -171,68 +145,68 @@ def verificar_ordenamiento(lista: List[Any]) -> bool:
 
 
 def ordenar_y_generar_reporte(inventario_general: List[Any]) -> Dict[str, Any]:
-    """Función de conveniencia: ordenar inventario y generar reporte en un solo paso.
-    
-    PROPÓSITO:
-    ==========
-    Combina merge_sort_books_by_price() y generar_reporte_global() en una sola
-    función para simplificar el uso común del módulo.
-    
-    PARÁMETROS:
-    ===========
+    """Convenience function: sort the inventory and produce a report.
+
+    Purpose
+    -------
+    Combines ``merge_sort_books_by_price()`` and ``generar_reporte_global()``
+    so callers can obtain sorted objects, a serializable report, and basic
+    inventory statistics with a single call.
+
+    Parameters
+    ----------
     inventario_general : List[Any]
-        Lista desordenada de objetos Book (el Inventario General)
-        
-    RETORNO:
-    ========
+        Unsorted list of Book objects (the general inventory).
+
+    Returns
+    -------
     Dict[str, Any]
-        Diccionario con dos claves:
-        - 'libros_ordenados': List[Any] - Lista ordenada de objetos Book
-        - 'reporte': List[Dict[str, Any]] - Reporte serializable
-        - 'total_libros': int - Cantidad de libros procesados
-        - 'precio_total': int - Suma de todos los precios
-        - 'precio_promedio': float - Precio promedio
-        - 'precio_minimo': int - Precio más bajo
-        - 'precio_maximo': int - Precio más alto
-        
-    EJEMPLO:
-    ========
-    >>> resultado = ordenar_y_generar_reporte(inventario_general)
-    >>> print(f"Total libros: {resultado['total_libros']}")
-    >>> print(f"Precio promedio: ${resultado['precio_promedio']:,.0f}")
-    >>> 
-    >>> # Guardar reporte en JSON
+        A dictionary containing:
+        - ``libros_ordenados``: List[Any] - the sorted Book objects
+        - ``reporte``: List[Dict[str, Any]] - JSON-serializable report
+        - ``total_libros``: int - number of processed books
+        - ``precio_total``: int - sum of all prices
+        - ``precio_promedio``: float - average price
+        - ``precio_minimo``: int - minimum price
+        - ``precio_maximo``: int - maximum price
+
+    Example
+    -------
+    >>> result = ordenar_y_generar_reporte(inventario_general)
+    >>> print(f"Total books: {result['total_libros']}")
+    >>> print(f"Average price: ${result['precio_promedio']:,.0f}")
+    >>>
+    >>> # Save the report as JSON
     >>> import json
-    >>> with open('reporte.json', 'w') as f:
-    ...     json.dump(resultado['reporte'], f, indent=2, ensure_ascii=False)
+    >>> with open('report.json', 'w') as f:
+    ...     json.dump(result['reporte'], f, indent=2, ensure_ascii=False)
     """
     # Importar el algoritmo de ordenamiento
     from utils.algorithms.AlgoritmosOrdenamiento import merge_sort_books_by_price
     
-    logger.info(f"Iniciando ordenamiento de {len(inventario_general)} libros por precio")
+    logger.info(f"Starting sort of {len(inventario_general)} books by price")
     
-    # Paso 1: Ordenar usando Merge Sort
+    # Step 1: Sort using Merge Sort
     libros_ordenados = merge_sort_books_by_price(inventario_general)
     
-    # Paso 2: Generar reporte serializable
+    # Step 2: Generate serializable report
     reporte = generar_reporte_global(libros_ordenados)
     
-    # Paso 3: Calcular estadísticas del inventario
+    # Step 3: Compute inventory statistics
     total_libros = len(libros_ordenados)
     
     if total_libros > 0:
-        precios = [libro.get_price() for libro in libros_ordenados]
-        precio_total = sum(precios)
+        prices = [libro.get_price() for libro in libros_ordenados]
+        precio_total = sum(prices)
         precio_promedio = precio_total / total_libros
-        precio_minimo = precios[0]  # Primera posición (ya ordenado)
-        precio_maximo = precios[-1]  # Última posición (ya ordenado)
+        precio_minimo = prices[0]  # first position (already sorted)
+        precio_maximo = prices[-1]  # last position (already sorted)
     else:
         precio_total = 0
         precio_promedio = 0.0
         precio_minimo = 0
         precio_maximo = 0
-    
-    logger.info(f"Ordenamiento completado: {total_libros} libros, precio total: ${precio_total:,}")
+    logger.info(f"Sorting completed: {total_libros} books, total price: ${precio_total:,}")
     
     return {
         'libros_ordenados': libros_ordenados,
