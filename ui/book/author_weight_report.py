@@ -1,12 +1,114 @@
-"""
-Author Weight Report Window - Queue (Tail) Recursion Implementation
+"""Author Weight Report Window - Tail (Queue) Recursion Demonstration.
 
-This module provides a UI window to calculate and display the average weight
-of all books by a specific author using tail-style (queue) recursion.
+This module implements a UI window for calculating and displaying the average weight
+of all books by a specific author using tail-style (queue) recursion. This serves as
+both a functional reporting tool and a demonstration of the tail recursion algorithm
+requirement from the project specifications.
 
-This demonstrates the recursion requirement from the project:
-"Recursión de Cola: Implementar una función recursiva que calcule el Peso Promedio
-de la colección de un autor, demostrando la lógica de la recursión de cola por consola."
+Project Requirement:
+    "Recursión de Cola: Implementar una función recursiva que calcule el Peso Promedio
+    de la colección de un autor, demostrando la lógica de la recursión de cola por consola."
+
+Algorithm - Tail (Queue) Recursion:
+    The calculation uses tail recursion where the recursive call is the last operation:
+    
+    ```
+    def calculate_avg_weight(books, author, index=0, count=0, total_weight=0.0):
+        if index >= len(books):              # Base case
+            return (total_weight / count) if count > 0 else 0.0
+        
+        book = books[index]
+        if book.author == author:
+            # Accumulate and recurse (tail call)
+            return calculate_avg_weight(books, author, index + 1,
+                                       count + 1, total_weight + book.weight)
+        else:
+            # Skip and recurse (tail call)
+            return calculate_avg_weight(books, author, index + 1,
+                                       count, total_weight)
+    ```
+    
+    Tail Recursion Characteristics:
+    - Uses accumulator parameters (index, count, total_weight)
+    - State updated before recursive call (not after)
+    - Recursive call is the LAST operation (tail position)
+    - No computation happens after recursive call returns
+    - Optimizable to iteration via TCO (Tail Call Optimization)
+    
+    Python Limitation:
+    - Python does NOT have TCO (CPython design decision)
+    - Still uses O(n) stack space despite tail recursion pattern
+    - Educational value: demonstrates tail recursion concept
+    - Would be O(1) space in languages with TCO (Scheme, Scala, etc.)
+
+Tail vs Stack Recursion Comparison:
+    Stack Recursion (author_value_report.py):
+    - Accumulates results on RETURN path (stack unwinding)
+    - Computation happens AFTER recursive call
+    - return value + recursive_call(...)
+    
+    Tail Recursion (this module):
+    - Accumulates results on CALL path (parameter passing)
+    - Computation happens BEFORE recursive call
+    - return recursive_call(..., accumulated_state)
+
+UI Features:
+    1. Author Selection:
+       - Dropdown populated with all unique authors
+       - Read-only combobox for data integrity
+       - Validation for empty/invalid selections
+    
+    2. Debug Mode:
+       - Checkbox to enable console output capture
+       - Shows recursive call flow with accumulated state
+       - Displays each iteration's parameters
+       - Educational tool for understanding tail recursion
+    
+    3. Results Display:
+       - Average weight in kilograms (3 decimal precision)
+       - Book count for selected author
+       - Detailed list of each book with weight
+       - Manual calculation verification
+       - Algorithm explanation with complexity analysis
+    
+    4. Visual Feedback:
+       - Scrollable textbox for long result lists
+       - Monospace font (Consolas) for alignment
+       - Box-drawing characters for visual structure
+       - Color-coded sections (emojis for visual hierarchy)
+
+Architecture:
+    Window Type: CTkToplevel (modal-like popup)
+    Controller: BookController (handles business logic)
+    Theme: Cozy Japanese aesthetic via theme module
+    Widgets: Factory-created for consistency
+
+Debug Mode Implementation:
+    - Uses stdout redirection (io.StringIO)
+    - Captures print() statements from controller
+    - Restores stdout after calculation
+    - Displays captured output in results area
+    - Non-invasive (optional feature via checkbox)
+
+Error Handling:
+    - Author loading failures: Shows error message, provides fallback
+    - Window centering failures: Logged but non-blocking
+    - Calculation errors: UIErrorHandler with user-friendly messages
+    - Invalid selections: Warning dialog before calculation
+    - Stdout redirection errors: Graceful fallback
+
+Usage Context:
+    Launched from main menu via "Author Weight Report" button. Used to:
+    - Demonstrate tail recursion algorithm to stakeholders
+    - Calculate average book weight for collection analysis
+    - Compare recursion styles (tail vs stack) educationally
+    - Analyze physical space requirements per author
+
+See Also:
+    - controllers.book_controller.BookController.calculate_average_weight_by_author:
+      Contains the actual tail recursive implementation
+    - ui.book.author_value_report: Stack recursion variant for value calculation
+    - ui.main_menu: Entry point for opening this window
 """
 
 import customtkinter as ctk
@@ -23,9 +125,140 @@ logger = LibraryLogger.get_logger(__name__)
 
 
 class AuthorWeightReport(ctk.CTkToplevel):
-    """Window to calculate average weight of books by author using tail recursion."""
+    """Tail recursion demonstration window for calculating average book weight by author.
+    
+    This window provides an interactive interface for selecting an author and
+    calculating the average weight of all their books using tail-style (queue)
+    recursion. The UI emphasizes educational value by optionally showing the
+    recursive call flow and providing detailed algorithm explanations.
+    
+    Architecture:
+        Window Type: CTkToplevel (popup window)
+        Layout: Vertical stack with input section, debug option, calculation button, results area
+        Controller: BookController for data access and tail recursive calculations
+    
+    UI Components:
+        1. Header Section:
+           - Title with emoji decoration (⚖️)
+           - Subtitle explaining tail recursion type
+        
+        2. Input Section:
+           - Author dropdown (ComboBox, read-only)
+           - Debug mode checkbox (enables console output capture)
+        
+        3. Action Section:
+           - Primary button to trigger calculation
+        
+        4. Results Section:
+           - Scrollable textbox (600x300px)
+           - Monospace font for alignment
+           - Displays: average weight, debug flow (optional), book details, manual calculation, algorithm explanation
+        
+        5. Footer Section:
+           - Clear button (resets to welcome message)
+           - Close button (destroys window)
+    
+    Attributes:
+        controller (BookController): Handles book data and tail recursive calculations
+        authors (list[str]): List of all unique authors in system
+        author_var (StringVar): Tracks selected author in dropdown
+        debug_var (BooleanVar): Tracks debug mode checkbox state
+        author_dropdown (CTkComboBox): Author selection widget
+        results_text (CTkTextbox): Scrollable results display area
+    
+    Window Configuration:
+        - Dimensions: 700x600 pixels
+        - Position: Screen-centered on creation
+        - Theme: Cozy Japanese aesthetic (warm beige)
+        - Title: "⚖️ Peso Promedio por Autor (Recursión de Cola)"
+    
+    Debug Mode Feature:
+        When enabled, captures stdout during calculation to show:
+        - Each recursive call with parameters
+        - Accumulated state (index, count, total_weight)
+        - Base case detection
+        - Final result computation
+        
+        Implementation: Uses io.StringIO to redirect sys.stdout temporarily
+    
+    Educational Value:
+        Results include detailed algorithm explanation showing:
+        - Tail recursive function pseudocode with accumulators
+        - Stack depth reached (same as book count despite tail recursion)
+        - Complexity analysis (time and space)
+        - Tail Call Optimization (TCO) explanation
+        - Comparison with stack recursion
+    
+    Key Differences from Stack Recursion Window:
+        1. Calculates average (weight) instead of sum (value)
+        2. Uses tail recursion with accumulators
+        3. Includes debug mode for call flow visualization
+        4. Shows manual calculation verification
+        5. Explains TCO concept and Python limitations
+    
+    See Also:
+        - controllers.book_controller.BookController: Tail recursive calculation logic
+        - ui.book.author_value_report: Stack recursion variant
+    """
 
     def __init__(self, parent):
+        """Initialize the Author Weight Report window with theme and components.
+        
+        Creates and configures the complete UI layout for tail recursion demonstration,
+        including author selection dropdown, debug mode checkbox, calculation button,
+        and results display area with stdout capture capability.
+        
+        Purpose:
+            Sets up an educational interface for demonstrating tail recursion while
+            providing practical average weight calculation functionality.
+        
+        Initialization Workflow:
+            1. Call parent CTkToplevel constructor
+            2. Initialize BookController for data access
+            3. Configure window (title, size, centering)
+            4. Apply theme (colors, fonts)
+            5. Create main container frame
+            6. Build title and subtitle
+            7. Create input section (author dropdown)
+            8. Load all authors from database
+            9. Add debug mode checkbox
+            10. Create calculation button
+            11. Build results display area
+            12. Show welcome message
+            13. Add footer buttons (clear, close)
+            14. Log window opening
+        
+        Window Centering Algorithm:
+            ```
+            screen_center_x = screen_width // 2
+            screen_center_y = screen_height // 2
+            window_x = screen_center_x - (window_width // 2)
+            window_y = screen_center_y - (window_height // 2)
+            ```
+        
+        Debug Mode Setup:
+            - BooleanVar initialized to False (debug off by default)
+            - Checkbox linked to debug_var for state tracking
+            - Label explains debug mode purpose clearly
+        
+        Error Handling:
+            - Window centering: Logged if fails, continues with default position
+            - Author loading: Shows error message, uses fallback list
+            - All errors non-blocking to ensure window opens
+        
+        Args:
+            parent: Parent CTk window (typically MainMenu)
+        
+        Side Effects:
+            - Creates new toplevel window
+            - Loads all authors from database via controller
+            - Applies global theme to window
+            - Logs window opening event
+            - Displays welcome message in results area
+        
+        Raises:
+            None: All exceptions caught and handled gracefully
+        """
         super().__init__(parent)
         
         self.controller = BookController()
@@ -164,7 +397,61 @@ class AuthorWeightReport(ctk.CTkToplevel):
         logger.info("Ventana de reporte de peso promedio por autor abierta")
     
     def _display_welcome_message(self):
-        """Display welcome message in results area."""
+        """Display instructional welcome message explaining tail recursion concept.
+        
+        Clears the results textbox and shows a formatted welcome message that
+        explains the tool's purpose, tail recursion algorithm, comparison with
+        stack recursion, and usage instructions. This provides comprehensive
+        educational context before the user performs calculations.
+        
+        Purpose:
+            Provides clear instructions and tail recursion explanation to help users
+            understand both how to use the tool and the underlying algorithmic
+            differences between tail and stack recursion.
+        
+        Message Content:
+            1. Header: Tool title in box-drawing frame
+            2. Purpose: Explains tail recursion for average weight calculation
+            3. Algorithm: High-level overview of tail recursive process with accumulators
+            4. Complexity: Time and space analysis (O(n) despite tail recursion)
+            5. Comparison: Key differences between tail and stack recursion
+            6. Instructions: Step-by-step usage guide including debug mode
+            7. Call to Action: Prompts user to select author
+        
+        Educational Elements:
+            - Explains accumulator pattern (index, count, total_weight)
+            - Clarifies "tail position" concept (last operation is recursive call)
+            - Distinguishes accumulation timing (going IN vs coming OUT)
+            - Notes space complexity difference in TCO-enabled languages
+            - Highlights Python's lack of TCO optimization
+        
+        Visual Formatting:
+            - Box-drawing characters (╔═╗║╚╝) for header
+            - Emojis for visual hierarchy (⚖️🔄💡📋👉)
+            - Bullet points (•) for algorithm steps
+            - Clear sectioning with blank lines
+        
+        Text State Management:
+            - Enables text widget for editing
+            - Clears all existing content
+            - Inserts new welcome message
+            - Disables text widget (read-only)
+        
+        Args:
+            None
+        
+        Returns:
+            None
+        
+        Side Effects:
+            - Clears results_text widget content
+            - Inserts welcome message
+            - Sets results_text to read-only state
+        
+        Called By:
+            - __init__: Initial welcome on window creation
+            - Clear button: Resets results area to welcome state
+        """
         self.results_text.delete("1.0", "end")
         welcome = """
 ╔════════════════════════════════════════════════════════════╗
@@ -197,7 +484,147 @@ class AuthorWeightReport(ctk.CTkToplevel):
         self.results_text.configure(state="disabled")
     
     def calculate_weight(self):
-        """Calculate average weight for selected author using tail recursion."""
+        """Calculate and display average weight for selected author using tail recursion.
+        
+        Validates author selection, optionally captures debug output via stdout redirection,
+        invokes the tail recursion algorithm via controller, retrieves book details, and
+        formats comprehensive results including manual calculation verification and
+        algorithm explanation with TCO discussion.
+        
+        Purpose:
+            Primary action method that orchestrates the entire calculation workflow
+            and presents educational results showing practical data, recursive call flow
+            (if debug enabled), and theoretical algorithm details with tail recursion emphasis.
+        
+        Workflow:
+            1. Validation:
+               - Check if author selected
+               - Validate against placeholder/error values
+               - Show warning dialog if invalid
+            
+            2. Data Collection:
+               - Log calculation start with debug mode status
+               - Retrieve all books from database
+               - Filter books by selected author
+               - Count matching books
+            
+            3. Debug Mode Setup (if enabled):
+               - Import io and sys modules
+               - Save original sys.stdout
+               - Redirect stdout to io.StringIO buffer
+            
+            4. Calculation:
+               - Call controller's tail recursion method with debug flag
+               - Returns average weight in kg
+            
+            5. Debug Mode Cleanup (if enabled):
+               - Restore original sys.stdout
+               - Extract captured console output
+            
+            6. Results Formatting:
+               - Clear previous results
+               - Display header with author name
+               - Show book count and average weight (3 decimal precision)
+               - Include debug output if captured
+               - List each book with details (title, ISBN, weight, status)
+               - Show manual calculation (sum ÷ count)
+               - Add algorithm explanation with accumulators and TCO
+            
+            7. Finalization:
+               - Set results as read-only
+               - Log success with summary
+        
+        Validation Logic:
+            Invalid selections:
+            - Empty string
+            - "Seleccione un autor..." (placeholder)
+            - "(No hay autores)" (empty database)
+            - "(Error al cargar)" (load failure)
+        
+        Debug Mode Mechanism:
+            ```python
+            import io, sys
+            old_stdout = sys.stdout
+            sys.stdout = captured_output = io.StringIO()
+            
+            # ... calculation with print() statements ...
+            
+            sys.stdout = old_stdout
+            debug_text = captured_output.getvalue()
+            ```
+            
+            Captures print() output from controller's debug mode,
+            showing each recursive call with accumulated parameters.
+        
+        Display Format:
+            ```
+            ╔════════════════════════════════════════╗
+            ║   RESULTADO DEL CÁLCULO (Cola)        ║
+            ╚════════════════════════════════════════╝
+            
+            👤 Autor: [Author Name]
+            📚 Libros encontrados: [Count]
+            ⚖️  PESO PROMEDIO: [Weight] kg
+            
+            [Debug output section if enabled]
+            
+            📋 Detalle de libros:
+               1. [Title]
+                  • ISBN: [Code]
+                  • Peso: [Weight] kg
+                  • Estado: [Available/Borrowed]
+            
+            📐 Cálculo Manual:
+               • Suma total: [Total] kg
+               • Cantidad: [Count]
+               • Promedio: [Total] ÷ [Count] = [Avg] kg
+            
+            🔄 Explicación del Algoritmo:
+               [Pseudocode with accumulators]
+               📊 Llamadas recursivas: [Count]
+               💾 Profundidad de pila: [Depth]
+               ⏱️  Complejidad: O(n) tiempo, O(n) espacio
+               
+               ✨ Tail Recursion Characteristic:
+                  Last operation is recursive call itself.
+                  Optimizable to O(1) space with TCO.
+                  Python lacks TCO, but pattern is educational.
+            ```
+        
+        Error Handling:
+            - Validation errors: Warning dialog, no calculation
+            - Calculation errors: UIErrorHandler with user message
+            - Stdout redirection errors: Gracefully handled (no debug output shown)
+            - All errors logged for debugging
+        
+        Args:
+            None (uses self.author_var for author, self.debug_var for debug mode)
+        
+        Returns:
+            None
+        
+        Side Effects:
+            - Updates results_text widget with formatted results
+            - Temporarily redirects sys.stdout if debug mode enabled
+            - Shows warning dialog if validation fails
+            - Shows error dialog if calculation fails
+            - Logs calculation start, result, and any errors
+        
+        Performance:
+            - Time: O(n) where n = total books (filters + recursion)
+            - Space: O(n) for stack frames during recursion (Python lacks TCO)
+            - UI update: O(m) where m = books by author (formatting)
+        
+        Notes:
+            - Debug mode captures console output non-invasively
+            - Manual calculation provides verification of recursive result
+            - TCO explanation helps users understand language differences
+            - Shows both practical use (average weight) and educational value (tail recursion)
+        
+        See Also:
+            - controllers.book_controller.BookController.calculate_average_weight_by_author:
+              Contains actual tail recursive implementation with debug prints
+        """
         author = self.author_var.get()
         debug_mode = self.debug_var.get()
         
