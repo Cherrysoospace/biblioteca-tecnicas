@@ -1,3 +1,13 @@
+"""
+User List Window Module
+
+This module provides a graphical user interface for viewing and managing all user
+records in the library management system. It displays users in a table format with
+search functionality and full CRUD operations including viewing, searching, editing,
+and deleting users. The module includes comprehensive logging and error handling
+for robust operation.
+"""
+
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -8,13 +18,62 @@ from ui.user.user_form import UserForm
 from controllers.user_controller import UserController
 from utils.logger import LibraryLogger, UIErrorHandler
 
-# Configurar logger para este módulo
+# Configure logger for this module
 logger = LibraryLogger.get_logger(__name__)
 
 
 class UserList(ctk.CTkToplevel):
-    """Listado de usuarios con opciones para editar y eliminar."""
+    """
+    A top-level window for displaying and managing all user records.
+
+    This class provides a comprehensive interface for user management with a searchable
+    table displaying all users and action buttons for refreshing, editing, and deleting
+    records. Users can double-click a row to edit a user or use the action buttons. The
+    table shows user ID and name. Includes search functionality by ID or name with Enter
+    key support. All operations are logged and errors are handled gracefully using the
+    UIErrorHandler.
+
+    Attributes:
+        _parent_window: Reference to the parent window that opened this dialog
+        controller (UserController): The user controller instance for database operations
+        search_entry (CTkEntry): Entry field for search input (ID or name)
+        tree (ttk.Treeview): Table widget displaying all user records with columns
+                            for id and name
+    """
+
     def __init__(self, parent=None):
+        """
+        Initialize the user list window.
+
+        Sets up the window layout with a search bar at the top, a table displaying all
+        users, and action buttons for managing users. Applies styling, configures the table,
+        and loads all users from the database. Sets up event handlers for search (Enter key),
+        double-click editing, and window closing. All initialization errors are logged and
+        handled gracefully.
+
+        Parameters:
+            parent: The parent window that opened this dialog. Can be None if opened
+                   as a standalone window. Used for window management and focus control
+
+        Returns:
+            None
+
+        Side Effects:
+            - Creates and displays a new top-level window (600x420)
+            - Initializes UserController for database operations
+            - Loads all user records from the database
+            - Applies application theme to the window and table
+            - Makes the window transient to the parent if provided
+            - Binds Enter key in search field to perform search
+            - Binds double-click event to open edit dialog
+            - Applies alternating row colors for readability
+            - Logs all significant events and errors
+
+        Raises:
+            Exception: Catches and logs various exceptions during initialization,
+                      continues execution to ensure the window opens even if some
+                      non-critical operations fail
+        """
         super().__init__(parent)
         self._parent_window = parent
         
@@ -152,6 +211,33 @@ class UserList(ctk.CTkToplevel):
         self.load_users()
 
     def load_users(self):
+        """
+        Load and display all user records in the table.
+
+        Clears the current table contents and retrieves all users from the controller,
+        then populates the table with user data including ID and name. Applies alternating
+        row colors for better readability. Logs the number of users loaded and any errors
+        encountered during the process.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Clears all existing rows from the table
+            - Retrieves all users from UserController
+            - Populates table with user records
+            - Applies alternating row background colors (odd/even)
+            - Logs info message with user count
+            - Shows error message box if loading fails
+            - Logs warning for individual user insertion failures
+
+        Raises:
+            Exception: Catches and handles errors via UIErrorHandler, logs warnings
+                      for individual user insertion failures and continues processing
+        """
         # clear rows
         for r in self.tree.get_children():
             self.tree.delete(r)
@@ -184,7 +270,39 @@ class UserList(ctk.CTkToplevel):
             UIErrorHandler.log_and_pass(logger, "configurar tags de colores en tree", e)
 
     def search_users(self):
-        """Buscar usuarios por ID o nombre."""
+        """
+        Search for users by ID or name.
+
+        Extracts the search term from the search entry field and performs searches using
+        both find_by_id and find_by_name controller methods. Combines results and removes
+        duplicates. Displays filtered results in the table. Logs search operations and
+        result counts. This method is triggered by clicking the search button or pressing
+        Enter in the search field.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Shows info message if search term is empty
+            - Clears all existing rows from the table
+            - Extracts and trims search term from search_entry field
+            - Calls controller.find_by_id to search by ID
+            - Calls controller.find_by_name to search by name
+            - Combines results and removes duplicates
+            - Logs info message with search term and result count
+            - Shows info message if no users match the search term
+            - Populates table with filtered user records
+            - Applies alternating row background colors (odd/even)
+            - Shows error message box if search operation fails
+            - Logs all operations and errors
+
+        Raises:
+            Exception: Catches and handles errors via UIErrorHandler, logs warnings
+                      for individual user insertion failures
+        """
         search_term = self.search_entry.get().strip()
         
         if not search_term:
@@ -242,7 +360,29 @@ class UserList(ctk.CTkToplevel):
             )
 
     def clear_search(self):
-        """Limpiar el campo de búsqueda y recargar todos los usuarios."""
+        """
+        Clear the search field and reload all users.
+
+        Removes the search term from the search entry field and reloads the complete
+        user list, effectively resetting the view to show all users. Logs the clear
+        operation.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Clears all text from the search_entry field
+            - Reloads and displays all users via load_users
+            - Logs info message about clearing search
+            - Shows error message box if clear operation fails
+            - Logs errors via UIErrorHandler
+
+        Raises:
+            Exception: Catches and handles exceptions via UIErrorHandler
+        """
         try:
             self.search_entry.delete(0, 'end')
             self.load_users()
@@ -255,6 +395,31 @@ class UserList(ctk.CTkToplevel):
             )
 
     def _on_close(self):
+        """
+        Handle the window close event.
+
+        Properly closes the user list window and returns focus to the parent window.
+        Attempts multiple cleanup methods to ensure the window is properly destroyed
+        even if some operations fail. This method is called when the user clicks the
+        return button or the window's close button. All errors are logged.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Destroys the current window
+            - If destroy fails, attempts to withdraw (hide) the window
+            - Lifts and focuses the parent window if it exists
+            - Restores the parent window to the foreground
+            - Logs all errors via UIErrorHandler
+
+        Raises:
+            Exception: Catches and logs all exceptions during cleanup to ensure
+                      the method completes without errors
+        """
         try:
             self.destroy()
         except Exception as e:
@@ -275,6 +440,36 @@ class UserList(ctk.CTkToplevel):
             UIErrorHandler.log_and_pass(logger, "_on_close manejo de ventana padre", e)
 
     def open_selected_for_edit(self):
+        """
+        Open the edit dialog for the selected user record.
+
+        Retrieves the user ID from the selected table row, fetches the full user object
+        from the controller, and opens the UserForm dialog in edit mode. Binds a destroy
+        event handler to refresh the user table when the edit dialog is closed. Also handles
+        double-click events on table rows. Logs all operations and handles errors gracefully.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Shows info message if no user is selected
+            - Shows error message if the selected row cannot be read
+            - Shows error message if user is not found in the database
+            - Retrieves user object from UserController
+            - Opens UserForm window in edit mode as a top-level dialog
+            - Binds destroy event to refresh the user table when edit window closes
+            - Logs info message with user ID being edited
+            - Automatically refreshes the user list after editing
+            - Shows error message box if edit window cannot be opened
+            - Logs all operations and errors via UIErrorHandler
+
+        Raises:
+            Exception: Catches and handles exceptions via UIErrorHandler with appropriate
+                      user messages
+        """
         sel = self.tree.selection()
         if not sel:
             messagebox.showinfo("Info", "Selecciona primero un usuario en la tabla.")
@@ -322,6 +517,36 @@ class UserList(ctk.CTkToplevel):
             )
 
     def delete_selected(self):
+        """
+        Delete the selected user record from the database.
+
+        Validates that a user is selected, retrieves the user ID from the selected table row,
+        prompts the user for confirmation, and deletes the user if confirmed. Warns the user
+        that this action cannot be undone. Refreshes the table after successful deletion.
+        Logs all operations including user cancellations.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Shows info message if no user is selected
+            - Shows error message if the selected row cannot be read
+            - Shows confirmation dialog warning about irreversible action
+            - Logs info message if user cancels deletion
+            - Deletes the user record from the database via controller
+            - Logs info message with deleted user ID
+            - Shows success message box if deletion succeeds
+            - Shows error message box if deletion fails
+            - Refreshes the user list after successful deletion
+            - Logs all operations and errors via UIErrorHandler
+
+        Raises:
+            Exception: Catches and handles exceptions via UIErrorHandler with appropriate
+                      user messages including the user ID and error details
+        """
         sel = self.tree.selection()
         if not sel:
             messagebox.showinfo("Info", "Selecciona primero un usuario en la tabla.")
