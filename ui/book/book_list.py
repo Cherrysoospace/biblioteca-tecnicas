@@ -53,7 +53,7 @@ class BookList(ctk.CTkToplevel):
         table_holder = tk.Frame(container, bg=theme.BG_COLOR)
         table_holder.pack(expand=True, fill="both", pady=(8, 8))
 
-        cols = ("id", "ISBNCode", "title", "author", "weight", "price")
+        cols = ("id", "ISBNCode", "title", "author", "weight", "price", "isBorrowed")
 
         # Style the Treeview to match app fonts and palette
         style = ttk.Style()
@@ -96,6 +96,7 @@ class BookList(ctk.CTkToplevel):
             "author": "Autor",
             "weight": "Peso",
             "price": "Precio",
+            "isBorrowed": "Prestado",
         }
         for c in cols:
             self.tree.heading(c, text=headings.get(c, c))
@@ -104,6 +105,8 @@ class BookList(ctk.CTkToplevel):
                 self.tree.column(c, width=70, anchor="center")
             elif c in ("price", "weight"):
                 self.tree.column(c, width=90, anchor="center")
+            elif c == "isBorrowed":
+                self.tree.column(c, width=80, anchor="center")
             else:
                 self.tree.column(c, width=200, anchor="w")
 
@@ -164,6 +167,8 @@ class BookList(ctk.CTkToplevel):
         # insert rows with alternating tag for subtle row striping
         for i, book in enumerate(books):
             try:
+                # Format isBorrowed as Sí/No for better readability
+                is_borrowed = "Sí" if book.get_isBorrowed() else "No"
                 row = (
                     book.get_id(),
                     book.get_ISBNCode(),
@@ -171,6 +176,7 @@ class BookList(ctk.CTkToplevel):
                     book.get_author(),
                     book.get_weight(),
                     book.get_price(),
+                    is_borrowed,
                 )
                 tag = 'even' if i % 2 == 0 else 'odd'
                 self.tree.insert("", "end", values=row, tags=(tag,))
