@@ -3,6 +3,11 @@ from services.loan_service import LoanService
 
 class LoanController:
 	def __init__(self):
+		"""Initialize the LoanController with a :class:`LoanService` instance.
+
+		The controller is a thin layer that translates service results into
+		simple dict responses for the UI or other callers.
+		"""
 		self.service = LoanService()
 
 	def create_loan(self, user_id: str, isbn: str) -> dict:
@@ -30,9 +35,22 @@ class LoanController:
 			return {"success": False, "message": str(e)}
 
 	def list_loans(self):
+		"""Return a list of all loans.
+
+		Returns:
+			List[Loan] - all loans currently persisted (copy of internal list).
+		"""
 		return self.service.get_all_loans()
 
 	def get_loan(self, loan_id: str):
+		"""Return a single loan by its ID.
+
+		Args:
+			loan_id: ID del préstamo
+
+		Returns:
+			Loan or None if no loan exists with the provided id.
+		"""
 		return self.service.find_by_id(loan_id)
 	
 	def find_by_id(self, loan_id: str):
