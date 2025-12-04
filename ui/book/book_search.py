@@ -13,7 +13,7 @@ import customtkinter as ctk
 from tkinter import ttk, messagebox
 from ui import theme
 from ui import widget_factory as wf
-from services.inventory_service import InventoryService
+from controllers.book_controller import BookController
 
 
 class BookSearch(ctk.CTkToplevel):
@@ -46,8 +46,8 @@ class BookSearch(ctk.CTkToplevel):
         except Exception:
             pass
 
-        # Inventory service
-        self.inventory_service = InventoryService()
+        # Book controller (follows MVC pattern)
+        self.controller = BookController()
         self.current_results = []
 
         # Main container
@@ -229,12 +229,12 @@ class BookSearch(ctk.CTkToplevel):
         for item in self.tree.get_children():
             self.tree.delete(item)
         
-        # Perform search using linear search algorithm
+        # Perform search using linear search algorithm through controller
         try:
             if search_type == "title":
-                results = self.inventory_service.find_by_title(query)
+                results = self.controller.search_books_by_title(query)
             else:  # author
-                results = self.inventory_service.find_by_author(query)
+                results = self.controller.search_books_by_author(query)
             
             self.current_results = results
             

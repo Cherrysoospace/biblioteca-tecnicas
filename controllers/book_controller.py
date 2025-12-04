@@ -154,3 +154,54 @@ class BookController:
             Total number of combinations the algorithm will check.
         """
         return self.service.count_possible_combinations()
+
+    # -------------------- Search Methods (Linear Search Algorithm) --------------------
+
+    def search_books_by_title(self, query: str):
+        """Search books by title using linear search algorithm.
+        
+        This method delegates to InventoryService which implements recursive
+        linear search to find books matching the given title query.
+        
+        Parameters:
+        - query: string to search for in book titles (partial match, case-insensitive)
+        
+        Returns:
+        - List of Inventory objects containing matching books
+        """
+        inv_service = InventoryService()
+        return inv_service.find_by_title(query)
+
+    def search_books_by_author(self, query: str):
+        """Search books by author using linear search algorithm.
+        
+        This method delegates to InventoryService which implements recursive
+        linear search to find books by the given author.
+        
+        Parameters:
+        - query: string to search for in author names (partial match, case-insensitive)
+        
+        Returns:
+        - List of Inventory objects containing matching books
+        """
+        inv_service = InventoryService()
+        return inv_service.find_by_author(query)
+
+    # -------------------- Backtracking Algorithm --------------------
+
+    def find_optimal_shelf_selection(self, max_capacity: float = 8.0):
+        """Find the optimal combination of books that maximizes value without exceeding weight capacity.
+
+        This exposes the backtracking algorithm through the controller layer.
+        The algorithm uses backtracking to solve the knapsack problem: finding
+        the combination of books from the catalog that maximizes total value (COP)
+        without exceeding the maximum shelf weight capacity.
+
+        Args:
+            max_capacity: Maximum weight capacity in Kg (default 8.0 - shelf capacity).
+
+        Returns:
+            Dictionary containing the optimal solution with max_value, total_weight,
+            selected books, and their indices.
+        """
+        return self.service.find_optimal_shelf_selection(max_capacity)

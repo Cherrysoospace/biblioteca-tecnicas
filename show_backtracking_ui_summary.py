@@ -1,0 +1,45 @@
+"""Summary display for Backtracking UI integration."""
+
+print('=' * 70)
+print('INTEGRACION UI - ALGORITMO DE BACKTRACKING')
+print('=' * 70)
+print()
+
+print('ARCHIVOS CREADOS/MODIFICADOS:')
+print('  + ui/book/backtracking_report.py - Ventana de visualizacion')
+print('  + test_backtracking_ui.py - Script de prueba UI')
+print('  ~ ui/main_menu.py - Agregado boton "Backtracking"')
+print()
+
+print('CARACTERISTICAS DE LA VENTANA:')
+print('  - Muestra resultados del algoritmo de backtracking')
+print('  - Estadisticas detalladas (valor, peso, capacidad)')
+print('  - Lista de libros seleccionados')
+print('  - Informacion del algoritmo utilizado')
+print('  - Boton para cambiar capacidad de estanteria')
+print('  - Boton de actualizacion')
+print('  - Diseno consistente con BruteForceReport')
+print()
+
+print('UBICACION EN EL MENU:')
+print('  Menu Principal > Boton "Backtracking"')
+print('  Icono: Lupa (search icon)')
+print('  Posicion: Junto al boton de Fuerza Bruta')
+print()
+
+print('INTEGRACION COMPLETA:')
+print('  OK Importacion en main_menu.py')
+print('  OK Boton agregado a button_specs')
+print('  OK Metodo open_backtracking_report() creado')
+print('  OK Usa controlador existente (BookController)')
+print('  OK Mismo tema visual que otras ventanas')
+print()
+
+print('COMANDOS PARA PROBAR:')
+print('  python main.py                - Abrir menu principal')
+print('  python test_backtracking_ui.py - Probar ventana directamente')
+print()
+
+print('=' * 70)
+print('INTEGRACION UI COMPLETADA')
+print('=' * 70)

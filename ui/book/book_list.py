@@ -6,6 +6,7 @@ from tkinter import ttk, messagebox
 from ui import theme
 from ui import widget_factory as wf
 from ui.book.book_form import BookForm
+from ui.book.book_search import BookSearch
 from controllers.book_controller import BookController
 
 
@@ -116,6 +117,10 @@ class BookList(ctk.CTkToplevel):
         action_frame = ctk.CTkFrame(container, fg_color=theme.BG_COLOR, corner_radius=0)
         action_frame.pack(fill="x", pady=(8, 4))
 
+        # Botón de búsqueda (más destacado)
+        search_btn = wf.create_primary_button(action_frame, text="🔍 Buscar Libros", command=self.open_book_search)
+        search_btn.pack(side="left", padx=(0, 12))
+
         refresh_btn = wf.create_small_button(action_frame, text="Refrescar", command=self.load_books)
         refresh_btn.pack(side="left", padx=(0, 8))
         # Edit and Delete buttons operate on the selected row
@@ -221,6 +226,24 @@ class BookList(ctk.CTkToplevel):
                 pass
         except Exception as e:
             messagebox.showerror("Error", f"No se pudo abrir el editor: {e}")
+
+    def open_book_search(self):
+        """Abrir ventana de búsqueda de libros."""
+        try:
+            parent = self._parent_window or self
+            win = BookSearch(parent)
+            try:
+                # keep a reference to avoid GC
+                if getattr(self, "_open_windows", None) is None:
+                    self._open_windows = []
+                self._open_windows.append(win)
+                win.deiconify()
+                win.lift()
+                win.focus()
+            except Exception:
+                pass
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo abrir la búsqueda: {e}")
 
     def delete_selected(self):
         sel = self.tree.selection()

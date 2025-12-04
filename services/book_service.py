@@ -426,6 +426,55 @@ class BookService:
         num_books = len(self.books)
         return count_total_combinations(num_books)
 
+    # -------------------- Backtracking Algorithm --------------------
+
+    def find_optimal_shelf_selection(self, max_capacity: float = 8.0) -> dict:
+        """Find the optimal combination of books that maximizes value without exceeding weight capacity.
+
+        This method implements the project requirement for a backtracking algorithm
+        that solves the knapsack problem: finding the combination of books that
+        maximizes total value (COP) without exceeding the maximum shelf capacity (8 Kg).
+
+        The algorithm uses backtracking to explore all possible combinations efficiently,
+        pruning branches that exceed the weight capacity. It demonstrates the complete
+        exploration and decision-making process.
+
+        Args:
+            max_capacity: Maximum weight capacity in Kg (default 8.0 - shelf capacity).
+
+        Returns:
+            Dictionary containing:
+                - 'max_value': Maximum total value achievable (in COP)
+                - 'total_weight': Total weight of selected books (in Kg)
+                - 'books': List of selected book dictionaries with full information
+                - 'indices': List of indices of selected books (for reference)
+
+        Example:
+            >>> service = BookService()
+            >>> result = service.find_optimal_shelf_selection(max_capacity=8.0)
+            >>> print(f"Maximum value: ${result['max_value']:,} COP")
+            >>> print(f"Books selected: {len(result['books'])}")
+
+        Complexity:
+            Time: O(2^n) worst case where n is the number of books (explores decision tree)
+            Space: O(n) for recursion depth + O(k) for solution where k is books selected
+        """
+        from utils.algorithms.backtracking import solve_optimal_shelf
+
+        # Convert Book objects to dict format for the algorithm
+        books_data = []
+        for book in self.books:
+            books_data.append({
+                'id': book.get_id(),
+                'title': book.get_title(),
+                'author': book.get_author(),
+                'weight': book.get_weight(),
+                'price': book.get_price()
+            })
+
+        # Apply backtracking algorithm
+        return solve_optimal_shelf(books_data, max_capacity)
+
 
 # Example:
 # service = BookService()
