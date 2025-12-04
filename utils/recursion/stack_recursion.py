@@ -45,8 +45,7 @@ def total_value_by_author(books, author, index=0):
 
     Returns
     - total value (int or float)
-
-    Complexity: O(n) time and O(n) call-stack depth where n is len(books).
+    
     """
 
     # Base case: we've processed all books

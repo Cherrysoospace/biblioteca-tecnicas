@@ -1,207 +1,180 @@
 """
 AlgoritmosBusqueda.py
 
-Implementa algoritmos de búsqueda recursivos para el sistema de biblioteca:
-1. Búsqueda Binaria: por ISBN sobre Inventario Ordenado (O(log n))
-2. Búsqueda Lineal: por Título o Autor sobre Inventario General (O(n))
+Recursive search algorithms used by the library management system:
+1. Binary Search: by ISBN over a sorted inventory (O(log n))
+2. Linear Search: by Title or Author over the general inventory (O(n))
 
-BÚSQUEDA BINARIA - USO CRÍTICO:
-================================
-Esta función es crítica para verificar si un libro devuelto tiene reservas 
-pendientes en la Cola de Espera. Su resultado (posición o no encontrado) debe 
-ser utilizado obligatoriamente para asignar el libro a la persona que solicitó 
-la reserva según la prioridad.
+Binary Search - Critical Use:
+-----------------------------
+The binary search function is critical for checking whether a returned book
+has pending reservations on the waiting queue. Its result (index or not found)
+must be used to allocate the book to the person who requested the reservation
+according to priority.
 
-PREREQUISITO BÚSQUEDA BINARIA:
-===============================
-El inventario debe estar ORDENADO por ISBN antes de usar esta función.
-Usar: AlgoritmosOrdenamiento.insercion_ordenada(inventario)
+Binary Search Precondition:
+---------------------------
+The inventory MUST be sorted by ISBN before using binary search. Use
+AlgoritmosOrdenamiento.insercion_ordenada(inventario) to prepare the list.
 
-BÚSQUEDA LINEAL - USO:
-======================
-Para buscar libros por Título o Autor en el Inventario General (no requiere 
-ordenamiento). Útil para búsquedas flexibles y parciales de texto.
+Linear Search - Use:
+-------------------
+Use the linear search to find books by partial Title or Author in the general
+inventory. It does not require sorting and is useful for flexible text searches.
 
-Autor: Sistema de Gestión de Bibliotecas
-Fecha: 2025-12-03
+Author: Library Management System
+Date: 2025-12-03
 """
 
 
 def busqueda_binaria(inventario_ordenado, isbn_buscado, inicio=0, fin=None):
     """
-    Busca un libro por ISBN en el inventario ordenado usando Búsqueda Binaria Recursiva.
-    
-    PREREQUISITO CRÍTICO:
-    =====================
-    El inventario DEBE estar ordenado por ISBN. Si no está ordenado, el resultado
-    será incorrecto (no solo lento, sino INCORRECTO).
-    
-    PARÁMETROS:
-    ===========
+    Search for a book by ISBN in a sorted inventory using recursive binary search.
+
+    Important precondition:
+    - The inventory MUST be sorted by ISBN prior to calling this function. If the
+      inventory is not sorted, the result will be incorrect (not merely slower).
+
+    Parameters
+    ----------
     inventario_ordenado : list
-        Lista ORDENADA de objetos Inventory. Cada objeto debe tener método get_isbn().
-        
+        A list (sorted by ISBN) of inventory objects. Each inventory object must
+        expose a get_isbn() method that returns a comparable ISBN string.
+
     isbn_buscado : str
-        El código ISBN del libro que se desea encontrar.
-        
-    inicio : int, opcional
-        Índice inicial del segmento de búsqueda (default: 0).
-        No modificar en la llamada inicial.
-        
-    fin : int, opcional
-        Índice final del segmento de búsqueda (default: len-1).
-        No modificar en la llamada inicial.
-    
-    RETORNO:
-    ========
+        The ISBN string to search for.
+
+    inicio : int, optional
+        The starting index for the search range (default: 0). This is intended for
+        internal recursive calls and should not be modified by external callers.
+
+    fin : int, optional
+        The ending index for the search range (default: len(inventario)-1). This
+        is intended for internal recursive calls and should not be modified by
+        external callers.
+
+    Returns
+    -------
     int
-        - Índice (posición) del libro si es encontrado
-        - -1 si el libro NO es encontrado
-        
-    COMPLEJIDAD:
-    ============
-    - Tiempo: O(log n) - divide el espacio de búsqueda a la mitad en cada paso
-    - Espacio: O(log n) - por la pila de recursión
-    
-    EJEMPLO DE USO:
-    ===============
+        The index of the matching inventory element if found, otherwise -1.
+
+    Example
+    -------
     >>> from utils.algorithms.AlgoritmosOrdenamiento import insercion_ordenada
     >>> from utils.algorithms.AlgoritmosBusqueda import busqueda_binaria
-    >>> 
-    >>> # 1. Ordenar inventario (PREREQUISITO)
+    >>>
+    >>> # 1. Sort inventory (PRECONDITION)
     >>> insercion_ordenada(inventario)
-    >>> 
-    >>> # 2. Buscar libro por ISBN
-    >>> indice = busqueda_binaria(inventario, "978-3-16-148410-0")
-    >>> 
-    >>> # 3. Verificar resultado
-    >>> if indice != -1:
-    ...     libro_encontrado = inventario[indice]
-    ...     print(f"Libro encontrado en posición {indice}")
+    >>>
+    >>> # 2. Search by ISBN
+    >>> index = busqueda_binaria(inventario, "978-3-16-148410-0")
+    >>>
+    >>> if index != -1:
+    ...     found = inventario[index]
+    ...     print(f"Book found at index {index}")
     ... else:
-    ...     print("Libro no encontrado")
+    ...     print("Book not found")
     """
-    # Si es el primer llamado, calcular el tamaño de la lista
+    # If this is the first call, determine the list size
     if fin is None:
         fin = len(inventario_ordenado) - 1
     
-    # Caso base: la lista está vacía
+    # Base case: empty list
     if not inventario_ordenado:
         return -1
     
-    # Caso base: la sublista no tiene elementos
+    # Base case: sublist has no elements
     if inicio > fin:
         return -1
     
-    # Calcular el punto medio
+    # Compute the midpoint
     medio = (inicio + fin) // 2
     
-    # Obtener el ISBN del inventario en la posición media
+    # Get the ISBN at the midpoint
     isbn_medio = inventario_ordenado[medio].get_isbn()
     
-    # Caso base: hemos encontrado el elemento
+    # Base case: element found
     if isbn_medio == isbn_buscado:
         return medio
     
-    # Caso recursivo: buscar en la mitad izquierda
-    # Se mueve una posición a la izquierda (medio - 1)
+    # Recursive case: search left half (move to medio - 1)
     elif isbn_medio > isbn_buscado:
         return busqueda_binaria(inventario_ordenado, isbn_buscado, inicio, medio - 1)
     
-    # Caso recursivo: buscar en la mitad derecha
-    # Se mueve una posición a la derecha (medio + 1)
+    # Recursive case: search right half (move to medio + 1)
     else:
         return busqueda_binaria(inventario_ordenado, isbn_buscado, medio + 1, fin)
 
 
 def busqueda_lineal(inventario, criterio_busqueda, indice=0):
     """
-    Busca libros por Título o Autor en el inventario usando Búsqueda Lineal Recursiva.
-    
-    CARACTERÍSTICAS:
-    ================
-    - NO requiere que el inventario esté ordenado (trabaja sobre Inventario General)
-    - Búsqueda PARCIAL: encuentra coincidencias aunque no sea texto exacto
-    - Insensible a mayúsculas/minúsculas
-    - Recursiva: sigue el patrón de búsqueda lineal enseñado en clase
-    
-    PARÁMETROS:
-    ===========
+    Search inventory recursively by partial Title or Author using linear search.
+
+    Characteristics
+    ---------------
+    - Does NOT require the inventory to be sorted.
+    - Performs partial, case- and accent-insensitive matching.
+    - Implemented recursively as a simple linear scan.
+
+    Parameters
+    ----------
     inventario : list
-        Lista de objetos Inventory (NO necesita estar ordenada).
-        
+        A list of inventory objects. Each inventory element is expected to have
+        a get_book() method that returns a book object (or None).
+
     criterio_busqueda : str
-        Texto a buscar en el título o autor del libro.
-        Puede ser parcial (ej: "Quijote" encontrará "Don Quijote de la Mancha").
-        
-    indice : int, opcional
-        Índice actual de búsqueda (default: 0).
-        No modificar en la llamada inicial - uso interno de la recursión.
-    
-    RETORNO:
-    ========
+        The text to search for within book title or author. Partial matches are
+        supported (e.g. "Quijote" matches "Don Quijote de la Mancha").
+
+    indice : int, optional
+        Current index used by recursion (default: 0). Do not change when calling
+        externally; this parameter is for internal recursion only.
+
+    Returns
+    -------
     int
-        - Índice (posición) del primer libro que coincida con el criterio
-        - -1 si NO se encuentra ninguna coincidencia
-        
-    COMPLEJIDAD:
-    ============
-    - Tiempo: O(n) - en el peor caso revisa todos los elementos
-    - Espacio: O(n) - por la pila de recursión
-    
-    EJEMPLO DE USO:
-    ===============
-    >>> from utils.algorithms.AlgoritmosBusqueda import busqueda_lineal
-    >>> 
-    >>> # Buscar por título parcial
-    >>> indice = busqueda_lineal(inventario_general, "quijote")
-    >>> 
-    >>> # Buscar por autor
-    >>> indice = busqueda_lineal(inventario_general, "garcía márquez")
-    >>> 
-    >>> # Verificar resultado
-    >>> if indice != -1:
-    ...     libro_encontrado = inventario_general[indice].get_book()
-    ...     print(f"Libro encontrado: {libro_encontrado.get_title()}")
-    ... else:
-    ...     print("No se encontró ningún libro con ese criterio")
-    
-    NOTA TÉCNICA:
-    =============
-    Esta función utiliza funciones auxiliares de normalización de texto
-    para hacer la búsqueda insensible a mayúsculas y acentos.
-    Ver: utils.search_helpers.normalizar_texto()
+        The index of the first inventory element whose book's title or author
+        contains the normalized search criterion; returns -1 if none found.
+
+    Complexity
+    ----------
+    Time: O(n) worst-case (scans all elements).
+    Space: O(n) due to recursion depth in the worst case.
+
+    Notes
+    -----
+    This function relies on helper routines to normalize text for
+    case- and accent-insensitive comparisons. See: utils.search_helpers.normalizar_texto()
     """
-    # Caso base: hemos llegado al final de la lista sin encontrar el elemento
+    # Base case: reached end of list without finding element
     if indice >= len(inventario):
         return -1
     
-    # Obtener el libro actual del inventario
+    # Get current inventory's book
     libro_actual = inventario[indice].get_book()
     
-    # Si no hay libro en esta posición del inventario, continuar
+    # If there is no book at this inventory position, continue
     if libro_actual is None:
-        # Caso recursivo: seguir buscando en el resto de la lista
+        # Recursive case: continue scanning the rest of the list
         return busqueda_lineal(inventario, criterio_busqueda, indice + 1)
     
-    # Obtener título y autor del libro actual
+    # Get current book's title and author
     titulo = libro_actual.get_title() or ""
     autor = libro_actual.get_author() or ""
     
-    # Importar función auxiliar para normalizar texto (insensible a mayúsculas/acentos)
+    # Import helper to normalize text (case and accent insensitive)
     from utils.search_helpers import normalizar_texto
     
-    # Normalizar todas las cadenas para comparación
+    # Normalize strings for comparison
     criterio_norm = normalizar_texto(criterio_busqueda)
     titulo_norm = normalizar_texto(titulo)
     autor_norm = normalizar_texto(autor)
     
-    # Caso base: hemos encontrado el elemento
-    # Buscar coincidencia PARCIAL en título o autor
+    # Base case: found the element (partial match in title or author)
     if criterio_norm in titulo_norm or criterio_norm in autor_norm:
         return indice
     
-    # Caso recursivo: seguir buscando en el resto de la lista
+    # Recursive case: continue searching the remainder of the list
     return busqueda_lineal(inventario, criterio_busqueda, indice + 1)
 
 
