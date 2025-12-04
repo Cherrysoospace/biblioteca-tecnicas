@@ -1,10 +1,14 @@
-"""loan_history.py
+"""
+Loan History Window Module
 
-UI para visualizar el historial de préstamos de un usuario (Stack LIFO).
-Muestra los préstamos en orden LIFO (más reciente primero).
+This module provides a graphical user interface for viewing a user's loan history
+using a Stack (LIFO) data structure. Loans are displayed in LIFO order with the
+most recent loan appearing first (top of stack). The interface allows filtering
+by user and displays comprehensive loan information including loan ID, ISBN,
+date, and return status.
 
-Autor: Sistema de Gestión de Bibliotecas
-Fecha: 2025-12-03
+Author: Library Management System
+Date: 2025-12-03
 """
 
 import customtkinter as ctk
@@ -19,14 +23,52 @@ from services.user_service import UserService
 
 
 class LoanHistory(ctk.CTkToplevel):
-    """Ventana para visualizar el historial de préstamos de un usuario (Stack LIFO)."""
+    """
+    A top-level window for viewing a user's loan history using Stack (LIFO) structure.
+
+    This class provides a graphical interface that displays loan records in LIFO order,
+    with the most recent loan at the top of the stack. Users can select a specific user
+    to view their complete loan history or view history for a pre-selected user. The
+    interface highlights the top of the stack and provides visual organization of the data.
+
+    Attributes:
+        _parent_window: Reference to the parent window that opened this dialog
+        user_id (str or None): ID of the user whose history is being displayed
+        controller (LoanController): The loan controller instance for database operations
+        user_service (UserService): Service for user-related operations
+        _user_map (dict): Maps user display strings to user IDs (only if no user_id provided)
+        user_selector (CTkOptionMenu or None): Widget for selecting users (only if no user_id provided)
+        tree (ttk.Treeview): The table widget displaying the loan history
+        info_lbl (CTkLabel): Label showing summary information about the history
+    """
     
     def __init__(self, parent=None, user_id: Optional[str] = None):
-        """Inicializar ventana de historial de préstamos.
-        
-        Args:
-            parent: Ventana padre
-            user_id: ID del usuario (si es None, muestra selector)
+        """
+        Initialize the loan history window.
+
+        Sets up the window layout, loads user data, and displays the loan history interface.
+        If a user_id is provided, the history is loaded immediately for that user. If not,
+        a user selector dropdown is displayed.
+
+        Parameters:
+            parent: The parent window that opened this dialog. Can be None if opened
+                   as a standalone window. Used for window management and focus control
+            user_id (Optional[str]): The ID of the user whose loan history should be displayed.
+                                    If None, a user selector will be shown to choose a user
+
+        Returns:
+            None
+
+        Side Effects:
+            - Creates and displays a new top-level window
+            - Loads user data from UserService if user_id is not provided
+            - Automatically loads loan history if user_id is provided
+            - Applies application theme to the window
+            - Makes the window transient to the parent if provided
+
+        Raises:
+            Exception: Catches and handles various exceptions during initialization
+                      to ensure the window opens even if some operations fail
         """
         super().__init__(parent)
         self._parent_window = parent
@@ -64,7 +106,25 @@ class LoanHistory(ctk.CTkToplevel):
             pass
     
     def _build_ui(self):
-        """Construir interfaz de usuario."""
+        """
+        Build the complete user interface for the loan history window.
+
+        Creates the main container, title, user selector (if needed), table for displaying
+        loan history, and action buttons. Conditionally displays either a user selector
+        dropdown or user information label based on whether user_id was provided.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Creates and packs all UI widgets into the window
+            - Calls helper methods to build specific UI sections
+            - Displays user information if user_id is provided
+            - Shows user selector if user_id is not provided
+        """
         container = ctk.CTkFrame(self, fg_color=theme.BG_COLOR, corner_radius=12)
         container.pack(expand=True, fill="both", padx=12, pady=12)
         
@@ -101,7 +161,28 @@ class LoanHistory(ctk.CTkToplevel):
         self._build_action_buttons(container)
     
     def _build_user_selector(self, container):
-        """Construir selector de usuario."""
+        """
+        Build the user selection interface.
+
+        Creates a dropdown menu populated with all users in the system, allowing
+        the user to select which user's loan history to view. Also includes a button
+        to load the selected user's history.
+
+        Parameters:
+            container: The parent container widget where the selector will be placed
+
+        Returns:
+            None
+
+        Side Effects:
+            - Creates and populates the user_selector OptionMenu widget
+            - Loads all users from UserService and populates _user_map dictionary
+            - Displays "No users available" message if no users exist
+            - Adds a "View History" button to trigger history loading
+
+        Raises:
+            Exception: Catches and handles exceptions during user loading
+        """
         selector_frame = ctk.CTkFrame(container, fg_color=theme.BG_COLOR, corner_radius=8)
         selector_frame.pack(pady=(0, 8), fill="x", padx=4)
         
@@ -140,7 +221,30 @@ class LoanHistory(ctk.CTkToplevel):
         load_btn.pack(side="left", padx=4)
     
     def _build_table(self, container):
-        """Construir tabla de historial."""
+        """
+        Build the table widget for displaying loan history.
+
+        Creates a Treeview table with columns for position (LIFO order), loan ID, ISBN,
+        loan date, and return status. Configures styling including fonts, colors, and
+        alternating row backgrounds. The top of the stack (most recent loan) receives
+        special highlighting.
+
+        Parameters:
+            container: The parent container widget where the table will be placed
+
+        Returns:
+            None
+
+        Side Effects:
+            - Creates and configures the tree (Treeview) widget
+            - Applies custom styling to table headers and rows
+            - Adds vertical scrollbar to the table
+            - Configures column widths and alignments
+            - Defines tags for alternating row colors and top-of-stack highlighting
+
+        Raises:
+            Exception: Catches and handles exceptions during table configuration
+        """
         table_holder = tk.Frame(container, bg=theme.BG_COLOR)
         table_holder.pack(expand=True, fill="both", pady=(8, 8))
         
@@ -210,7 +314,24 @@ class LoanHistory(ctk.CTkToplevel):
             pass
     
     def _build_action_buttons(self, container):
-        """Construir botones de acción."""
+        """
+        Build the action buttons section at the bottom of the window.
+
+        Creates refresh and close buttons, as well as an information label that displays
+        summary statistics about the loan history (total count and ordering information).
+
+        Parameters:
+            container: The parent container widget where the buttons will be placed
+
+        Returns:
+            None
+
+        Side Effects:
+            - Creates "Refresh" button to reload the history
+            - Creates "Close" button to close the window
+            - Creates info_lbl label for displaying statistics
+            - Packs all widgets into the action frame
+        """
         action_frame = ctk.CTkFrame(container, fg_color=theme.BG_COLOR, corner_radius=0)
         action_frame.pack(fill="x", pady=(8, 4))
         
@@ -230,12 +351,55 @@ class LoanHistory(ctk.CTkToplevel):
         self.info_lbl.pack(side="right", padx=4)
     
     def _on_user_selected(self, selection):
-        """Callback cuando se selecciona un usuario."""
+        """
+        Callback handler when a user is selected from the dropdown.
+
+        This method is called automatically when the user changes the selection in the
+        user selector OptionMenu. Currently serves as a placeholder for potential
+        auto-loading functionality.
+
+        Parameters:
+            selection: The selected value from the OptionMenu (user display string)
+
+        Returns:
+            None
+
+        Side Effects:
+            None (method is currently a placeholder)
+
+        Note:
+            Could be enhanced to automatically load history when user selection changes
+        """
         # Optionally auto-load history when user changes
         pass
     
     def _load_history(self):
-        """Cargar historial de préstamos del usuario."""
+        """
+        Load and display the loan history for the selected or specified user.
+
+        Retrieves loan history from the controller in LIFO order (most recent first),
+        clears the current table, and populates it with the history data. The top of
+        the stack (most recent loan) is highlighted with special formatting. Updates
+        the information label with total count and ordering details.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Clears all rows from the table
+            - Loads history data from LoanController
+            - Populates table with loan records in LIFO order
+            - Highlights the top of stack (position #1) with special background color
+            - Updates info_lbl with summary statistics
+            - Shows error message box if loading fails or user is invalid
+            - Shows "No loan history" message if history is empty
+
+        Raises:
+            Exception: Catches and displays exceptions via message box
+        """
         # Get user_id
         if self.user_id:
             user_id = self.user_id
@@ -295,7 +459,30 @@ class LoanHistory(ctk.CTkToplevel):
             messagebox.showerror("Error", f"Error cargando historial: {e}")
     
     def _on_close(self):
-        """Cerrar ventana."""
+        """
+        Handle the window close event.
+
+        Properly closes the loan history window and returns focus to the parent window.
+        Attempts multiple cleanup methods to ensure the window is properly destroyed
+        even if some operations fail. This method is called when the user clicks the
+        close button or the window's close button.
+
+        Parameters:
+            None
+
+        Returns:
+            None
+
+        Side Effects:
+            - Destroys the current window
+            - If destroy fails, attempts to withdraw (hide) the window
+            - Lifts and focuses the parent window if it exists
+            - Restores the parent window to the foreground
+
+        Raises:
+            Exception: Catches and ignores all exceptions during cleanup to ensure
+                      the method completes without errors
+        """
         try:
             self.destroy()
         except Exception:
