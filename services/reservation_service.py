@@ -1,3 +1,12 @@
+"""services.reservation_service
+
+Reservation service layer: business logic for creating, managing and assigning
+reservations. Persistence is delegated to a repository implementation.
+
+This module implements FIFO (queue) semantics for pending reservations and
+exposes CRUD-like operations used by controllers or higher-level services.
+"""
+
 import os
 import json
 from datetime import datetime
@@ -26,7 +35,11 @@ class ReservationService:
 		self._load_reservations()
 
 	def _load_reservations(self) -> None:
-		"""Load reservations from repository."""
+		"""Load reservations from repository.
+
+		This populates the in-memory reservation list from the configured
+		repository. If loading fails the service falls back to an empty list.
+		"""
 		try:
 			self.reservations = self.repository.load_all()
 		except Exception:
@@ -39,6 +52,17 @@ class ReservationService:
 
 	# -------------------- CRUD / Actions --------------------
 	def _generate_next_id(self) -> str:
+		"""Generate the next reservation identifier.
+
+		The repository uses string identifiers with an 'R' prefix (e.g. R001).
+		This helper inspects existing IDs and returns a new unique ID in the
+		format 'Rnnn' where nnn is a zero-padded integer.
+
+		Returns
+		-------
+		str
+			New unique reservation id (e.g. 'R005').
+		"""
 		existing = {r.get_reservation_id() for r in self.reservations if r.get_reservation_id()}
 		max_n = 0
 		for rid in existing:
@@ -144,9 +168,28 @@ class ReservationService:
 		return res
 
 	def get_all_reservations(self) -> List[Reservation]:
+		"""Return a shallow copy list of all reservations.
+
+		Returns
+		-------
+		List[Reservation]
+			All Reservation objects currently loaded in memory.
+		"""
 		return list(self.reservations)
 
 	def find_by_id(self, reservation_id: str) -> Optional[Reservation]:
+		"""Find a reservation by its unique identifier.
+
+		Parameters
+		----------
+		reservation_id : str
+			Reservation identifier to search for.
+
+		Returns
+		-------
+		Optional[Reservation]
+			The Reservation if found, otherwise None.
+		"""
 		return next((r for r in self.reservations if r.get_reservation_id() == reservation_id), None)
 
 	def find_by_isbn(self, isbn: str, only_pending: bool = True) -> List[Reservation]:
@@ -208,6 +251,18 @@ class ReservationService:
 		return None
 
 	def cancel_reservation(self, reservation_id: str) -> None:
+		"""Mark a reservation as cancelled and persist the change.
+
+		Parameters
+		----------
+		reservation_id : str
+			Identifier of the reservation to cancel.
+
+		Raises
+		------
+		ValueError
+			If no reservation exists with the provided id.
+		"""
 		res = self.find_by_id(reservation_id)
 		if res is None:
 			raise ValueError(f"No reservation found with id '{reservation_id}'")
@@ -215,6 +270,18 @@ class ReservationService:
 		self._save_reservations()
 
 	def delete_reservation(self, reservation_id: str) -> None:
+		"""Permanently remove a reservation from storage.
+
+		Parameters
+		----------
+		reservation_id : str
+			Identifier of the reservation to delete.
+
+		Raises
+		------
+		ValueError
+			If the reservation cannot be found.
+		"""
 		res = self.find_by_id(reservation_id)
 		if res is None:
 			raise ValueError(f"No reservation found with id '{reservation_id}'")
