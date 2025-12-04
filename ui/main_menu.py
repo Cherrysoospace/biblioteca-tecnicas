@@ -103,6 +103,7 @@ from ui.shelf.assign_book_form import AssignBookForm
 from ui.shelf.shelf_list import ShelfList
 from ui.reservation.reservation_form import ReservationForm
 from ui.reservation.reservation_list import ReservationList
+from ui.book.book_clone import BookClone
 
 class MainMenu(ctk.CTk):
     """Main application window providing centralized navigation to all features.
@@ -447,6 +448,7 @@ class MainMenu(ctk.CTk):
         # Build a list of button specs to create and place in a 2-column grid
         button_specs = [
             ("Crear Libro", self.open_create_book, self.icon_book),
+            ("Agregar libro existente", self.open_clone_book, self.icon_book),
             ("Crear Usuario", self.open_create_user, self.icon_user),
             ("Ver Libros", self.open_view_books, self.icon_view),
             ("Ver Usuarios", self.open_view_users, self.icon_user),
@@ -511,6 +513,10 @@ class MainMenu(ctk.CTk):
         # Reservation form button
         b_res = wf.create_primary_button(btn_frame, "Crear Reserva", command=self.open_create_reservation, image=self.icon_loan)
         b_res.pack(pady=10)
+
+    def open_clone_book(self):
+        """Open the clone-book dialog to duplicate an existing book with a new id."""
+        self._open_toplevel(BookClone)
 
     
     def open_author_value_report(self):

@@ -11,7 +11,6 @@ Se ha implementado exitosamente el algoritmo de **Búsqueda Lineal Recursiva** p
 ### 1. **Algoritmo Principal: `busqueda_lineal()`**
    - **Ubicación:** `utils/algorithms/AlgoritmosBusqueda.py`
    - **Tipo:** Recursiva (sigue el patrón enseñado en clase)
-   - **Complejidad:** O(n) tiempo, O(n) espacio
    - **Entrada:** Inventario (no requiere ordenamiento) + criterio de búsqueda
    - **Salida:** Índice del primer libro encontrado o -1 si no existe
 
@@ -25,22 +24,6 @@ Se ha implementado exitosamente el algoritmo de **Búsqueda Lineal Recursiva** p
 
 ---
 
-## 🔍 Comparación con el Ejemplo de Clase
-
-### **Patrón Original (Clase):**
-```python
-def busqueda_lineal(lista, elemento, indice=0):
-    # Caso base: llegamos al final sin encontrar
-    if indice >= len(lista):
-        return -1
-    
-    # Caso base: encontramos el elemento
-    if lista[indice] == elemento:
-        return indice
-    
-    # Caso recursivo: seguir buscando
-    return busqueda_lineal(lista, elemento, indice + 1)
-```
 
 ### **Implementación del Proyecto:**
 ```python
@@ -73,16 +56,6 @@ def busqueda_lineal(inventario, criterio_busqueda, indice=0):
     # Caso recursivo: seguir buscando
     return busqueda_lineal(inventario, criterio_busqueda, indice + 1)
 ```
-
-### **Diferencias Clave:**
-| Aspecto | Ejemplo Clase | Implementación Proyecto |
-|---------|--------------|------------------------|
-| **Comparación** | Exacta (`==`) | Parcial (`in`) |
-| **Datos** | Lista simple | Objetos `Inventory` |
-| **Búsqueda** | Un campo | Título + Autor |
-| **Normalización** | No | Sí (mayúsculas/acentos) |
-| **Manejo nulos** | No aplica | Verifica `None` |
-
 ---
 
 ## ✅ Funcionalidades
@@ -100,23 +73,6 @@ def busqueda_lineal(inventario, criterio_busqueda, indice=0):
 
 ---
 
-## 📊 Resultados de Pruebas
-
-Se creó `test_busqueda_lineal.py` con 8 pruebas exhaustivas:
-
-```
-✓ TEST 1: Búsqueda por título exacto - ÉXITO
-✓ TEST 2: Búsqueda por título parcial - ÉXITO
-✓ TEST 3: Búsqueda por autor - ÉXITO
-✓ TEST 4: Búsqueda insensible a mayúsculas (4 casos) - ÉXITO
-✓ TEST 5: Búsqueda sin acentos (3 casos) - ÉXITO
-✓ TEST 6: Búsqueda de elemento inexistente - ÉXITO
-✓ TEST 7: Función auxiliar normalizar_texto (5 casos) - ÉXITO
-✓ TEST 8: Verificación de recursividad - ÉXITO
-```
-
-**Todas las pruebas pasaron exitosamente.**
-
 ---
 
 ## 📁 Archivos Modificados/Creados
@@ -131,12 +87,6 @@ Se creó `test_busqueda_lineal.py` con 8 pruebas exhaustivas:
    - Agregada función `normalizar_texto()`
    - Documentación completa con ejemplos
    - Exportada en `__all__`
-
-### **Creados:**
-3. **`test_busqueda_lineal.py`**
-   - Suite de 8 pruebas completas
-   - Inventario de prueba con 5 libros
-   - Validación de recursividad
 
 ---
 
@@ -170,29 +120,6 @@ while indice != -1:
 
 ---
 
-## 🔬 Análisis de Complejidad
-
-### **Búsqueda Lineal:**
-- **Complejidad Temporal:**
-  - Mejor caso: O(1) - elemento en primera posición
-  - Caso promedio: O(n/2) ≈ O(n)
-  - Peor caso: O(n) - elemento en última posición o no existe
-
-- **Complejidad Espacial:**
-  - O(n) por la pila de recursión
-  - Cada llamada recursiva agrega un frame a la pila
-
-### **Comparación con Búsqueda Binaria:**
-| Aspecto | Búsqueda Lineal | Búsqueda Binaria |
-|---------|-----------------|------------------|
-| **Ordenamiento** | NO requiere | SÍ requiere |
-| **Tiempo** | O(n) | O(log n) |
-| **Espacio** | O(n) | O(log n) |
-| **Búsqueda** | Título/Autor | Solo ISBN |
-| **Coincidencia** | Parcial | Exacta |
-
----
-
 ## 📝 Documentación Técnica
 
 ### **Función `busqueda_lineal()`:**
@@ -220,7 +147,7 @@ while indice != -1:
 
 La implementación de Búsqueda Lineal Recursiva cumple con los requisitos educativos:
 
-1. ✅ **Sigue el patrón enseñado en clase** (estructura recursiva idéntica)
+1. ✅ 
 2. ✅ **Adaptado al proyecto** (objetos Inventory en lugar de lista simple)
 3. ✅ **Funcionalidad mejorada** (búsqueda parcial, normalización de texto)
 4. ✅ **Totalmente probado** (8 pruebas exhaustivas, todas exitosas)
@@ -231,7 +158,3 @@ El sistema ahora cuenta con dos algoritmos de búsqueda complementarios:
 - **Búsqueda Lineal** (O(n)) para Título/Autor en inventario general
 
 ---
-
-**Autor:** Sistema de Gestión de Bibliotecas  
-**Fecha:** 2025-12-03  
-**Versión:** 1.0

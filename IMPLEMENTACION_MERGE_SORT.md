@@ -6,7 +6,7 @@
 
 ## 📋 RESUMEN DE IMPLEMENTACIÓN
 
-Se ha implementado exitosamente el algoritmo **Merge Sort** para generar reportes globales del inventario ordenados por precio, cumpliendo con el requisito del proyecto:
+Se implementó el algoritmo **Merge Sort** para generar reportes globales del inventario ordenados por precio, cumpliendo con el requisito del proyecto:
 
 > "Ordenamiento por Mezcla (Merge Sort): Este algoritmo debe usarse para generar un Reporte Global de inventario, ordenado por el atributo Valor (COP). El reporte generado también debe poder almacenarse en un archivo."
 
@@ -137,62 +137,6 @@ def generate_and_export_price_report(self) -> None:
         └───────────────────────────────────────┘
 ```
 
----
-
-## ✅ VALIDACIÓN Y PRUEBAS
-
-### Script de prueba: `test_merge_sort_report.py`
-
-El script de prueba valida:
-1. ✅ **Generación inicial** del reporte
-2. ✅ **Actualización automática** al agregar libro económico
-3. ✅ **Actualización automática** al agregar libro costoso
-4. ✅ **Actualización automática** al cambiar precio
-5. ✅ **Actualización automática** al eliminar libros
-6. ✅ **Ordenamiento correcto** por precio (menor a mayor)
-7. ✅ **Cálculo correcto** de estadísticas (total, promedio, min, max)
-
-### Resultados de prueba:
-
-```
-ESTADO INICIAL: 32 libros, $782,054 total, $24,439.19 promedio
-
-AGREGAR LIBRO $500:
-  → Total: 33 libros
-  → Precio total: $782,554
-  → Libro más barato: $500 (nuevo libro en posición 1)
-
-AGREGAR LIBRO $150,000:
-  → Total: 34 libros
-  → Precio total: $932,554
-  → Libro más caro: $150,000 (nuevo libro en última posición)
-
-ACTUALIZAR PRECIO $500 → $100:
-  → Precio total: $932,154
-  → Libro más barato: $100 (actualizado correctamente)
-
-ELIMINAR LIBROS:
-  → Regresa al estado inicial: 32 libros, $782,054 total
-```
-
----
-
-## 🔍 DIFERENCIA CON INSERTION SORT
-
-| Aspecto | Insertion Sort | Merge Sort |
-|---------|---------------|------------|
-| **Propósito** | Mantener `inventory_sorted` por ISBN | Generar reporte global por precio |
-| **Criterio** | Ordena por **ISBN** | Ordena por **precio** |
-| **Tipo de datos** | Objetos `Inventory` | Objetos `Book` |
-| **Cuándo se usa** | Al agregar libro al inventario | Al cambiar catálogo de libros |
-| **Complejidad** | O(n²) | O(n log n) |
-| **Archivo destino** | `inventory_sorted.json` | `inventory_value.json` |
-| **Trigger** | `synchronize_inventories()` | `generate_and_export_price_report()` |
-
-**Ambos algoritmos coexisten y cumplen propósitos diferentes según los requisitos del proyecto.**
-
----
-
 ## 📁 ARCHIVOS MODIFICADOS
 
 ### 1. `utils/algorithms/AlgoritmosOrdenamiento.py`
@@ -206,10 +150,6 @@ ELIMINAR LIBROS:
 - ✅ Integrado trigger en `add_book()`
 - ✅ Integrado trigger en `update_book()`
 - ✅ Integrado trigger en `delete_book()`
-
-### 3. `test_merge_sort_report.py` (nuevo)
-- ✅ Script de prueba completo
-- ✅ Validación de todas las funcionalidades
 
 ---
 

@@ -26,8 +26,6 @@ biblioteca-tecnicas/
 │   └── shelf_service.py           # Lógica de negocio
 ├── controllers/
 │   └── shelf_controller.py        # Capa de controlador
-├── demo_brute_force.py            # Demostración del algoritmo
-└── test_brute_force.py            # Pruebas unitarias
 ```
 
 ---
@@ -103,11 +101,7 @@ def find_risky_combinations(books_data: List[Dict[str, Any]], threshold: float =
 - No omite ninguna combinación potencial
 - Garantiza encontrar todas las combinaciones riesgosas
 
-### 2. Complejidad
-- **Tiempo:** O(n⁴) donde n es el número de libros
-- **Espacio:** O(k) donde k es el número de combinaciones riesgosas encontradas
-
-### 3. Número de Combinaciones
+### 2. Número de Combinaciones
 Para n libros, el algoritmo explora **C(n, 4) = n! / (4! × (n-4)!)** combinaciones:
 
 | Libros (n) | Combinaciones |
@@ -214,93 +208,6 @@ for combo in risky:
     for book in combo['books']:
         print(f"  - {book['id']}: {book['title']} ({book['weight']} Kg)")
 ```
-
-### Demo Script
-
-**Ejecutar:** `python demo_brute_force.py`
-
-Este script muestra:
-- Estadísticas del inventario
-- Número total de combinaciones a explorar
-- Todas las combinaciones riesgosas encontradas
-- Resumen y análisis
-
----
-
-## Resultados de Ejemplo
-
-### Ejemplo 1: Inventario con 33 libros
-
-```
-====================================================================================================
-BRUTE FORCE ALGORITHM DEMONSTRATION
-Finding Risky 4-Book Combinations (Weight > 8 Kg)
-====================================================================================================
-
-Inventory Statistics:
-  Total books in catalog: 33
-  Total 4-book combinations to explore: 40,920
-
-Weight Distribution:
-  Average book weight: 0.74 Kg
-  Lightest book: 0.10 Kg
-  Heaviest book: 3.00 Kg
-
-====================================================================================================
-Running Brute Force Algorithm (threshold = 8.0 Kg)...
-====================================================================================================
-
-✓ No risky combinations found! All 4-book combinations are within safe limits.
-
-====================================================================================================
-SUMMARY
-====================================================================================================
-  Total combinations explored: 40,920
-  Risky combinations found: 0
-```
-
-### Ejemplo 2: Con libros pesados
-
-```
-⚠ Found 4 risky combinations that exceed 8.0 Kg:
-
-==================================================================================================
-
-Risky Combination #1:
-  Total Weight: 13.0 Kg
-  Exceeds threshold by: 5.0 Kg
-  Books in combination:
-    1. [B001] Heavy Book 1 by Author A - 1.0 Kg
-    2. [B002] Heavy Book 2 by Author B - 1.0 Kg
-    3. [B003] Heavy Book 3 by Author C - 1.0 Kg
-    4. [B005] Very Heavy Book by Author E - 10.0 Kg
-```
-
----
-
-## Pruebas Unitarias
-
-**Archivo:** `test_brute_force.py`
-
-### Tests implementados:
-1. ✅ `test_find_risky_combinations_basic` - Prueba básica con 4 libros
-2. ✅ `test_find_risky_combinations_no_risky` - Sin combinaciones riesgosas
-3. ✅ `test_find_risky_combinations_multiple` - Múltiples combinaciones
-4. ✅ `test_find_risky_combinations_insufficient_books` - Menos de 4 libros
-5. ✅ `test_find_risky_combinations_custom_threshold` - Umbral personalizado
-6. ✅ `test_combination_structure` - Estructura de los resultados
-7. ✅ `test_count_total_combinations` - Conteo de combinaciones
-8. ✅ `test_exhaustive_search` - Búsqueda exhaustiva
-9. ✅ `test_weight_precision` - Precisión de pesos
-10. ✅ `test_invalid_weight_handling` - Manejo de datos inválidos
-
-**Ejecutar pruebas:**
-```bash
-python -m pytest test_brute_force.py -v
-```
-
-**Resultado:** ✅ 10 pruebas pasadas
-
 ---
 
 ## Ventajas y Desventajas
@@ -342,16 +249,6 @@ Si el rendimiento fuera un problema (no es el caso en este proyecto educativo):
 - ✅ Completamente documentado
 - ✅ Probado exhaustivamente
 
----
-
-## Próximos Pasos
-
-El siguiente algoritmo a implementar es **Backtracking** para la Estantería Óptima:
-> "Implementar un algoritmo que encuentre la combinación de libros que maximice el valor total (COP) sin exceder la capacidad máxima de peso (8 Kg) de un estante."
-
-Este problema es conocido como el **Problema de la Mochila (Knapsack Problem)** y será resuelto usando backtracking.
-
----
 
 ## Referencias
 

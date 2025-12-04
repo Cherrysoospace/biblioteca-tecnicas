@@ -149,8 +149,47 @@ class BookController:
         return self.service.find_by_id(book_id)
 
     def get_all_books(self):
-        """Return list of all Book objects from the service."""
+        """Return list of all Book objects from the service.
+
+        NOTE: Ensure the service reloads data from persistence first. The
+        BookService keeps an in-memory list which may be stale if another
+        controller/service instance modified the underlying JSON file.
+        Calling the internal _load_books() guarantees we return fresh data
+        for UI refresh operations.
+        """
+        try:
+            # best-effort refresh from repository
+            self.service._load_books()
+        except Exception:
+            # If reload fails, return the current in-memory list rather than
+            # raising; UI will show available data and can alert the user
+            pass
         return self.service.get_all_books()
+
+    def clone_book(self, existing_book_id: str):
+        """Clone an existing book (same data, new id) and update related systems.
+
+        Returns the id of the newly created clone.
+        """
+        new_book = self.service.clone_book(existing_book_id)
+
+        # Add a new inventory item for the cloned physical copy (best-effort)
+        try:
+            inv_svc = InventoryService()
+            try:
+                inv_svc.add_item(new_book, 1)
+            except Exception:
+                pass
+        except Exception:
+            pass
+
+        # Update global report (best-effort)
+        try:
+            self.report_service.generate_inventory_value_report()
+        except Exception:
+            pass
+
+        return new_book.get_id()
 
     def calculate_total_value_by_author(self, author: str):
         """Calculate total monetary value of all books by a given author.

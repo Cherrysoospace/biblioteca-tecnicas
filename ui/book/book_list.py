@@ -485,7 +485,8 @@ class BookList(ctk.CTkToplevel):
         search_btn = wf.create_primary_button(action_frame, text="🔍 Buscar Libros", command=self.open_book_search)
         search_btn.pack(side="left", padx=(0, 12))
 
-        refresh_btn = wf.create_small_button(action_frame, text="Refrescar", command=self.load_books)
+    # wrap in lambda to ensure callback is a zero-arg callable when invoked by CTkButton
+        refresh_btn = wf.create_small_button(action_frame, text="Refrescar", command=lambda: self.load_books())
         refresh_btn.pack(side="left", padx=(0, 8))
         # Edit and Delete buttons operate on the selected row
         edit_btn = wf.create_small_button(action_frame, text="Editar", command=self.open_selected_for_edit)
@@ -1134,11 +1135,11 @@ class BookList(ctk.CTkToplevel):
             return
 
         try:
-            # use controller to delete (this also updates reports and removes from shelves)
-            controller = BookController()
-            # BookService.delete_book enforces borrow/stock checks and removes from shelves
-            controller.delete_book(book_id)
+            # Use the existing controller instance so its in-memory list is updated
+            # and subsequent calls to self.load_books() reflect the deletion.
+            self.book_controller.delete_book(book_id)
             messagebox.showinfo("Borrado", "Libro eliminado correctamente de catálogo y estanterías.")
+            # Reload view from controller (which now contains the updated list)
             self.load_books()
         except Exception as e:
             messagebox.showerror("Error", str(e))

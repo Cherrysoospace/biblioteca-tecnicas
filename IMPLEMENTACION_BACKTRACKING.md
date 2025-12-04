@@ -9,19 +9,6 @@ Este documento describe la implementación del algoritmo de **Backtracking** par
 **Requerimiento del Proyecto:**
 > Implementar un algoritmo que encuentre la combinación de libros que maximice el valor total (COP) sin exceder la capacidad máxima de peso (8 Kg) de un estante. El algoritmo debe demostrar la exploración y su ejecución.
 
-## Conceptos Clave
-
-### ¿Qué es Backtracking?
-
-Backtracking es una técnica algorítmica que explora todas las posibles soluciones de un problema mediante un árbol de decisiones. En cada nodo del árbol, el algoritmo toma una decisión y explora recursivamente las consecuencias. Si una rama no lleva a una solución válida u óptima, el algoritmo "retrocede" (backtrack) y explora otras alternativas.
-
-### Problema de la Mochila (0/1 Knapsack)
-
-- **Entrada:** Conjunto de objetos (libros), cada uno con peso y valor
-- **Restricción:** Capacidad máxima de peso (8 Kg para estantería)
-- **Objetivo:** Maximizar el valor total sin exceder la capacidad
-- **Tipo:** 0/1 (cada objeto se incluye o se excluye completamente)
-
 ## Estructura del Algoritmo
 
 ### 1. Función Recursiva de Exploración
@@ -73,7 +60,7 @@ if current_weight + weights[index] <= max_capacity:
     current_selection.pop()  # BACKTRACKING - Deshacer decisión
 ```
 
-**Poda (Pruning):** Solo exploramos esta rama si el peso no excede la capacidad.
+**Poda:** Solo exploramos esta rama si el peso no excede la capacidad.
 
 #### Rama 2: NO INCLUIR el libro actual
 ```python
@@ -161,10 +148,6 @@ Reduce el espacio de búsqueda manteniendo alta calidad de solución.
 **`demo_backtracking.py`**
 - Script interactivo que muestra el algoritmo en acción con datos reales de `books.json`
 
-### 5. Pruebas Unitarias
-**`test_backtracking.py`**
-- 15 pruebas que verifican casos edge, optimalidad, restricciones, integración
-
 ## Uso del Algoritmo
 
 ### Desde el Controlador
@@ -181,18 +164,6 @@ print(f"Libros seleccionados: {len(result['books'])}")
 
 for book in result['books']:
     print(f"- {book['id']}: {book['title']} ({book['weight']} Kg, ${book['price']:,} COP)")
-```
-
-### Ejecución de Demostración
-
-```bash
-python demo_backtracking.py
-```
-
-### Ejecución de Pruebas
-
-```bash
-python test_backtracking.py
 ```
 
 ## Resultados con Datos Reales
@@ -220,15 +191,6 @@ python test_backtracking.py
 ⚠️ Requiere memoria para la pila de recursión (profundidad n)  
 ⚠️ Para datasets muy grandes, necesita heurísticas adicionales  
 
-## Comparación con Fuerza Bruta
-
-| Aspecto | Backtracking | Fuerza Bruta |
-|---------|--------------|--------------|
-| **Exploración** | Con poda inteligente | Exhaustiva sin poda |
-| **Eficiencia** | Reduce ramas inválidas | Explora todo |
-| **Problema resuelto** | Optimización (máximo valor) | Enumeración (listar riesgos) |
-| **Complejidad** | O(2^n) con poda efectiva | O(n^4) para 4 elementos |
-
 ## Validación
 
 ### Pruebas Ejecutadas
@@ -252,16 +214,10 @@ python test_backtracking.py
 
 El algoritmo de backtracking implementado resuelve exitosamente el problema de la mochila para la selección óptima de libros en una estantería. La implementación:
 
-1. ✅ Sigue fielmente el ejemplo del profesor
+1. ✅ Encuentra la solución óptima garantizada
 2. ✅ Se integra limpiamente con la arquitectura del proyecto
 3. ✅ Maneja datasets reales de forma eficiente mediante optimizaciones
 4. ✅ Está completamente documentado y probado
 5. ✅ Demuestra claramente la exploración backtracking
 
 El algoritmo cumple con todos los requerimientos del proyecto y está listo para ser presentado y sustentado.
-
----
-
-**Autores:** Library Management System Team  
-**Fecha:** Diciembre 2025  
-**Curso:** Técnicas de Programación - UCALDAS

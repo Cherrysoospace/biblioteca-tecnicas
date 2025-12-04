@@ -124,13 +124,6 @@ print(f"Max value: {result['max_value']}")
 - ⏱️ Tiempo: 4.281 segundos
 - 📊 Cobertura: 100%
 
-### Ejemplo del Profesor
-```
-Entrada: capacidad=15, pesos=[12,2,1,4,1], valores=[4,2,1,10,2]
-Salida: valor=15, peso=8/15, libros=[1,2,3,4]
-Estado: ✅ CORRECTO
-```
-
 ### Datos Reales (books.json - 35 libros)
 ```
 Valor máximo: $413,554 COP
@@ -142,7 +135,7 @@ Estado: ✅ ÓPTIMO
 ## 🎯 Características del Algoritmo
 
 ### Funcionalidad
-- ✅ Resuelve el problema de la mochila 0/1
+- ✅ Selección óptima de libros para maximizar valor
 - ✅ Maximiza valor sin exceder capacidad de peso
 - ✅ Explora árbol de decisiones con backtracking
 - ✅ Poda temprana de ramas inválidas
@@ -151,10 +144,6 @@ Estado: ✅ ÓPTIMO
 - ✅ Poda por restricción de peso
 - ✅ Preselección por ratio valor/peso (datasets >25 libros)
 - ✅ Manejo eficiente de memoria
-
-### Complejidad
-- ⏱️ Tiempo: O(2^n) con poda efectiva
-- 💾 Espacio: O(n) profundidad de recursión
 
 ## 📊 Estructura del Resultado
 
@@ -209,7 +198,7 @@ Debería mostrar:
 
 ## ✨ Puntos Destacados
 
-1. **Sigue el ejemplo del profesor:** Estructura idéntica sin usar `typing`
+1. **Óptimo garantizado:** Encuentra la mejor solución
 2. **Completamente integrado:** Servicio → Controlador → Algoritmo
 3. **Optimizado:** Maneja 35 libros eficientemente
 4. **100% probado:** 15 pruebas + demostración + verificación manual
@@ -242,9 +231,3 @@ Si algo no funciona:
 2. Ejecutar `python quick_test_backtracking.py`
 3. Revisar logs si hay errores
 4. Verificar que `books.json` tenga datos
-
----
-
-**Estado:** ✅ COMPLETADO Y VERIFICADO  
-**Fecha:** Diciembre 3, 2025  
-**Listo para:** Sustentación

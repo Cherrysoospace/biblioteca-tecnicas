@@ -41,17 +41,6 @@ Cuando se activa el modo debug:
 - ✅ Logging completo de operaciones
 - ✅ Manejo de errores robusto con `UIErrorHandler`
 
-## Comparación: Recursión de Pila vs Cola
-
-| Aspecto | Pila (Stack) | Cola (Tail/Queue) |
-|---------|--------------|-------------------|
-| **Función** | `calculate_total_value_by_author()` | `calculate_average_weight_by_author()` |
-| **Calcula** | Valor monetario total | Peso promedio |
-| **Acumulación** | Al VOLVER de las llamadas | Al IR hacia las llamadas |
-| **Parámetros** | `index` (interno) | `index, count, total_weight` (acumuladores) |
-| **Última operación** | `contribution + recursion()` | `recursion(accumulators_updated)` |
-| **Optimizable** | No (necesita acumular al volver) | Sí (en lenguajes con TCO) |
-
 ## Ejemplo de Uso
 
 ### Caso de Prueba: Autor "hi"
@@ -137,19 +126,6 @@ Esta implementación cumple con el requisito del proyecto:
 ✅ **Demuestra la lógica por consola** (modo debug)  
 ✅ **Interfaz gráfica completa** para facilitar las pruebas
 
-## Pruebas Realizadas
-
-### Test Manual
-- ✅ Demo interno funciona (`python utils/recursion/queue_recursion.py`)
-- ✅ Test con base de datos real (`python test_queue_recursion.py`)
-- ✅ Interfaz gráfica funciona correctamente (`python main.py`)
-
-### Autores Probados
-- Homer: 1.100 kg ✅
-- Suzanne Collins: 0.900 kg ✅
-- hi: 0.225 kg ✅
-- YO: 0.900 kg ✅
-
 ## Archivos Modificados/Creados
 
 1. **Creado**: `ui/book/author_weight_report.py` (interfaz completa)
@@ -158,17 +134,3 @@ Esta implementación cumple con el requisito del proyecto:
 4. **Modificado**: `utils/recursion/queue_recursion.py` (simplificado)
 5. **Modificado**: `services/book_service.py` (método agregado)
 6. **Modificado**: `controllers/book_controller.py` (método agregado)
-
-## Próximos Pasos
-
-Si deseas mejorar la interfaz:
-- Agregar gráficos de peso por autor (barras)
-- Comparar múltiples autores simultáneamente
-- Exportar resultados a PDF/Excel
-- Animación visual del flujo de recursión
-
----
-
-**Fecha**: 3 de diciembre de 2025  
-**Implementación**: Queue/Tail Recursion para peso promedio por autor  
-**Estado**: ✅ Completado y probado exitosamente

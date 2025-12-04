@@ -171,15 +171,3 @@ Esta implementación cumple completamente con el requisito:
 ✅ **Implementado y funcional**
 
 ---
-
-## 🚀 Próximos Pasos
-
-Para completar el módulo de recursión, se debe implementar:
-
-- [ ] **Recursión de Cola**: Calcular el Peso Promedio de la colección de un autor
-  - Archivo: `utils/recursion/queue_recursion.py` (ya existe)
-  - Pendiente: Integración UI similar a esta
-
----
-
-*Implementación completada el 3 de diciembre de 2025*
