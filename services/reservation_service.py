@@ -59,8 +59,9 @@ class ReservationService:
 	def create_reservation(self, reservation_id: Optional[str], user_id: str, isbn: str) -> Reservation:
 		"""Create a reservation. If reservation_id None, generate one.
 		
-		CRITICAL VALIDATION: Only allows reservation if book stock = 0 (business rule).
-		This ensures reservations are only created for out-of-stock books.
+		CRITICAL VALIDATIONS:
+		1. Only allows reservation if book stock = 0 (business rule)
+		2. User cannot reserve a book they already have on active loan
 		
 		Args:
 			reservation_id: Unique ID (auto-generated if None)
@@ -71,9 +72,9 @@ class ReservationService:
 			Reservation: Created reservation object
 			
 		Raises:
-			ValueError: If book has available stock (stock > 0)
+			ValueError: If book has available stock (stock > 0) or user already has the book on loan
 		"""
-		# CRITICAL: Validate stock = 0 before creating reservation
+		# CRITICAL VALIDATION #1: Validate stock = 0 before creating reservation
 		from services.inventory_service import InventoryService
 		inv_service = InventoryService()
 		
@@ -90,6 +91,37 @@ class ReservationService:
 				f"{'copy' if total_available == 1 else 'copies'} available. "
 				f"Reservations are only allowed for books with zero stock."
 			)
+		
+		# CRITICAL VALIDATION #2: User cannot reserve a book they already have on active loan
+		try:
+			from services.loan_service import LoanService
+			loan_service = LoanService()
+			
+			# Check if user has any active loans for this ISBN
+			user_loans = loan_service.find_by_user(user_id)
+			active_loan_for_isbn = None
+			for loan in user_loans:
+				if loan.get_isbn() == isbn and not loan.is_returned():
+					active_loan_for_isbn = loan
+					break
+			
+			if active_loan_for_isbn:
+				raise ValueError(
+					f"Cannot create reservation: User '{user_id}' already has an active loan "
+					f"(Loan ID: {active_loan_for_isbn.get_loan_id()}) for ISBN '{isbn}'. "
+					f"Users cannot reserve books they currently have borrowed."
+				)
+		except ValueError:
+			# Re-raise validation errors
+			raise
+		except ImportError:
+			# If LoanService is not available, skip validation
+			pass
+		except Exception as e:
+			# Log error but allow validation to continue
+			import logging
+			logger = logging.getLogger(__name__)
+			logger.error(f"Error checking loans for user {user_id} during reservation: {e}")
 		
 		# Generate ID if needed
 		if not reservation_id:
