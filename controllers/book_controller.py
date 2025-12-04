@@ -8,11 +8,40 @@ from utils.logger import LibraryLogger
 logger = LibraryLogger.get_logger(__name__)
 
 class BookController:
+    """Controller for book-related actions.
+
+    This class coordinates requests from the UI or API layer and delegates
+    operations to service classes such as BookService, InventoryService and
+    ReportService. It handles creation, update, deletion, retrieval and
+    higher-level operations like algorithmic searches and reporting triggers.
+
+    Responsibilities:
+        - Validate/prepare data when necessary before calling services.
+        - Keep global reports in sync after catalog changes (best-effort).
+        - Expose search and algorithmic features implemented in services.
+    """
     def __init__(self):
         self.service = BookService()
         self.report_service = ReportService()
 
     def create_book(self, data):
+        """Create a new book and update related systems.
+
+        The `data` argument is expected to be a dictionary with at least the
+        following keys: 'ISBNCode', 'title', 'author', 'weight', 'price'. The
+        'id' key is optional; if missing or empty the controller will attempt
+        to generate one via the service or fallback to a timestamp-based id.
+
+        After creating the Book object and persisting it via BookService, the
+        controller will attempt to add an inventory record (one physical copy)
+        and generate an updated inventory value report (best-effort).
+
+        Parameters:
+            data (dict): book fields for creation.
+
+        Returns:
+            The identifier (id) of the created book.
+        """
         # If caller did not provide an id (or provided an empty one), generate
         # the next chronological id from the service.
         if not data.get("id"):
@@ -63,30 +92,60 @@ class BookController:
         return book.get_id()
 
     def update_book(self, book_id, data):
+        """Update an existing book's data.
+
+        Delegates to BookService to perform the update. After a successful
+        update, the method attempts to regenerate the global inventory value
+        report (best-effort). Exceptions from report generation are logged but
+        do not propagate to the caller.
+
+        Parameters:
+            book_id: identifier of the book to update.
+            data (dict): fields to update on the book.
+
+        Returns:
+            None
+        """
         self.service.update_book(book_id, data)
         
-        # Actualizar reporte global después de modificar el libro
+        # Update global report after modifying the book (best-effort)
         try:
             self.report_service.generate_inventory_value_report()
-            logger.info(f"Reporte global actualizado después de modificar libro {book_id}")
+            logger.info(f"Global report updated after modifying book {book_id}")
         except Exception as e:
-            logger.warning(f"No se pudo actualizar el reporte global: {e}")
+            logger.warning(f"Failed to update global report: {e}")
 
     def delete_book(self, book_id):
-        """Eliminar un libro del catálogo.
-        
-        Actualiza automáticamente el reporte global después de la eliminación.
+        """Delete a book from the catalog.
+
+        This method removes the book via BookService and attempts to regenerate
+        the global inventory value report. Report generation failures are
+        logged and not raised to callers.
+
+        Parameters:
+            book_id: identifier of the book to delete.
+
+        Returns:
+            None
         """
         self.service.delete_book(book_id)
         
-        # Actualizar reporte global después de eliminar el libro
+        # Update global report after deleting the book (best-effort)
         try:
             self.report_service.generate_inventory_value_report()
-            logger.info(f"Reporte global actualizado después de eliminar libro {book_id}")
+            logger.info(f"Global report updated after deleting book {book_id}")
         except Exception as e:
-            logger.warning(f"No se pudo actualizar el reporte global: {e}")
+            logger.warning(f"Failed to update global report: {e}")
     
     def get_book(self, book_id):
+        """Retrieve a book by its identifier.
+
+        Parameters:
+            book_id: identifier of the book to retrieve.
+
+        Returns:
+            Book instance if found, otherwise implementation-specific (e.g., None or raises).
+        """
         return self.service.find_by_id(book_id)
 
     def get_all_books(self):

@@ -8,7 +8,7 @@ from utils.validators import BookValidator, ValidationError
 from utils.logger import LibraryLogger
 from utils.config import FilePaths
 
-# Configurar logger
+# Configure logger
 logger = LibraryLogger.get_logger(__name__)
 
 
@@ -96,7 +96,7 @@ class BookService:
         - ValueError: if a book with the same `id` already exists.
         - Exception: for IO errors when saving.
         """
-        # Validar datos del libro ANTES de agregar
+        # Validate book data BEFORE adding
         try:
             BookValidator.validate_book_data(
                 isbn=book.get_ISBNCode(),
@@ -107,15 +107,15 @@ class BookService:
                 book_id=book.get_id()
             )
         except ValidationError as e:
-            logger.error(f"Validación fallida al agregar libro: {e}")
-            raise  # Re-lanzar la excepción para que el controlador la maneje
+            logger.error(f"Validation failed when adding book: {e}")
+            raise  # Re-raise the exception so the controller can handle it
         
         if any(b.get_id() == book.get_id() for b in self.books):
             raise ValueError(f"A book with id '{book.get_id()}' already exists")
 
         self.books.append(book)
         self._save_books()
-        logger.info(f"Libro agregado: id={book.get_id()}, ISBN={book.get_ISBNCode()}, título={book.get_title()}")
+        logger.info(f"Book added: id={book.get_id()}, ISBN={book.get_ISBNCode()}, title={book.get_title()}")
 
     def update_book(self, id: str, new_data: Dict[str, Any]) -> None:
         """Update fields of a book identified by `id`.
@@ -148,7 +148,7 @@ class BookService:
             'isBorrowed': book.set_isBorrowed,
         }
 
-        # VALIDAR campos ANTES de actualizar
+    # VALIDATE fields BEFORE updating
         try:
             if 'ISBNCode' in new_data:
                 new_data['ISBNCode'] = BookValidator.validate_isbn(new_data['ISBNCode'])
@@ -163,7 +163,7 @@ class BookService:
             if 'id' in new_data:
                 new_data['id'] = BookValidator.validate_id(new_data['id'])
         except ValidationError as e:
-            logger.error(f"Validación fallida al actualizar libro {id}: {e}")
+            logger.error(f"Validation failed when updating book {id}: {e}")
             raise
 
         if 'id' in new_data:
@@ -178,7 +178,7 @@ class BookService:
         for key, value in new_data.items():
             if key not in setters:
                 continue
-            # Los valores ya fueron validados y convertidos arriba
+            # Values have already been validated and converted above
             if key == 'isBorrowed':
                 value = bool(value)
             setters[key](value)
@@ -323,9 +323,9 @@ class BookService:
             shelf_svc = ShelfService()
             try:
                 shelf_svc.remove_book_from_all_shelves(id)
-                logger.info(f"Libro {id} eliminado de todas las estanterías")
+                logger.info(f"Book {id} removed from all shelves")
             except Exception as e:
-                logger.warning(f"Error al eliminar libro {id} de estanterías: {e}")
+                logger.warning(f"Error removing book {id} from shelves: {e}")
         except Exception:
             # Don't block book deletion if shelf sync fails
             pass
