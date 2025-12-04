@@ -1,3 +1,75 @@
+"""Main Menu - Primary Application Entry Point and Navigation Hub.
+
+This module implements the main application window for the Library Management System,
+providing a centralized navigation interface to access all major features and
+subsystems.
+
+Architecture - UI Entry Point:
+    MainMenu serves as the primary entry point for the desktop application, built
+    using CustomTkinter for a modern, themed interface. It follows a hub-spoke
+    navigation pattern where all major features are accessible from this central menu.
+
+Key Features:
+    - Responsive Design: Dynamic scaling based on screen resolution (HD/Full HD/4K)
+    - Pixel-Art Background: Responsive background image with NEAREST interpolation
+    - Icon-Based Navigation: Emoji/image icons for visual hierarchy
+    - Two-Column Layout: Efficient use of screen space with grid layout
+    - Error Handling: Comprehensive try-catch blocks for robustness
+    - Window Management: Tracks opened windows to prevent garbage collection
+
+UI Components:
+    - Header: Title with lantern icon
+    - Navigation Grid: 16 primary action buttons in 2 columns
+    - Footer: Exit button
+    - Background: Responsive pixel-art image (BG-5.jpg)
+
+Navigation Categories:
+    Book Management:
+        - Create/View Books
+        - Author Value Report (Stack Recursion)
+        - Author Weight Report (Tail/Queue Recursion)
+        - Search Reports (Brute Force, Backtracking)
+    
+    User Management:
+        - Create/View Users
+    
+    Circulation:
+        - Create/View Loans
+        - Loan History (LIFO Stack)
+        - Create/View Reservations
+    
+    Shelf Management:
+        - View/Manage Shelves
+        - Assign Books to Shelves
+
+Technical Stack:
+    - UI Framework: CustomTkinter (modern themed widgets)
+    - Image Processing: PIL/Pillow (background and icons)
+    - Logging: Custom LibraryLogger with UIErrorHandler
+    - Theme: Centralized theme module for consistent styling
+
+Responsive Features:
+    - Automatic DPI scaling (1.0x, 1.2x, 1.5x based on screen width)
+    - Window centering on screen
+    - Scrollable button container for smaller screens
+    - Dynamic background resizing with pixel-art preservation
+
+Error Handling Strategy:
+    - Graceful degradation: Missing images/icons don't crash the app
+    - Logged errors: All exceptions logged via LibraryLogger
+    - User feedback: Critical errors shown via UIErrorHandler dialogs
+    - Fallback mechanisms: Multiple fallback strategies for image loading
+
+Assets Used:
+    - backgrounds/BG-5.jpg: Main background image
+    - twemoji/*.png: Icon set for buttons (lantern, bookpile, user, etc.)
+
+See Also:
+    - ui.theme: Theme constants and application logic
+    - ui.widget_factory: Factory for creating styled widgets
+    - utils.logger: Logging infrastructure
+"""
+
 import os
 import customtkinter as ctk
 try:
@@ -33,7 +105,147 @@ from ui.reservation.reservation_form import ReservationForm
 from ui.reservation.reservation_list import ReservationList
 
 class MainMenu(ctk.CTk):
+    """Main application window providing centralized navigation to all features.
+    
+    This class implements the primary entry point window for the Library Management
+    System, built on CustomTkinter (ctk.CTk). It provides a visually appealing,
+    responsive interface with icon-based navigation to all major subsystems.
+    
+    Architecture:
+        Inherits from ctk.CTk (CustomTkinter root window) and implements:
+        - Responsive UI scaling based on screen resolution
+        - Dynamic background image with pixel-art preservation
+        - Grid-based navigation with 16 primary actions
+        - Window lifecycle management for child windows
+    
+    Responsibilities:
+        - Display main navigation menu
+        - Open child windows (forms, lists, reports)
+        - Manage window references to prevent garbage collection
+        - Apply theme and responsive scaling
+        - Handle UI initialization errors gracefully
+    
+    UI Layout:
+        - Header: Title "Biblioteca Mitrauma" with lantern icon
+        - Body: Scrollable 2-column grid of action buttons
+        - Footer: Exit button
+        - Background: Responsive pixel-art image layer
+    
+    Responsive Scaling:
+        - Screen width >= 2560px (4K): 1.5x scaling
+        - Screen width >= 1920px (Full HD): 1.2x scaling
+        - Screen width < 1920px (HD): 1.0x scaling
+    
+    Navigation Actions (16 total):
+        Books:
+            - Crear Libro (Create Book)
+            - Ver Libros (View Books)
+            - Valor por Autor (Author Value Report - Stack Recursion)
+            - Peso por Autor (Author Weight Report - Tail Recursion)
+            - Fuerza Bruta (Brute Force Search Report)
+            - Backtracking (Backtracking Search Report)
+        
+        Users:
+            - Crear Usuario (Create User)
+            - Ver Usuarios (View Users)
+        
+        Circulation:
+            - Crear Préstamo (Create Loan)
+            - Ver Préstamos (View Loans)
+            - Historial LIFO (Loan History - Stack)
+            - Crear Reserva (Create Reservation)
+            - Ver Reservas (View Reservations)
+        
+        Shelves:
+            - Gestionar Estanterías (Manage Shelves)
+            - Ver Estanterías (View Shelves)
+            - Asignar Libros (Assign Books to Shelves)
+    
+    Error Handling:
+        - All UI initialization wrapped in try-except blocks
+        - Graceful degradation for missing images/icons
+        - Logged errors via LibraryLogger
+        - User-facing error dialogs via UIErrorHandler
+    
+    Window Management:
+        - Tracks opened child windows in _open_windows list
+        - Prevents garbage collection of Toplevel windows
+        - Centralized window opening via _open_toplevel method
+    
+    Attributes:
+        icon_lantern (CTkImage): Lantern icon for title
+        icon_book (CTkImage): Book pile icon for book actions
+        icon_user (CTkImage): User icon for user actions
+        icon_view (CTkImage): Open book icon for view actions
+        icon_loan (CTkImage): Loan/sakura icon for circulation
+        icon_search (CTkImage): Search icon for algorithm reports
+        bg_pil_original (PIL.Image): Original background image for responsive resize
+        bg_image (CTkImage): Current background image (CTkImage)
+        bg_photo (ImageTk.PhotoImage): Fallback background image (ImageTk)
+        bg_label (CTkLabel): Label widget displaying background
+        _open_windows (List): References to opened child windows
+    """
     def __init__(self):
+        """Initialize the main menu window with responsive UI and navigation.
+        
+        Sets up the complete main menu interface including:
+        - Dynamic DPI scaling based on screen resolution
+        - Responsive pixel-art background image
+        - Themed UI components and styling
+        - Navigation grid with 16 action buttons
+        - Icon loading and error handling
+        - Window centering and sizing
+        
+        Initialization Workflow:
+            1. Apply responsive scaling (1.0x, 1.2x, or 1.5x based on screen)
+            2. Apply theme and set window title/geometry
+            3. Center window on screen
+            4. Load and configure responsive background image
+            5. Bind resize event for background responsiveness
+            6. Create title section with lantern icon
+            7. Load navigation button icons (book, user, view, loan, search)
+            8. Create scrollable navigation grid (2 columns, 8 rows)
+            9. Create exit button in footer
+            10. Initialize window management list
+        
+        Responsive Scaling Logic:
+            - Detects screen width and applies appropriate scaling:
+              * >= 2560px: 1.5x (4K displays)
+              * >= 1920px: 1.2x (Full HD displays)
+              * < 1920px: 1.0x (HD and lower)
+            - Applies to both widgets and windows (Toplevel)
+        
+        Background Image:
+            - Source: ui/assets/backgrounds/BG-5.jpg
+            - Resize method: Image.NEAREST (preserves pixel-art aesthetic)
+            - Responsive: Resizes on window resize events
+            - Fallback: Multiple fallback strategies if image loading fails
+        
+        Icon Assets:
+            - Source directory: ui/assets/twemoji/
+            - Icons loaded: lantern, bookpile, user, openbook, prestamo, search
+            - Size: 36x36 or 40x40 pixels
+            - Fallback: Gracefully handles missing icons (buttons still work)
+        
+        Error Handling:
+            - All image loading wrapped in try-except
+            - All icon loading wrapped in try-except
+            - All UI component creation wrapped in try-except
+            - Errors logged via UIErrorHandler.log_and_pass
+            - Application continues even if non-critical components fail
+        
+        Args:
+            None
+        
+        Returns:
+            None
+        
+        Side Effects:
+            - Creates main window widgets
+            - Loads image assets from disk
+            - Binds window resize event
+            - Logs initialization events
+        """
         super().__init__()
 
         # Apply dynamic scaling based on screen resolution
@@ -300,19 +512,134 @@ class MainMenu(ctk.CTk):
         b_res = wf.create_primary_button(btn_frame, "Crear Reserva", command=self.open_create_reservation, image=self.icon_loan)
         b_res.pack(pady=10)
 
-    def open_assign_books(self):
-        self._open_toplevel(AssignBookForm)
-
-    def open_view_reservations(self):
-        # Open the reservations list viewer
-        self._open_toplevel(ReservationList)
-
-    def open_view_shelves(self):
-        # Open the shelves list viewer
-        self._open_toplevel(ShelfList)
+    
+    def open_author_value_report(self):
+        """Open the Author Value Report window (Stack Recursion).
+        
+        Opens AuthorValueReport window displaying total book value by author
+        using stack-based recursive algorithms.
+        
+        Purpose:
+            Demonstrates stack recursion algorithm implementation for calculating
+            aggregate values grouped by author.
+        
+        Args:
+            None
+        
+        Returns:
+            AuthorValueReport instance or None if error occurred
+        
+        Side Effects:
+            - Opens AuthorValueReport window
+            - Adds window reference to _open_windows
+        """
+        self._open_toplevel(AuthorValueReport)
+    
+    def open_author_weight_report(self):
+        """Open the Author Weight Report window (Tail/Queue Recursion).
+        
+        Opens AuthorWeightReport window displaying total book weight by author
+        using tail/queue-based recursive algorithms.
+        
+        Purpose:
+            Demonstrates tail recursion and queue-based recursive algorithm
+            implementation for calculating aggregate weights grouped by author.
+        
+        Args:
+            None
+        
+        Returns:
+            AuthorWeightReport instance or None if error occurred
+        
+        Side Effects:
+            - Opens AuthorWeightReport window
+            - Adds window reference to _open_windows
+        """
+        self._open_toplevel(AuthorWeightReport)
+    
+    def open_brute_force_report(self):
+        """Open the Brute Force Search Report window.
+        
+        Opens BruteForceReport window demonstrating brute force search algorithm
+        implementation for finding books by criteria.
+        
+        Purpose:
+            Demonstrates brute force algorithm implementation with time complexity
+            analysis and performance metrics.
+        
+        Args:
+            None
+        
+        Returns:
+            BruteForceReport instance or None if error occurred
+        
+        Side Effects:
+            - Opens BruteForceReport window
+            - Adds window reference to _open_windows
+        """
+        self._open_toplevel(BruteForceReport)
+    
+    def open_backtracking_report(self):
+        """Open the Backtracking Search Report window.
+        
+        Opens BacktrackingReport window demonstrating backtracking algorithm
+        implementation for optimized search operations.
+        
+        Purpose:
+            Demonstrates backtracking algorithm implementation with pruning
+            strategies and performance comparison against brute force.
+        
+        Args:
+            None
+        
+        Returns:
+            BacktrackingReport instance or None if error occurred
+        
+        Side Effects:
+            - Opens BacktrackingReport window
+            - Adds window reference to _open_windows
+        """
+        self._open_toplevel(BacktrackingReport)
 
     # ------------------- OPEN WINDOWS -------------------
     def _open_toplevel(self, cls, *args, **kwargs):
+        """Open a child window and manage its lifecycle.
+        
+        Centralized method for opening all child windows (forms, lists, reports)
+        with consistent error handling and window management.
+        
+        Features:
+            - Creates instance of specified window class
+            - Catches and logs instantiation errors
+            - Stores reference to prevent garbage collection
+            - Shows and focuses the new window
+            - Displays user-facing error dialogs on failure
+        
+        Window Management:
+            - Appends window reference to self._open_windows list
+            - Prevents premature garbage collection of Toplevel widgets
+            - Allows windows to persist independently
+        
+        Error Handling:
+            - Catches exceptions during window instantiation
+            - Logs errors via UIErrorHandler.handle_error
+            - Shows user-friendly error dialog with exception details
+            - Returns None on failure (safe to check return value)
+        
+        Args:
+            cls (type): Class of the window to instantiate (must accept parent as first arg)
+            *args: Additional positional arguments to pass to window constructor
+            **kwargs: Keyword arguments to pass to window constructor
+        
+        Returns:
+            Window instance if successful, None if exception occurred
+        
+        Side Effects:
+            - Creates new Toplevel window
+            - Appends reference to _open_windows list
+            - Shows window (deiconify, lift, focus)
+            - Logs window opening events
+        """
         try:
             logger.info(f"Abriendo ventana: {cls.__name__}")
             win = cls(self, *args, **kwargs)
@@ -336,48 +663,207 @@ class MainMenu(ctk.CTk):
         return win
 
     def open_create_book(self):
+        """Open the book creation form window.
+        
+        Opens BookForm in create mode for adding new books to the library system.
+        
+        Args:
+            None
+        
+        Returns:
+            BookForm instance or None if error occurred
+        
+        Side Effects:
+            - Opens BookForm window
+            - Adds window reference to _open_windows
+        """
         self._open_toplevel(BookForm, mode="create")
 
     def open_create_user(self):
+        """Open the user creation form window.
+        
+        Opens UserForm in create mode for registering new users in the system.
+        
+        Args:
+            None
+        
+        Returns:
+            UserForm instance or None if error occurred
+        
+        Side Effects:
+            - Opens UserForm window
+            - Adds window reference to _open_windows
+        """
         self._open_toplevel(UserForm, mode="create")
 
     def open_view_books(self):
-        # Open the provisional book list viewer
+        """Open the book list viewer window.
+        
+        Opens BookList window displaying all books with search and management features.
+        
+        Args:
+            None
+        
+        Returns:
+            BookList instance or None if error occurred
+        
+        Side Effects:
+            - Opens BookList window
+            - Adds window reference to _open_windows
+        """
         self._open_toplevel(BookList)
 
     def open_view_users(self):
-        # Open the user list viewer
+        """Open the user list viewer window.
+        
+        Opens UserList window displaying all registered users with management features.
+        
+        Args:
+            None
+        
+        Returns:
+            UserList instance or None if error occurred
+        
+        Side Effects:
+            - Opens UserList window
+            - Adds window reference to _open_windows
+        """
         self._open_toplevel(UserList)
     def open_view_loans(self):
-        # Open the loans list viewer
+        """Open the loan list viewer window.
+        
+        Opens LoanList window displaying all active and historical loans.
+        
+        Args:
+            None
+        
+        Returns:
+            LoanList instance or None if error occurred
+        
+        Side Effects:
+            - Opens LoanList window
+            - Adds window reference to _open_windows
+        """
         self._open_toplevel(LoanList)
+    
     def open_create_loan(self):
-        # Use the generic toplevel opener so errors are handled uniformly
+        """Open the loan creation form window.
+        
+        Opens LoanForm for creating new book loans to users.
+        
+        Args:
+            None
+        
+        Returns:
+            LoanForm instance or None if error occurred
+        
+        Side Effects:
+            - Opens LoanForm window
+            - Adds window reference to _open_windows
+        """
         self._open_toplevel(LoanForm)
+    
     def open_loan_history(self):
-        # Open the loan history viewer (Stack LIFO per user)
+        """Open the loan history viewer window (LIFO Stack).
+        
+        Opens LoanHistory window displaying user loan history using Stack (LIFO)
+        data structure for historical tracking.
+        
+        Args:
+            None
+        
+        Returns:
+            LoanHistory instance or None if error occurred
+        
+        Side Effects:
+            - Opens LoanHistory window
+            - Adds window reference to _open_windows
+        """
         self._open_toplevel(LoanHistory)
     def open_shelf_manager(self):
-        # Open the shelf management form (create mode)
+        """Open the shelf creation and management form window.
+        
+        Opens ShelfForm in create mode for adding and managing library shelves.
+        
+        Args:
+            None
+        
+        Returns:
+            ShelfForm instance or None if error occurred
+        
+        Side Effects:
+            - Opens ShelfForm window
+            - Adds window reference to _open_windows
+        """
         self._open_toplevel(ShelfForm, mode="create")
+    
+    def open_assign_books(self):
+        """Open the book-to-shelf assignment form window.
+        
+        Opens AssignBookForm for assigning books to shelves with capacity validation.
+        
+        Args:
+            None
+        
+        Returns:
+            AssignBookForm instance or None if error occurred
+        
+        Side Effects:
+            - Opens AssignBookForm window
+            - Adds window reference to _open_windows
+        """
+        self._open_toplevel(AssignBookForm)
+
+    def open_view_reservations(self):
+        """Open the reservation list viewer window.
+        
+        Opens ReservationList window displaying all book reservations.
+        
+        Args:
+            None
+        
+        Returns:
+            ReservationList instance or None if error occurred
+        
+        Side Effects:
+            - Opens ReservationList window
+            - Adds window reference to _open_windows
+        """
+        self._open_toplevel(ReservationList)
+
+    def open_view_shelves(self):
+        """Open the shelf list viewer window.
+        
+        Opens ShelfList window displaying all library shelves with book assignments.
+        
+        Args:
+            None
+        
+        Returns:
+            ShelfList instance or None if error occurred
+        
+        Side Effects:
+            - Opens ShelfList window
+            - Adds window reference to _open_windows
+        """
+        self._open_toplevel(ShelfList)
+    
     def open_create_reservation(self):
+        """Open the reservation creation form window.
+        
+        Opens ReservationForm for creating new book reservations.
+        
+        Args:
+            None
+        
+        Returns:
+            ReservationForm instance or None if error occurred
+        
+        Side Effects:
+            - Opens ReservationForm window
+            - Adds window reference to _open_windows
+        """
         self._open_toplevel(ReservationForm)
-    
-    def open_author_value_report(self):
-        # Open the author value report window (stack recursion)
-        self._open_toplevel(AuthorValueReport)
-    
-    def open_author_weight_report(self):
-        # Open the author weight report window (tail/queue recursion)
-        self._open_toplevel(AuthorWeightReport)
-    
-    def open_brute_force_report(self):
-        # Open the brute force algorithm report window
-        self._open_toplevel(BruteForceReport)
-    
-    def open_backtracking_report(self):
-        # Open the backtracking algorithm report window
-        self._open_toplevel(BacktrackingReport)
 
 
 
