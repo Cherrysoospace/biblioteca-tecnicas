@@ -9,7 +9,7 @@ Sistema completo de gestión de biblioteca desarrollado en Python con interfaz g
 <!-- TODO: Reemplazar con los nombres reales de los autores -->
 
 - **[Luz Alejandra López Cuayal]** - [55242] - [GitHub-Cherrysoospace]
-- **[Cristhian Andrey Zambrano Cerón]** - [55009] - [GitHub/CristhianZambranoC]
+- **[Cristhian Andrey Zambrano Cerón]** - [55009] - [GitHub-CristhianZambranoC]
 ---
 
 ## 📋 Descripción del Proyecto
@@ -322,10 +322,10 @@ Este es un proyecto académico. Para sugerencias o mejoras, contactar a los auto
 
 <!-- TODO: Agregar información de contacto si es necesario -->
 
-- **Universidad:** [Nombre Universidad]
+- **Universidad:** [Universidad de Caldas]
 - **Materia:** Técnicas de Programación
-- **Semestre:** [Semestre/Año]
-- **Profesor:** [Nombre Profesor]
+- **Semestre:** [2025-2]
+- **Profesor:** [Johnny Alexander Salazar Cardona]
 
 ---
 

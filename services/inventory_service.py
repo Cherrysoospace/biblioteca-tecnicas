@@ -11,29 +11,99 @@ from utils.config import FilePaths
 
 
 class InventoryService:
-    """Service responsible for managing inventory groups.
+    """Service responsible for managing inventory groups and stock levels.
 
-    Responsibilities:
-    - BUSINESS LOGIC ONLY: inventory synchronization, stock management, ordering
-    - Persistence delegated to InventoryRepository (SRP compliance)
+    SINGLE RESPONSIBILITY: Business logic for inventory management, synchronization,
+    and search operations. All persistence operations are delegated to the
+    InventoryRepository following the Single Responsibility Principle.
     
-    Manages in-memory lists:
-    - self.inventory_general: List[Inventory] (unsorted, grouped by ISBN)
-    - self.inventory_sorted: List[Inventory] (sorted by ISBN using insercion_ordenada)
+    Architecture Pattern:
+        This service implements the Service Layer pattern, acting as a facade between
+        controllers and the data layer. It coordinates business rules, validation,
+        and delegates persistence to the repository layer.
     
-    Each Inventory object represents a group of books with the same ISBN:
-    - stock: total number of copies
-    - items: list of Book objects (physical copies)
+    In-Memory State:
+        The service maintains two synchronized in-memory lists:
+        
+        - inventory_general (List[Inventory]): Unsorted list of inventory groups,
+          organized by ISBN. Each group contains all physical copies of books with
+          the same ISBN. This is the primary working list for most operations.
+          
+        - inventory_sorted (List[Inventory]): Sorted copy of inventory_general,
+          ordered by ISBN using the insertion sort algorithm (insercion_ordenada).
+          This sorted list enables efficient binary search operations.
+    
+    Inventory Group Concept:
+        Each Inventory object represents a logical group of books sharing the same ISBN:
+        - stock: count of available (not borrowed) copies
+        - items: list of Book objects (each represents a physical copy)
+        
+        Example: If the library has 3 copies of "Don Quijote" (ISBN 978-123),
+        there will be ONE Inventory object with stock=2 (if 1 is borrowed) and
+        items=[book1, book2, book3].
+    
+    Synchronization:
+        The service ensures both lists remain synchronized:
+        1. All mutations (add/update/delete) are applied to inventory_general
+        2. synchronize_inventories() creates a sorted copy in inventory_sorted
+        3. Both lists are persisted to JSON files via the repository
+    
+    Attributes:
+        repository (InventoryRepository): Handles persistence to JSON files
+        inventory_general (List[Inventory]): Unsorted inventory groups
+        inventory_sorted (List[Inventory]): Sorted inventory groups (by ISBN)
+    
+    Example:
+        >>> service = InventoryService()
+        >>> book = Book("B001", "978-123", "Title", "Author", 1.5, 25000, False)
+        >>> service.add_item(book)
+        >>> results = service.find_by_title("Title")
+        >>> for inv in results:
+        ...     print(f"{inv.get_isbn()}: {inv.get_stock()} available")
     """
 
     def __init__(self, repository: InventoryRepository = None):
-        """Initialize InventoryService with a repository.
+        """Initialize the InventoryService with an optional repository.
 
-        Parameters:
-        - repository: Optional InventoryRepository instance. If None, creates a new one.
+        Creates a new inventory service instance, loads existing inventory data
+        from persistent storage, and ensures both in-memory lists (general and sorted)
+        are synchronized. If the inventory is empty, attempts to regenerate it from
+        the books catalog (books.json).
+        
+        Initialization Process:
+            1. Set repository (use provided or create new InventoryRepository)
+            2. Initialize empty in-memory lists
+            3. Load inventory from repository (JSON files)
+            4. If empty, regenerate from books.json catalog
+            5. Synchronize general and sorted lists
+            6. Persist synchronized state
+        
+        Args:
+            repository (InventoryRepository, optional): Repository instance for
+                persistence operations. If None, creates a new InventoryRepository
+                with default file paths. Defaults to None.
 
+        Returns:
+            None
+        
         Raises:
-        - Exception: for IO errors or invalid JSON format.
+            Exception: For IO errors when reading from repository or books.json.
+                If initialization fails, the service will have empty inventory lists.
+        
+        Side Effects:
+            - Loads data from inventory_general.json and inventory_sorted.json
+            - May regenerate inventory from books.json if empty
+            - Persists synchronized inventory to both JSON files
+        
+        Example:
+            >>> # Default initialization (auto-creates repository)
+            >>> service = InventoryService()
+            >>> len(service.inventory_general)
+            33
+            >>> 
+            >>> # Custom repository for testing
+            >>> mock_repo = MockInventoryRepository()
+            >>> service = InventoryService(repository=mock_repo)
         """
         self.repository = repository or InventoryRepository()
 
@@ -50,11 +120,33 @@ class InventoryService:
 
     # -------------------- Persistence (delegated to repository) --------------------
     def _load_inventories(self) -> None:
-        """Load inventories from repository.
+        """Load inventory data from persistent storage via repository.
+        
+        This private method delegates the loading operation to the repository layer,
+        following the separation of concerns principle. It loads only the general
+        (unsorted) inventory; the sorted version is generated via synchronization.
+        
+        Error Handling:
+            If loading fails (file doesn't exist, corrupted JSON, etc.), the method
+            gracefully initializes with an empty inventory list rather than crashing.
+            This allows the service to function even on first run or after data loss.
+        
+        Args:
+            None
+        
+        Returns:
+            None
+        
+        Side Effects:
+            - Populates self.inventory_general from repository
+            - If loading fails, sets self.inventory_general to empty list []
         
         Raises:
-        - ValueError: if JSON is malformed
-        - Exception: for IO errors.
+            Does not raise exceptions. All errors are caught and logged internally.
+        
+        Note:
+            This is a private method (prefix _) and should not be called directly
+            by external code. It's part of the initialization sequence.
         """
         try:
             self.inventory_general = self.repository.load_general()
@@ -63,30 +155,89 @@ class InventoryService:
             self.inventory_general = []
 
     def _save_inventories(self) -> None:
-        """Persist both inventory lists using repository.
+        """Persist both inventory lists to storage via repository.
+        
+        This private method delegates persistence to the repository layer, saving
+        both the general (unsorted) and sorted inventory lists to their respective
+        JSON files. This ensures data consistency across both files.
+        
+        Synchronization Requirement:
+            This method should only be called AFTER synchronize_inventories() to
+            ensure both lists are consistent. Most public methods call
+            synchronize_inventories() which internally calls this method.
+        
+        Args:
+            None
+        
+        Returns:
+            None
         
         Raises:
-        - Exception: for IO errors
+            Exception: Propagated from repository if file write operations fail.
+                Callers should handle this exception appropriately.
+        
+        Side Effects:
+            - Writes to inventory_general.json
+            - Writes to inventory_sorted.json
+        
+        Note:
+            This is a private method (prefix _) and should not be called directly.
+            Use synchronize_inventories() instead, which calls this automatically.
         """
         self.repository.save_both(self.inventory_general, self.inventory_sorted)
 
     # -------------------- CRUD --------------------
     def add_item(self, book: Book, stock: int = 1) -> None:
-        """
-        Add a new book to the inventory.
+        """Add a new book to the inventory system.
         
-        If an inventory group with the same ISBN already exists, adds the book to that group.
-        Otherwise, creates a new inventory group for this ISBN.
+        This method integrates a new physical book copy into the inventory, either
+        by adding it to an existing ISBN group or creating a new group if this is
+        the first copy of that ISBN.
+        
+        Business Logic:
+            1. Validate that the book ID doesn't already exist (prevents duplicates)
+            2. Search for an existing inventory group with matching ISBN
+            3. If found: Add book to that group (increases group size)
+            4. If not found: Create new inventory group for this ISBN
+            5. Synchronize and persist both inventory lists
+        
+        Inventory Grouping:
+            Books with the same ISBN are grouped together in a single Inventory
+            object. For example, 3 copies of "Don Quijote" (ISBN 978-123) will
+            be managed as one Inventory group with 3 items.
+        
+        Args:
+            book (Book): Book instance to add to inventory. Must have unique ID.
+            stock (int, optional): Legacy parameter, kept for compatibility but
+                ignored. Stock is calculated automatically from items count.
+                Defaults to 1.
 
-        Parameters:
-        - book: Book instance to add to inventory.
-        - stock: ignored (kept for compatibility), each book counts as 1 item.
-
-        Returns: None
+        Returns:
+            None
 
         Raises:
-        - ValueError: if a book with the same id already exists.
-        - Exception: for IO errors while saving.
+            ValueError: If a book with the same ID already exists in any inventory
+                group. Book IDs must be unique across the entire inventory.
+            Exception: If persistence operations fail (IO errors).
+        
+        Side Effects:
+            - Adds book to inventory_general (to existing or new group)
+            - Synchronizes inventory_sorted (creates sorted copy)
+            - Persists both lists to JSON files
+        
+        Example:
+            >>> service = InventoryService()
+            >>> book1 = Book("B001", "978-123", "Don Quijote", "Cervantes", 1.5, 25000, False)
+            >>> service.add_item(book1)
+            >>> # First copy creates new group
+            >>> 
+            >>> book2 = Book("B002", "978-123", "Don Quijote", "Cervantes", 1.5, 25000, False)
+            >>> service.add_item(book2)
+            >>> # Second copy added to existing group
+            >>> 
+            >>> # Trying to add duplicate ID raises error
+            >>> duplicate = Book("B001", "978-456", "Other", "Author", 1.0, 1000, False)
+            >>> service.add_item(duplicate)  # Raises ValueError
         """
         # Check if book id already exists in any inventory group
         for inventory in self.inventory_general:
@@ -113,17 +264,56 @@ class InventoryService:
         self.synchronize_inventories()
 
     def update_book_in_inventory(self, book_id: str, updated_book: Book) -> None:
-        """
-        Update a book's information in the inventory.
+        """Update a book's information in the inventory system.
         
-        If the ISBN changes, moves the book to the appropriate group.
+        This method locates a book by ID and updates its properties with new data.
+        If the ISBN changes, the book is automatically moved to the appropriate
+        inventory group, maintaining proper ISBN-based organization.
+        
+        Update Workflow:
+            1. Search for book across all inventory groups by ID
+            2. Update book data in place
+            3. If ISBN changed:
+               a. Remove book from old ISBN group
+               b. Clean up empty groups
+               c. Add book to new ISBN group (or create new group)
+            4. Synchronize and persist changes
+        
+        ISBN Change Handling:
+            When a book's ISBN is updated, the inventory structure must be reorganized:
+            - Old group: Book is removed; empty groups are deleted
+            - New group: Book is added to existing group or new group is created
+            This maintains the invariant that each group contains only one ISBN.
+        
+        Args:
+            book_id (str): Unique identifier of the book to update.
+            updated_book (Book): Book object with new/updated information.
+                Can have different ISBN, which triggers group reorganization.
 
-        Parameters:
-        - book_id: ID of the book to update
-        - updated_book: Book object with updated information
+        Returns:
+            None
 
         Raises:
-        - ValueError: if book not found in inventory
+            ValueError: If no book with the specified ID is found in inventory.
+            Exception: If persistence operations fail.
+        
+        Side Effects:
+            - Updates book data in inventory_general
+            - May move book between groups (if ISBN changed)
+            - Removes empty groups
+            - Synchronizes inventory_sorted
+            - Persists changes to JSON files
+        
+        Example:
+            >>> service = InventoryService()
+            >>> # Update title only (same ISBN)
+            >>> updated = Book("B001", "978-123", "New Title", "Author", 1.5, 25000, False)
+            >>> service.update_book_in_inventory("B001", updated)
+            >>> 
+            >>> # Update ISBN (moves to different group)
+            >>> updated2 = Book("B001", "978-456", "Title", "Author", 1.5, 25000, False)
+            >>> service.update_book_in_inventory("B001", updated2)
+            >>> # Book B001 now in ISBN 978-456 group
         """
         found = False
         old_inventory = None
@@ -197,14 +387,60 @@ class InventoryService:
         self.synchronize_inventories()
 
     def synchronize_inventories(self) -> None:
-        """
-        Synchronize the unordered inventory with the ordered inventory.
+        """Synchronize the sorted inventory list with the general inventory list.
 
-        This method ensures that inventory_sorted is a sorted copy of inventory_general
-        using the insertion sort algorithm (insercion_ordenada).
+        This method ensures that inventory_sorted remains a properly ordered copy
+        of inventory_general by creating a deep copy and applying the insertion
+        sort algorithm. Both lists are then persisted to their respective JSON files.
+        
+        Synchronization Process:
+            1. Create deep copy of each Inventory object in inventory_general
+               (includes copying all Book objects to avoid shared references)
+            2. Store copies in inventory_sorted list
+            3. Apply insertion sort algorithm (insercion_ordenada) to sort by ISBN
+            4. Persist both lists to JSON files via repository
+        
+        Why Synchronization?
+            The system maintains two versions of the inventory:
+            - inventory_general: Working list for mutations (add/update/delete)
+            - inventory_sorted: Sorted list for efficient binary search operations
+            
+            This dual-list approach separates concerns:
+            - Fast mutations on unsorted list
+            - Fast searches on sorted list
+        
+        Sorting Algorithm:
+            Uses insercion_ordenada (insertion sort) from AlgoritmosOrdenamiento.
+            Time Complexity: O(n²) worst case, but efficient for small datasets
+            and nearly-sorted data. The inventory is sorted by ISBN in ascending order.
+        
+        Deep Copy Rationale:
+            Deep copying prevents mutations to inventory_general from affecting
+            inventory_sorted, maintaining data integrity across both lists.
+        
+        Args:
+            None
+
+        Returns:
+            None
 
         Raises:
-        - Exception: for IO errors while saving.
+            Exception: If persistence operations fail (propagated from _save_inventories).
+        
+        Side Effects:
+            - Creates new inventory_sorted list (replaces existing)
+            - Writes to both JSON files (inventory_general.json, inventory_sorted.json)
+        
+        Performance:
+            Called after every mutation operation (add/update/delete). For large
+            inventories, consider batching operations to reduce synchronization overhead.
+        
+        Example:
+            >>> service = InventoryService()
+            >>> # After any mutation
+            >>> service.inventory_general.append(new_inventory)
+            >>> service.synchronize_inventories()
+            >>> # Now inventory_sorted is updated and sorted
         """
         # Create deep copy of inventory_general to inventory_sorted
         self.inventory_sorted = []
@@ -454,21 +690,64 @@ class InventoryService:
         return results
 
     def find_by_title(self, title: str) -> List[Inventory]:
-        """Find inventory items where the book title matches using linear search.
+        """Find inventory items by book title using recursive linear search.
 
-        Uses the recursive busqueda_lineal algorithm to search through the
-        Inventario General (unsorted list) for books matching the title.
-        The search is case-insensitive and supports partial matches.
-
-        Parameters:
-        - title: title string to search (can be partial)
+        This method implements the project requirement for recursive linear search
+        (búsqueda lineal recursiva). It searches through the unsorted inventory_general
+        list to find all books whose titles match the search query.
+        
+        Algorithm:
+            Uses busqueda_lineal from AlgoritmosBusqueda module, which implements
+            recursive linear search with the following characteristics:
+            - Time Complexity: O(n) where n is the number of inventory groups
+            - Space Complexity: O(n) for recursion stack
+            - Case-insensitive matching
+            - Supports partial matches (substring search)
+        
+        Search Strategy:
+            The method performs iterative calls to busqueda_lineal to find ALL
+            matching results, not just the first one:
+            1. Start search from index 0
+            2. Find first match using busqueda_lineal
+            3. If found, add to results and continue from next index
+            4. Repeat until no more matches found
+            5. Return all collected results
+        
+        Why Unsorted List?
+            Linear search doesn't require sorted data, so we use inventory_general
+            (the primary working list) rather than inventory_sorted. This avoids
+            unnecessary sorting overhead for a search that must scan all items anyway.
+        
+        Args:
+            title (str): Title string to search for. Can be partial (e.g., "quijote"
+                will match "Don Quijote de la Mancha"). Search is case-insensitive
+                thanks to text normalization in the search helper functions.
 
         Returns:
-        - List[Inventory]: All inventory items with matching titles
+            List[Inventory]: All inventory groups containing books with matching titles.
+                Returns empty list [] if no matches found.
 
         Example:
-        >>> service.find_by_title("quijote")
-        [<Inventory for "Don Quijote de la Mancha">]
+            >>> service = InventoryService()
+            >>> # Partial match search
+            >>> results = service.find_by_title("quijote")
+            >>> for inv in results:
+            ...     book = inv.get_book()
+            ...     print(f"{book.get_title()}: {inv.get_stock()} available")
+            Don Quijote de la Mancha: 2 available
+            >>> 
+            >>> # Case-insensitive search
+            >>> results = service.find_by_title("QUIJOTE")  # Same results
+            >>> 
+            >>> # No matches
+            >>> results = service.find_by_title("nonexistent")
+            >>> len(results)
+            0
+        
+        See Also:
+            - find_by_author(): Similar search by author name
+            - utils.algorithms.AlgoritmosBusqueda.busqueda_lineal: The recursive
+              linear search implementation
         """
         results = []
         start_index = 0
@@ -491,21 +770,60 @@ class InventoryService:
         return results
 
     def find_by_author(self, author: str) -> List[Inventory]:
-        """Find inventory items where the book author matches using linear search.
+        """Find inventory items by book author using recursive linear search.
 
-        Uses the recursive busqueda_lineal algorithm to search through the
-        Inventario General (unsorted list) for books matching the author.
-        The search is case-insensitive and supports partial matches.
-
-        Parameters:
-        - author: author string to search (can be partial)
+        This method implements the project requirement for recursive linear search
+        (búsqueda lineal recursiva). It searches through the unsorted inventory_general
+        list to find all books whose authors match the search query.
+        
+        Algorithm:
+            Uses busqueda_lineal from AlgoritmosBusqueda module, which implements
+            recursive linear search with the following characteristics:
+            - Time Complexity: O(n) where n is the number of inventory groups
+            - Space Complexity: O(n) for recursion stack
+            - Case-insensitive matching
+            - Supports partial matches (substring search)
+        
+        Search Strategy:
+            Identical to find_by_title() but matches against the author field:
+            1. Iteratively call busqueda_lineal starting from index 0
+            2. Collect all matches (not just first one)
+            3. Continue until no more matches found
+            4. Return complete result set
+        
+        Use Cases:
+            - Find all books by a specific author
+            - Search with partial author name (e.g., "garcía" matches "García Márquez")
+            - Case-insensitive author lookup
+        
+        Args:
+            author (str): Author name to search for. Can be partial (e.g., "márquez"
+                will match "Gabriel García Márquez"). Search is case-insensitive.
 
         Returns:
-        - List[Inventory]: All inventory items with matching authors
+            List[Inventory]: All inventory groups containing books with matching authors.
+                Returns empty list [] if no matches found.
 
         Example:
-        >>> service.find_by_author("garcía márquez")
-        [<Inventory for books by Gabriel García Márquez>]
+            >>> service = InventoryService()
+            >>> # Full or partial author search
+            >>> results = service.find_by_author("garcía márquez")
+            >>> for inv in results:
+            ...     book = inv.get_book()
+            ...     print(f"{book.get_title()} by {book.get_author()}")
+            Cien años de soledad by Gabriel García Márquez
+            El amor en los tiempos del cólera by Gabriel García Márquez
+            >>> 
+            >>> # Partial match
+            >>> results = service.find_by_author("márquez")  # Same results
+            >>> 
+            >>> # Case-insensitive
+            >>> results = service.find_by_author("GARCÍA")  # Same results
+        
+        See Also:
+            - find_by_title(): Similar search by book title
+            - utils.algorithms.AlgoritmosBusqueda.busqueda_lineal: The recursive
+              linear search implementation
         """
         results = []
         start_index = 0
