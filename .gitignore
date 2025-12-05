@@ -10,6 +10,9 @@ wheels/
 .venv
 logs/
 
+# UI Assets
+ui/assets/twemoji/twback/
+
 # Data files (database JSONs)
 data/example.json
 data/inventory_general.json
