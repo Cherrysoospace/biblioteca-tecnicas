@@ -1342,14 +1342,4 @@ biblioteca-tecnicas/
 ├── data/                # Archivos JSON de datos
 └── reports/             # Reportes generados
 
-**Total**: ~100+ archivos, ~15,000+ líneas de código
-```
 
----
-
-**Documento generado**: Diciembre 2024  
-**Autores**: Cristhian [Nombre completo]  
-**Institución**: Universidad de Caldas  
-**Asignatura**: Técnicas de Programación - Semestre III
-
----

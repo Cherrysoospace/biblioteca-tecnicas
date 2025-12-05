@@ -1,0 +1,209 @@
+[
+  {
+    "id": "B001",
+    "ISBNCode": "9780140449134",
+    "title": "The Odyssey",
+    "author": "Homer",
+    "weight": 2.5,
+    "price": 35000,
+    "isBorrowed": false
+  },
+  {
+    "id": "B002",
+    "ISBNCode": "9780679783268",
+    "title": "Pride and Prejudice",
+    "author": "Jane Austen",
+    "weight": 2.3,
+    "price": 25000,
+    "isBorrowed": false
+  },
+  {
+    "id": "B003",
+    "ISBNCode": "9780743273565",
+    "title": "The Great Gatsby",
+    "author": "F. Scott Fitzgerald",
+    "weight": 1.8,
+    "price": 27000,
+    "isBorrowed": false
+  },
+  {
+    "id": "B004",
+    "ISBNCode": "9780061120084",
+    "title": "To Kill a Mockingbird",
+    "author": "Harper Lee",
+    "weight": 2.1,
+    "price": 28000,
+    "isBorrowed": false
+  },
+  {
+    "id": "B005",
+    "ISBNCode": "9780307277671",
+    "title": "The Road",
+    "author": "Cormac McCarthy",
+    "weight": 1.9,
+    "price": 32000,
+    "isBorrowed": false
+  },
+  {
+    "id": "B006",
+    "ISBNCode": "9781982137274",
+    "title": "The Institute",
+    "author": "Stephen King",
+    "weight": 2.4,
+    "price": 45000,
+    "isBorrowed": false
+  },
+  {
+    "id": "B007",
+    "ISBNCode": "9780307387899",
+    "title": "The Alchemist",
+    "author": "Paulo Coelho",
+    "weight": 1.5,
+    "price": 20000,
+    "isBorrowed": false
+  },
+  {
+    "id": "B008",
+    "ISBNCode": "9780446310789",
+    "title": "Mockingjay",
+    "author": "Suzanne Collins",
+    "weight": 1.7,
+    "price": 26000,
+    "isBorrowed": false
+  },
+  {
+    "id": "B009",
+    "ISBNCode": "9780307743657",
+    "title": "Ready Player One",
+    "author": "Ernest Cline",
+    "weight": 2.0,
+    "price": 35000,
+    "isBorrowed": false
+  },
+  {
+    "id": "B010",
+    "ISBNCode": "9780143126560",
+    "title": "The Martian",
+    "author": "Andy Weir",
+    "weight": 2.2,
+    "price": 38000,
+    "isBorrowed": false
+  },
+  {
+    "id": "B011",
+    "ISBNCode": "9780439023528",
+    "title": "The Hunger Games",
+    "author": "Suzanne Collins",
+    "weight": 1.8,
+    "price": 45000,
+    "isBorrowed": false
+  },
+  {
+    "id": "B012",
+    "ISBNCode": "9781594633669",
+    "title": "The Kite Runner",
+    "author": "Khaled Hosseini",
+    "weight": 1.9,
+    "price": 40000,
+    "isBorrowed": false
+  },
+  {
+    "id": "B013",
+    "ISBNCode": "9780316769488",
+    "title": "The Catcher in the Rye",
+    "author": "J.D. Salinger",
+    "weight": 1.6,
+    "price": 32000,
+    "isBorrowed": false
+  },
+  {
+    "id": "B014",
+    "ISBNCode": "9781451673319",
+    "title": "Fahrenheit 451",
+    "author": "Ray Bradbury",
+    "weight": 1.7,
+    "price": 30000,
+    "isBorrowed": false
+  },
+  {
+    "id": "B015",
+    "ISBNCode": "9780060850524",
+    "title": "Life of Pi",
+    "author": "Yann Martel",
+    "weight": 1.8,
+    "price": 39000,
+    "isBorrowed": false
+  },
+  {
+    "id": "B016",
+    "ISBNCode": "9780061122415",
+    "title": "Of Mice and Men",
+    "author": "John Steinbeck",
+    "weight": 1.5,
+    "price": 28000,
+    "isBorrowed": false
+  },
+  {
+    "id": "B017",
+    "ISBNCode": "9780679783268",
+    "title": "Pride and Prejudice",
+    "author": "Jane Austen",
+    "weight": 2.3,
+    "price": 25000,
+    "isBorrowed": false
+  },
+  {
+    "id": "B018",
+    "ISBNCode": "9781982137274",
+    "title": "The Institute",
+    "author": "Stephen King",
+    "weight": 2.4,
+    "price": 45000,
+    "isBorrowed": false
+  },
+  {
+    "id": "B019",
+    "ISBNCode": "9780061122415",
+    "title": "Of Mice and Men",
+    "author": "John Steinbeck",
+    "weight": 1.5,
+    "price": 28000,
+    "isBorrowed": false
+  },
+  {
+    "id": "B020",
+    "ISBNCode": "9780439023528",
+    "title": "The Hunger Games",
+    "author": "Suzanne Collins",
+    "weight": 1.8,
+    "price": 45000,
+    "isBorrowed": false
+  },
+  {
+    "id": "B021",
+    "ISBNCode": "00000000021",
+    "title": "Libro21",
+    "author": "Autor21",
+    "weight": 0.8,
+    "price": 20000,
+    "isBorrowed": false
+  },
+  {
+    "id": "B022",
+    "ISBNCode": "9780140449134",
+    "title": "The Odyssey",
+    "author": "Homer",
+    "weight": 2.5,
+    "price": 35000,
+    "isBorrowed": false
+  },
+  {
+    "id": "B023",
+    "ISBNCode": "000000023",
+    "title": "libro23",
+    "author": "autor23",
+    "weight": 1.0,
+    "price": 100000,
+    "isBorrowed": false
+  }
+]
