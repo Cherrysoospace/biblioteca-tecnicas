@@ -6,21 +6,25 @@ Single Responsibility: Persistence of history data in loan_history.json
 The history is an organized view of loan.json by user in LIFO structure.
 It is automatically updated when loans change.
 
-File structure:
-{
-  "user_stacks": {
-    "U001": [
-      {
-        "user_id": "U001",
-        "isbn": "978...",
-        "loan_date": "2025-12-03",
-        "loan_id": "L002",
-        "returned": true
-      },
-      ...
-    ]
-  }
-}
+File structure (Array/Stack format):
+[
+  "user_stacks",
+  [
+    {
+      "U001": [
+        {
+          "user_id": "U001",
+          "isbn": "978...",
+          "loan_date": "2025-12-03",
+          "loan_id": "L002",
+          "returned": true
+        },
+        ...
+      ],
+      "U002": [...]
+    }
+  ]
+]
 """
 
 import json
@@ -56,39 +60,64 @@ class LoanHistoryRepository:
         """Ensure that the history file exists."""
         if not os.path.exists(self.file_path):
             logger.info(f"Creando archivo de historial: {self.file_path}")
-            self._write_raw_data({"user_stacks": {}})
+            self._write_raw_data({})
     
     def _read_raw_data(self) -> Dict[str, Any]:
         """Read raw data from JSON file.
         
         Returns:
-            Dict with structure {"user_stacks": {...}}
+            Dict with user stacks extracted from array format
         """
         try:
             with open(self.file_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-                if not isinstance(data, dict) or 'user_stacks' not in data:
+                # El archivo debe ser un array: ["user_stacks", [{...}]]
+                if isinstance(data, list) and len(data) >= 2:
+                    if data[0] == "user_stacks":
+                        # data[1] debe ser un array con un dict dentro
+                        if isinstance(data[1], list) and len(data[1]) > 0:
+                            if isinstance(data[1][0], dict):
+                                return data[1][0]
+                        # O puede ser directamente un dict (formato anterior)
+                        elif isinstance(data[1], dict):
+                            return data[1]
                     logger.warning(f"Estructura inválida en {self.file_path}, inicializando vacío")
-                    return {"user_stacks": {}}
-                return data
+                    return {}
+                # Compatibilidad con formato antiguo {"user_stacks": {...}}
+                elif isinstance(data, dict) and 'user_stacks' in data:
+                    logger.warning(f"Convirtiendo formato antiguo de {self.file_path}")
+                    return data['user_stacks']
+                # Compatibilidad con formato [{user_stacks: {...}}]
+                elif isinstance(data, list) and len(data) > 0:
+                    obj = data[0]
+                    if isinstance(obj, dict) and 'user_stacks' in obj:
+                        return obj['user_stacks']
+                    logger.warning(f"Estructura inválida en {self.file_path}, inicializando vacío")
+                    return {}
+                else:
+                    logger.warning(f"Estructura inválida en {self.file_path}, inicializando vacío")
+                    return {}
         except FileNotFoundError:
             logger.debug(f"Archivo {self.file_path} no encontrado, retornando vacío")
-            return {"user_stacks": {}}
+            return {}
         except json.JSONDecodeError as e:
             logger.error(f"Error decodificando JSON en {self.file_path}: {e}")
-            return {"user_stacks": {}}
+            return {}
         except Exception as e:
             logger.error(f"Error leyendo {self.file_path}: {e}")
-            return {"user_stacks": {}}
+            return {}
     
-    def _write_raw_data(self, data: Dict[str, Any]) -> None:
+    def _write_raw_data(self, user_stacks: Dict[str, List[Dict[str, Any]]]) -> None:
         """Write raw data to JSON file.
         
         Args:
-            data: Dict with structure {"user_stacks": {...}}
+            user_stacks: Dict with user stacks to save
         """
         try:
             os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
+            
+            # Formato de pila: ["user_stacks", [{...}]]
+            data = ["user_stacks", [user_stacks]]
             
             with open(self.file_path, 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
@@ -104,8 +133,7 @@ class LoanHistoryRepository:
             Dict[user_id, List[Dict]] where each list is that user's stack
             (index 0 = bottom, index -1 = top of stack)
         """
-        data = self._read_raw_data()
-        user_stacks = data.get('user_stacks', {})
+        user_stacks = self._read_raw_data()
         
         result = {}
         for user_id, stack_items in user_stacks.items():
@@ -123,8 +151,7 @@ class LoanHistoryRepository:
         Args:
             user_stacks: Dict[user_id, List[Dict]] with each user's stacks
         """
-        data = {"user_stacks": user_stacks}
-        self._write_raw_data(data)
+        self._write_raw_data(user_stacks)
     
     def load_user_stack(self, user_id: str) -> List[Dict[str, Any]]:
         """Load a specific user's stack.
