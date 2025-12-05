@@ -204,7 +204,7 @@ class ShelfList(ctk.CTkToplevel):
 
         action_frame = ctk.CTkFrame(container, fg_color=theme.BG_COLOR, corner_radius=0)
         # place the action frame in the bottom grid row so it stays visible
-        action_frame.grid(row=2, column=0, sticky="ew", pady=(8, 4))
+        action_frame.grid(row=3, column=0, sticky="ew", pady=(8, 4))
 
         refresh_btn = wf.create_small_button(action_frame, text="Refrescar", command=self.load_shelves)
         refresh_btn.pack(side="left", padx=(0, 8))
