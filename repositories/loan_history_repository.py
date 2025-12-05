@@ -8,22 +8,19 @@ It is automatically updated when loans change.
 
 File structure (Array/Stack format):
 [
-  "user_stacks",
+  "U001",
   [
     {
-      "U001": [
-        {
-          "user_id": "U001",
-          "isbn": "978...",
-          "loan_date": "2025-12-03",
-          "loan_id": "L002",
-          "returned": true
-        },
-        ...
-      ],
-      "U002": [...]
-    }
-  ]
+      "user_id": "U001",
+      "isbn": "978...",
+      "loan_date": "2025-12-03",
+      "loan_id": "L002",
+      "returned": true
+    },
+    ...
+  ],
+  "U002",
+  [...]
 ]
 """
 
@@ -71,29 +68,31 @@ class LoanHistoryRepository:
         try:
             with open(self.file_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-                # El archivo debe ser un array: ["user_stacks", [{...}]]
-                if isinstance(data, list) and len(data) >= 2:
-                    if data[0] == "user_stacks":
-                        # data[1] debe ser un array con un dict dentro
-                        if isinstance(data[1], list) and len(data[1]) > 0:
-                            if isinstance(data[1][0], dict):
-                                return data[1][0]
-                        # O puede ser directamente un dict (formato anterior)
-                        elif isinstance(data[1], dict):
-                            return data[1]
-                    logger.warning(f"Estructura inválida en {self.file_path}, inicializando vacío")
-                    return {}
+                
+                # El archivo debe ser un array: ["U001", [...], "U002", [...], ...]
+                if isinstance(data, list):
+                    result = {}
+                    i = 0
+                    while i < len(data):
+                        # Cada par es: user_id (string), stack (array)
+                        if i + 1 < len(data):
+                            user_id = data[i]
+                            stack = data[i + 1]
+                            
+                            if isinstance(user_id, str) and isinstance(stack, list):
+                                result[user_id] = stack
+                                i += 2
+                            else:
+                                logger.warning(f"Formato incorrecto en posición {i}, saltando")
+                                i += 1
+                        else:
+                            break
+                    return result
+                
                 # Compatibilidad con formato antiguo {"user_stacks": {...}}
                 elif isinstance(data, dict) and 'user_stacks' in data:
                     logger.warning(f"Convirtiendo formato antiguo de {self.file_path}")
                     return data['user_stacks']
-                # Compatibilidad con formato [{user_stacks: {...}}]
-                elif isinstance(data, list) and len(data) > 0:
-                    obj = data[0]
-                    if isinstance(obj, dict) and 'user_stacks' in obj:
-                        return obj['user_stacks']
-                    logger.warning(f"Estructura inválida en {self.file_path}, inicializando vacío")
-                    return {}
                 else:
                     logger.warning(f"Estructura inválida en {self.file_path}, inicializando vacío")
                     return {}
@@ -116,8 +115,11 @@ class LoanHistoryRepository:
         try:
             os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
             
-            # Formato de pila: ["user_stacks", [{...}]]
-            data = ["user_stacks", [user_stacks]]
+            # Formato de pila: ["U001", [...], "U002", [...], ...]
+            data = []
+            for user_id, stack in user_stacks.items():
+                data.append(user_id)
+                data.append(stack)
             
             with open(self.file_path, 'w', encoding='utf-8') as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
