@@ -108,10 +108,6 @@ def solve_optimal_shelf(books_data, max_capacity=8.0):
     The function extracts weights and values from the books data, calls the
     backtracking algorithm, and returns the optimal solution in a readable format.
     
-    OPTIMIZATION: For large datasets (>25 books), the algorithm prefilters books
-    by selecting those with the best value-to-weight ratio to keep the problem
-    tractable while still finding high-quality solutions.
-    
     Parameters:
     - books_data: List of dictionaries containing book information.
                   Each dict must have: 'id', 'title', 'author', 'weight', 'price' keys.
@@ -147,39 +143,19 @@ def solve_optimal_shelf(books_data, max_capacity=8.0):
             'indices': []
         }
     
-    # OPTIMIZATION: For large datasets, prefilter books by value-to-weight ratio
-    # This keeps the problem tractable while finding good solutions
-    MAX_BOOKS_FOR_FULL_SEARCH = 25
+    # Extract weights and values from books data
+    weights = []
+    values = []
     
-    # Create indexed book data with value-to-weight ratio
-    indexed_books = []
-    for i, book in enumerate(books_data):
+    for book in books_data:
         try:
             weight = float(book.get('weight', 0))
             price = float(book.get('price', 0))
-            # Calculate value per kg (higher is better)
-            ratio = price / weight if weight > 0 else 0
-            indexed_books.append({
-                'original_index': i,
-                'book': book,
-                'weight': weight,
-                'price': price,
-                'ratio': ratio
-            })
-        except (ValueError, TypeError, ZeroDivisionError):
+            weights.append(weight)
+            values.append(price)
+        except (ValueError, TypeError):
             # Skip books with invalid data
             continue
-    
-    # If we have too many books, select the best candidates by ratio
-    if len(indexed_books) > MAX_BOOKS_FOR_FULL_SEARCH:
-        # Sort by value-to-weight ratio (descending)
-        indexed_books.sort(key=lambda x: x['ratio'], reverse=True)
-        # Keep only the top candidates
-        indexed_books = indexed_books[:MAX_BOOKS_FOR_FULL_SEARCH]
-    
-    # Extract weights and values for the selected books
-    weights = [b['weight'] for b in indexed_books]
-    values = [b['price'] for b in indexed_books]
     
     # Use a dictionary to store the global state of the best solution.
     # This is necessary because integers in Python are immutable when passed by function.
@@ -205,12 +181,11 @@ def solve_optimal_shelf(books_data, max_capacity=8.0):
     total_weight = 0.0
     
     for idx in best_solution["selection"]:
-        # Map back to original book using indexed_books
-        original_book = indexed_books[idx]['book']
+        book = books_data[idx]
         selected_books.append({
-            'id': original_book.get('id', 'N/A'),
-            'title': original_book.get('title', 'Unknown'),
-            'author': original_book.get('author', 'Unknown'),
+            'id': book.get('id', 'N/A'),
+            'title': book.get('title', 'Unknown'),
+            'author': book.get('author', 'Unknown'),
             'weight': weights[idx],
             'price': values[idx]
         })
