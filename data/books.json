@@ -150,7 +150,7 @@
     "author": "Jane Austen",
     "weight": 2.3,
     "price": 25000,
-    "isBorrowed": false
+    "isBorrowed": true
   },
   {
     "id": "B018",

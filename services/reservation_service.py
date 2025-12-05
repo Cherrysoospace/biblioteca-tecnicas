@@ -32,6 +32,8 @@ class ReservationService:
 	def __init__(self, repository: ReservationRepository = None):
 		self.repository = repository or ReservationRepository()
 		self.reservations: List[Reservation] = []
+		# Queues por ISBN para manejo FIFO de reservas pendientes
+		self.pending_queues: dict[str, Queue] = {}
 		self._load_reservations()
 
 	def _load_reservations(self) -> None:
@@ -39,16 +41,38 @@ class ReservationService:
 
 		This populates the in-memory reservation list from the configured
 		repository. If loading fails the service falls back to an empty list.
+		Additionally rebuilds the FIFO queues for pending reservations by ISBN.
 		"""
 		try:
 			self.reservations = self.repository.load_all()
 		except Exception:
 			# Start with empty list if load fails
 			self.reservations = []
+		
+		# Rebuild pending queues from loaded reservations
+		self._rebuild_pending_queues()
 
 	def _save_reservations(self) -> None:
 		"""Persist reservations using repository."""
 		self.repository.save_all(self.reservations)
+
+	def _rebuild_pending_queues(self) -> None:
+		"""Rebuild pending queues from current reservations.
+		
+		This method reconstructs the FIFO queues for each ISBN based on
+		the current state of reservations. Only pending reservations are
+		added to queues, maintaining their original order.
+		"""
+		# Clear existing queues
+		self.pending_queues.clear()
+		
+		# Rebuild queues with pending reservations in order
+		for reservation in self.reservations:
+			if reservation.get_status() == 'pending':
+				isbn = reservation.get_isbn()
+				if isbn not in self.pending_queues:
+					self.pending_queues[isbn] = Queue()
+				self.pending_queues[isbn].enqueue(reservation)
 
 	# -------------------- CRUD / Actions --------------------
 	def _generate_next_id(self) -> str:
@@ -164,6 +188,12 @@ class ReservationService:
 		# Create reservation and add to list (maintains FIFO order)
 		res = Reservation(reservation_id, user_id, isbn)
 		self.reservations.append(res)
+		
+		# Add to pending queue for this ISBN (FIFO implementation)
+		if isbn not in self.pending_queues:
+			self.pending_queues[isbn] = Queue()
+		self.pending_queues[isbn].enqueue(res)
+		
 		self._save_reservations()
 		return res
 
@@ -212,8 +242,8 @@ class ReservationService:
 		"""Assign the earliest pending reservation for the ISBN using FIFO queue logic.
 		
 		This method implements the Queue (FIFO) structure requirement:
-		- Gets all pending reservations for the ISBN
-		- Assigns the FIRST one (First In, First Out)
+		- Uses dequeue() to get the FIRST reservation from the queue
+		- Assigns the reservation (First In, First Out)
 		- Updates status to 'assigned' and sets assigned_date
 		
 		Args:
@@ -222,13 +252,16 @@ class ReservationService:
 		Returns:
 			Optional[Reservation]: Assigned reservation or None if no pending reservations
 		"""
-		# Get pending reservations in FIFO order
-		pending = self.find_by_isbn(isbn, only_pending=True)
-		if not pending:
+		# Check if queue exists and is not empty
+		if isbn not in self.pending_queues or self.pending_queues[isbn].is_empty():
 			return None
 		
-		# FIFO: Assign the first (earliest) reservation in the queue
-		next_res = pending[0]
+		# FIFO: Dequeue the first (earliest) reservation from the queue
+		next_res = self.pending_queues[isbn].dequeue()
+		if next_res is None:
+			return None
+		
+		# Update reservation status
 		next_res.set_status('assigned')
 		next_res.set_assigned_date(datetime.utcnow())
 		self._save_reservations()
@@ -267,6 +300,9 @@ class ReservationService:
 		if res is None:
 			raise ValueError(f"No reservation found with id '{reservation_id}'")
 		res.set_status('cancelled')
+		
+		# Rebuild queues to remove cancelled reservation
+		self._rebuild_pending_queues()
 		self._save_reservations()
 
 	def delete_reservation(self, reservation_id: str) -> None:
