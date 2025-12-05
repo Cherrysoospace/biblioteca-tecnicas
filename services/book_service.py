@@ -93,7 +93,7 @@ class BookService:
 
         Raises:
         - ValidationError: if book data is invalid (ISBN, title, weight, price)
-        - ValueError: if a book with the same `id` or `ISBN` already exists.
+        - ValueError: if a book with the same `id` already exists.
         - Exception: for IO errors when saving.
         """
         # Validate book data BEFORE adding
@@ -110,20 +110,11 @@ class BookService:
             logger.error(f"Validation failed when adding book: {e}")
             raise  # Re-raise the exception so the controller can handle it
         
-        # Check for duplicate ID
-        if any(b.get_id() == book.get_id() for b in self.books):
-            raise ValueError(f"A book with id '{book.get_id()}' already exists")
-        
-        # Check for duplicate ISBN - NEW BOOKS CANNOT HAVE DUPLICATE ISBN
-        existing_books_with_isbn = [b for b in self.books if b.get_ISBNCode() == book.get_ISBNCode()]
-        if existing_books_with_isbn:
-            existing_ids = [b.get_id() for b in existing_books_with_isbn]
-            raise ValueError(
-                f"Cannot create book: ISBN '{book.get_ISBNCode()}' already exists "
-                f"in the catalog with ID(s): {', '.join(existing_ids)}. "
-                f"Use the 'Clone Book' feature to add another physical copy."
-            )
+        # Check for duplicate ID only (allow duplicate ISBNs)
+        if any(existing_book.get_id() == book.get_id() for existing_book in self.books):
+            raise ValueError(f"A book with the same ID '{book.get_id()}' already exists.")
 
+        # Add the book and persist
         self.books.append(book)
         self._save_books()
         logger.info(f"Book added: id={book.get_id()}, ISBN={book.get_ISBNCode()}, title={book.get_title()}")

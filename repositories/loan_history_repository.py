@@ -1,12 +1,12 @@
 """loan_history_repository.py
 
-Repositorio para la persistencia del historial de préstamos por usuario (Stacks).
-Responsabilidad Única: Persistencia de datos de historial en loan_history.json
+Repository for persisting loan history per user (Stacks).
+Single Responsibility: Persistence of history data in loan_history.json
 
-El historial es una vista organizada de loan.json por usuario en estructura LIFO.
-Se actualiza automáticamente cuando cambian los préstamos.
+The history is an organized view of loan.json by user in LIFO structure.
+It is automatically updated when loans change.
 
-Estructura del archivo:
+File structure:
 {
   "user_stacks": {
     "U001": [
@@ -21,9 +21,6 @@ Estructura del archivo:
     ]
   }
 }
-
-Autor: Sistema de Gestión de Bibliotecas
-Fecha: 2025-12-03
 """
 
 import json
@@ -36,17 +33,17 @@ logger = LibraryLogger.get_logger(__name__)
 
 
 class LoanHistoryRepository:
-    """Repositorio para persistir historial de préstamos por usuario.
+    """Repository for persisting loan history per user.
     
-    RESPONSABILIDAD única: Leer/escribir loan_history.json
-    NO contiene lógica de negocio ni manejo de estructuras Stack.
+    SINGLE RESPONSIBILITY: Read/write loan_history.json
+    Does NOT contain business logic or Stack structure handling.
     """
     
     def __init__(self, file_path: str = None):
-        """Inicializar repositorio de historial de préstamos.
+        """Initialize loan history repository.
         
         Args:
-            file_path: Ruta al archivo JSON. Si es None, usa ruta por defecto
+            file_path: Path to JSON file. If None, uses default path
         """
         if file_path is None:
             data_dir = os.path.dirname(FilePaths.LOANS)
@@ -56,16 +53,16 @@ class LoanHistoryRepository:
         self._ensure_file()
     
     def _ensure_file(self) -> None:
-        """Asegurar que el archivo de historial existe."""
+        """Ensure that the history file exists."""
         if not os.path.exists(self.file_path):
             logger.info(f"Creando archivo de historial: {self.file_path}")
             self._write_raw_data({"user_stacks": {}})
     
     def _read_raw_data(self) -> Dict[str, Any]:
-        """Leer datos crudos del archivo JSON.
+        """Read raw data from JSON file.
         
         Returns:
-            Dict con estructura {"user_stacks": {...}}
+            Dict with structure {"user_stacks": {...}}
         """
         try:
             with open(self.file_path, 'r', encoding='utf-8') as f:
@@ -85,10 +82,10 @@ class LoanHistoryRepository:
             return {"user_stacks": {}}
     
     def _write_raw_data(self, data: Dict[str, Any]) -> None:
-        """Escribir datos crudos al archivo JSON.
+        """Write raw data to JSON file.
         
         Args:
-            data: Dict con estructura {"user_stacks": {...}}
+            data: Dict with structure {"user_stacks": {...}}
         """
         try:
             os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
@@ -101,11 +98,11 @@ class LoanHistoryRepository:
             raise
     
     def load_all_user_stacks(self) -> Dict[str, List[Dict[str, Any]]]:
-        """Cargar todos los stacks de usuarios desde el archivo.
+        """Load all user stacks from the file.
         
         Returns:
-            Dict[user_id, List[Dict]] donde cada lista es el stack de ese usuario
-            (índice 0 = fondo, índice -1 = tope del stack)
+            Dict[user_id, List[Dict]] where each list is that user's stack
+            (index 0 = bottom, index -1 = top of stack)
         """
         data = self._read_raw_data()
         user_stacks = data.get('user_stacks', {})
@@ -121,32 +118,32 @@ class LoanHistoryRepository:
         return result
     
     def save_all_user_stacks(self, user_stacks: Dict[str, List[Dict[str, Any]]]) -> None:
-        """Guardar todos los stacks de usuarios al archivo.
+        """Save all user stacks to the file.
         
         Args:
-            user_stacks: Dict[user_id, List[Dict]] con los stacks de cada usuario
+            user_stacks: Dict[user_id, List[Dict]] with each user's stacks
         """
         data = {"user_stacks": user_stacks}
         self._write_raw_data(data)
     
     def load_user_stack(self, user_id: str) -> List[Dict[str, Any]]:
-        """Cargar el stack de un usuario específico.
+        """Load a specific user's stack.
         
         Args:
-            user_id: ID del usuario
+            user_id: User ID
             
         Returns:
-            Lista representando el stack del usuario (vacía si no existe)
+            List representing the user's stack (empty if it doesn't exist)
         """
         all_stacks = self.load_all_user_stacks()
         return all_stacks.get(user_id, [])
     
     def save_user_stack(self, user_id: str, stack_items: List[Dict[str, Any]]) -> None:
-        """Guardar el stack de un usuario específico.
+        """Save a specific user's stack.
         
         Args:
-            user_id: ID del usuario
-            stack_items: Lista representando el stack del usuario
+            user_id: User ID
+            stack_items: List representing the user's stack
         """
         all_stacks = self.load_all_user_stacks()
         all_stacks[user_id] = stack_items
